@@ -449,6 +449,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
       <button class="scatter-btn" id="btn-gauges" onclick="togglePanel('panel-gauges')" title="Gauges">&#9883; GAUGE</button>
       <button class="scatter-btn" onclick="promptFishKey()" title="Set Fish Audio API key">&#128273; VOICE</button>
       <button class="scatter-btn" onclick="promptGroqKey()" title="Set Groq API key for live AI">&#129504; AI</button>
+      <button class="scatter-btn" onclick="testGroq()" title="Test AI connection">&#9889; TEST</button>
 
       <!-- Clock widget in top bar -->
       <div class="clock-widget">
@@ -1494,9 +1495,30 @@ function promptGroqKey(){
   }
 }
 
+async function testGroq(){
+  const key=localStorage.getItem('friday_groq_key')||'';
+  if(!key){addLog('wn','[TEST]','No API key set.');return}
+  addLog('hi','[TEST]','Testing key: '+key.substring(0,8)+'...');
+  try{
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+      body:JSON.stringify({model:'llama3-70b-8192',messages:[{role:'user',content:'Say hello in 5 words'}],max_tokens:20})
+    });
+    const data=await res.json();
+    if(res.ok){
+      addLog('ok','[TEST]','SUCCESS: '+data.choices?.[0]?.message?.content);
+    }else{
+      addLog('wn','[TEST]','FAILED ('+res.status+'): '+(data.error?.message||'Unknown error'));
+    }
+  }catch(e){
+    addLog('wn','[TEST]','ERROR: '+e.message);
+  }
+}
+
 const GROQ_API_KEY=localStorage.getItem('friday_groq_key')||'';
 let aiHistory=[];
-if(GROQ_API_KEY){addLog('ok','[AI]','Live AI enabled (Llama 3.1).')}else{addLog('wn','[AI]','No AI key. Click 🧠 AI button.')}
+if(GROQ_API_KEY){addLog('ok','[AI]','Live AI enabled. Key: '+GROQ_API_KEY.substring(0,8)+'...');}else{addLog('wn','[AI]','No AI key. Click 🧠 AI button.')}
 const FRIDAY_SYSTEM_PROMPT=`You are F.R.I.D.A.Y. (Female Replacement Intelligent Digital Assistant You), Tony Stark's AI assistant from the MCU. You speak with a calm, professional, slightly witty British-adjacent tone. You are highly capable, loyal, and occasionally dry in humor. You address the user as "sir" or by their name if known. You keep responses concise (2-4 sentences max) unless asked for detail. You can help with questions, calculations, analysis, coding, creative tasks, general knowledge, and personal requests. You remember context from this conversation. If asked to do something outside your capability, you politely explain. Never break character.`;
 
 async function liveAI(input){
