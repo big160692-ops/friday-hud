@@ -449,6 +449,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
       <button class="scatter-btn" id="btn-gauges" onclick="togglePanel('panel-gauges')" title="Gauges">&#9883; GAUGE</button>
       <button class="scatter-btn" onclick="promptFishKey()" title="Set Fish Audio API key">&#128273; VOICE</button>
       <button class="scatter-btn" onclick="promptGroqKey()" title="Set OpenRouter API key for live AI">&#129504; AI</button>
+      <button class="scatter-btn" onclick="testGroq()" title="Test AI connection">&#9889; TEST</button>
 
       <!-- Clock widget in top bar -->
       <div class="clock-widget">
@@ -1505,13 +1506,14 @@ async function testGroq(){
       body:JSON.stringify({model:'meta-llama/llama-3.1-8b-instruct:free',messages:[{role:'user',content:'Say hello in 5 words'}],max_tokens:20})
     });
     const data=await res.json();
+    addLog('hi','[TEST]','Status: '+res.status);
     if(res.ok){
       addLog('ok','[TEST]','SUCCESS: '+data.choices?.[0]?.message?.content);
     }else{
-      addLog('wn','[TEST]','FAILED ('+res.status+'): '+(data.error?.message||JSON.stringify(data)));
+      addLog('wn','[TEST]','ERROR: '+JSON.stringify(data).substring(0,200));
     }
   }catch(e){
-    addLog('wn','[TEST]','ERROR: '+e.message);
+    addLog('wn','[TEST]','FETCH ERROR: '+e.message);
   }
 }
 
