@@ -478,7 +478,8 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
       <button class="scatter-btn" id="btn-notes" onclick="togglePanel('panel-notes')" title="Quick Notes">&#128221; NOTES</button>
       <button class="scatter-btn" id="btn-quote" onclick="togglePanel('panel-quote')" title="Daily Quote">&#10077; QUOTE</button>
       <button class="scatter-btn" id="btn-gauges" onclick="togglePanel('panel-gauges')" title="Gauges">&#9883; GAUGE</button>
-      <button class="scatter-btn" onclick="promptFishKey()" title="Set Fish Audio API key">&#128273; KEY</button>
+      <button class="scatter-btn" onclick="promptFishKey()" title="Set Fish Audio API key">&#128273; VOICE</button>
+      <button class="scatter-btn" onclick="promptGroqKey()" title="Set Groq API key for live AI">&#129504; AI</button>
 
       <!-- Clock widget in top bar -->
       <div class="clock-widget">
@@ -733,7 +734,7 @@ function aiProcess(input){
   if(/^(my name is|i'm|call me|i am)\s+(.+)/i.test(lo)){const nn=lo.replace(/^(my name is|i'm|call me|i am)\s+/i,'').trim();setName(nn);const m=`Understood. I will address you as ${nn}.`;addMem('ai',m);return{c:'hi',m}}
   if(/^(hi|hello|hey|greetings|yo|sup|howdy)/i.test(lo)){const r=[nm?`At your service, ${nm}.`:'At your service, sir.','All systems standing by.','Good to see you.'];const m=r[Math.floor(Math.random()*r.length)];addMem('ai',m);return{c:'hi',m}}
   if(/how (are|r) (you|u)/i.test(lo)){const m=['All neural networks at peak efficiency.','Core stable, processes nominal.','Running optimally.'][Math.floor(Math.random()*3)];addMem('ai',m);return{c:'hi',m}}
-  if(/^(help|what can you do|commands)/i.test(lo)){const m='Commands: Status, Diagnostics, Who am I, My name, Mode, Weather [city], News [category], Time, Joke, Quote, Note [text], Calc [expr], Scan, Power, Threat, Recall, Clear memory, Forget me, Show/Hide [panel], Show/Hide all panels';addMem('ai',m);return{c:'hi',m}}
+  if(/^(help|what can you do|commands)/i.test(lo)){const m='Live AI enabled - ask me anything! Built-in: Status, Weather [city], News, Time, Joke, Quote, Note [text], Calc [expr], Scan, Mode, Show/Hide [panel], Show/Hide all panels';addMem('ai',m);return{c:'hi',m}}
   if(/^(status|diagnostics|health|syscheck)/i.test(lo)){const cpu=document.getElementById('cv').textContent;const m=`Diagnostics: CPU ${cpu}, Reactor OPTIMAL, AES-256, All systems NOMINAL`;addMem('ai',m);return{c:'ok',m}}
   if(/^(who am i|what('s| is) my name)/i.test(lo)){const n=getName();const m=n?`You are ${n}.`:'No name on file. Use "My name is [name]".';addMem('ai',m);return{c:'hi',m}}
   if(/^(forget me|erase my name)/i.test(lo)){localStorage.removeItem(UK);const m='Name cleared.';addMem('ai',m);return{c:'wn',m}}
@@ -1097,7 +1098,34 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){const o=document.ge
 
 // === CONSOLE ===
 function addLog(c,t,m){const con=document.getElementById('con');const l=document.createElement('div');l.className='log-line'+(c?' '+c:'')+' new';l.innerHTML=`<span class="lpfx">${t}</span>${m}`;con.appendChild(l);con.scrollTop=con.scrollHeight;while(con.children.length>8)con.removeChild(con.firstChild)}
-function doCmd(){const inp=document.getElementById('ji'),v=inp.value.trim();if(!v)return;addLog('hi','[YOU]',v.toUpperCase());inp.value='';const th=document.getElementById('thinking');th.classList.add('active');setTimeout(()=>{th.classList.remove('active');const r=aiProcess(v);addLog(r.c||'','[AI]',r.m);fridaySpeak(r.m)},600+Math.random()*500)}
+function doCmd(){
+  const inp=document.getElementById('ji'),v=inp.value.trim();
+  if(!v)return;
+  addLog('hi','[YOU]',v.toUpperCase());
+  inp.value='';
+  const th=document.getElementById('thinking');
+  th.classList.add('active');
+
+  // Try live AI first
+  liveAI(v).then(reply=>{
+    th.classList.remove('active');
+    if(reply){
+      addLog('hi','[AI]',reply);
+      fridaySpeak(reply);
+      addMem('ai',reply);
+    }else{
+      // Fall back to local commands
+      const r=aiProcess(v);
+      addLog(r.c||'','[AI]',r.m);
+      fridaySpeak(r.m);
+    }
+  }).catch(()=>{
+    th.classList.remove('active');
+    const r=aiProcess(v);
+    addLog(r.c||'','[AI]',r.m);
+    fridaySpeak(r.m);
+  });
+}
 
 // === CLOCK ===
 function tickClock(){
@@ -1504,6 +1532,65 @@ function promptFishKey(){
   }
 }
 
+function promptGroqKey(){
+  const key=prompt('Paste your Groq API key for live AI (Llama 3).\nGet free key at: console.groq.com/keys\n\nLeave blank to use built-in commands only.');
+  if(key&&key.trim()){
+    localStorage.setItem('friday_groq_key',key.trim());
+    location.reload();
+  }
+}
+
+const GROQ_API_KEY=localStorage.getItem('friday_groq_key')||'';
+let aiHistory=[];
+const FRIDAY_SYSTEM_PROMPT=`You are F.R.I.D.A.Y. (Female Replacement Intelligent Digital Assistant You), Tony Stark's AI assistant from the MCU. You speak with a calm, professional, slightly witty British-adjacent tone. You are highly capable, loyal, and occasionally dry in humor. You address the user as "sir" or by their name if known. You keep responses concise (2-4 sentences max) unless asked for detail. You can help with questions, calculations, analysis, coding, creative tasks, general knowledge, and personal requests. You remember context from this conversation. If asked to do something outside your capability, you politely explain. Never break character.`;
+
+async function liveAI(input){
+  if(!GROQ_API_KEY)return null;
+  // Build messages with history
+  aiHistory.push({role:'user',content:input});
+  if(aiHistory.length>20)aiHistory=aiHistory.slice(-20);
+
+  const messages=[
+    {role:'system',content:FRIDAY_SYSTEM_PROMPT+'\nUser name: '+(getName()||'sir')},
+    ...aiHistory
+  ];
+
+  try{
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+GROQ_API_KEY,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        model:'llama3-8b-8192',
+        messages:messages,
+        temperature:0.7,
+        max_tokens:300,
+        top_p:0.9
+      })
+    });
+
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
+      console.error('Groq error:',err);
+      aiHistory.pop();
+      return null;
+    }
+
+    const data=await res.json();
+    const reply=data.choices?.[0]?.message?.content||null;
+    if(reply){
+      aiHistory.push({role:'assistant',content:reply});
+    }
+    return reply;
+  }catch(e){
+    console.error('AI fetch error:',e);
+    aiHistory.pop();
+    return null;
+  }
+}
+
 function toggleVoice(){
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SpeechRecognition){
@@ -1568,16 +1655,27 @@ function startRecognition(){
       document.getElementById('voice-status').textContent='"'+cmd.substring(0,35)+'..."';
       document.getElementById('ji').value=cmd;
       addLog('hi','[VR]',`Heard: "${cmd}"`);
-      // Process command
       const th=document.getElementById('thinking');
       th.classList.add('active');
       fridayChirp();
-      setTimeout(()=>{
+      // Try live AI first
+      liveAI(cmd).then(reply=>{
+        th.classList.remove('active');
+        if(reply){
+          addLog('hi','[AI]',reply);
+          fridaySpeak(reply);
+          addMem('ai',reply);
+        }else{
+          const r=aiProcess(cmd);
+          addLog(r.c||'','[AI]',r.m);
+          fridaySpeak(r.m);
+        }
+      }).catch(()=>{
         th.classList.remove('active');
         const r=aiProcess(cmd);
         addLog(r.c||'','[AI]',r.m);
         fridaySpeak(r.m);
-      },400);
+      });
     }
   };
 
