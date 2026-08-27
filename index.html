@@ -1500,14 +1500,25 @@ async function testGroq(){
   if(!key){addLog('wn','[TEST]','No API key set.');return}
   addLog('hi','[TEST]','Testing key: '+key.substring(0,8)+'...');
   try{
+    // First, list available models
+    const listRes=await fetch('https://api.groq.com/openai/v1/models',{
+      headers:{'Authorization':'Bearer '+key}
+    });
+    const listData=await listRes.json();
+    const models=(listData.data||[]).map(m=>m.id).filter(id=>id.includes('llama')||id.includes('gemma')||id.includes('mixtral'));
+    addLog('hi','[TEST]','Available: '+models.join(', '));
+
+    // Try first available model
+    if(models.length===0){addLog('wn','[TEST]','No chat models found.');return}
+    const testModel=models[0];
     const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
-      body:JSON.stringify({model:'llama3-70b-8192',messages:[{role:'user',content:'Say hello in 5 words'}],max_tokens:20})
+      body:JSON.stringify({model:testModel,messages:[{role:'user',content:'Say hello in 5 words'}],max_tokens:20})
     });
     const data=await res.json();
     if(res.ok){
-      addLog('ok','[TEST]','SUCCESS: '+data.choices?.[0]?.message?.content);
+      addLog('ok','[TEST]','SUCCESS with '+testModel+': '+data.choices?.[0]?.message?.content);
     }else{
       addLog('wn','[TEST]','FAILED ('+res.status+'): '+(data.error?.message||'Unknown error'));
     }
@@ -1531,47 +1542,39 @@ async function liveAI(input){
     ...aiHistory
   ];
 
-  // Try models in order until one works
-  const models=['llama3-70b-8192','llama-3.3-70b-versatile','meta-llama/llama-4-scout-17b-16e-instruct','llama-3.1-8b-instant'];
+  // Get available models dynamically
+  let models=[];
+  try{
+    const listRes=await fetch('https://api.groq.com/openai/v1/models',{
+      headers:{'Authorization':'Bearer '+GROQ_API_KEY}
+    });
+    const listData=await listRes.json();
+    models=(listData.data||[]).map(m=>m.id).filter(id=>id.includes('llama')||id.includes('gemma')||id.includes('mixtral'));
+  }catch(e){}
+
+  // Fallback list if API listing fails
+  if(!models.length)models=['llama-3.3-70b-versatile','meta-llama/llama-4-scout-17b-16e-instruct','llama-3.1-8b-instant','gemma2-9b-it'];
 
   for(const model of models){
     try{
       const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
         method:'POST',
-        headers:{
-          'Authorization':'Bearer '+GROQ_API_KEY,
-          'Content-Type':'application/json'
-        },
-        body:JSON.stringify({
-          model:model,
-          messages:messages,
-          temperature:0.7,
-          max_tokens:300,
-          top_p:0.9
-        })
+        headers:{'Authorization':'Bearer '+GROQ_API_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({model:model,messages:messages,temperature:0.7,max_tokens:300,top_p:0.9})
       });
 
-      if(!res.ok){
-        const err=await res.json().catch(()=>({}));
-        console.warn('Model '+model+' failed:',err.error?.message||res.status);
-        continue; // try next model
-      }
+      if(!res.ok)continue;
 
       const data=await res.json();
       const reply=data.choices?.[0]?.message?.content||null;
       if(reply){
         aiHistory.push({role:'assistant',content:reply});
-        addLog('ok','[AI]','Model: '+model);
         return reply;
       }
-    }catch(e){
-      console.warn('Model '+model+' error:',e.message);
-      continue;
-    }
+    }catch(e){continue}
   }
 
-  // All models failed
-  addLog('wn','[AI]','All models failed. Check API key at console.groq.com');
+  addLog('wn','[AI]','All models failed.');
   aiHistory.pop();
   return null;
 }
