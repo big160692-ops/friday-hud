@@ -39,15 +39,8 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .layout{position:absolute;inset:0;display:grid;grid-template-rows:42px 20px 1fr 28px;z-index:2}
 
 /* App Launcher Bar */
-.app-bar{display:flex;align-items:center;justify-content:center;gap:0;border-bottom:1px solid var(--dim);background:rgba(2,8,18,0.95);padding:0 10px;position:relative;height:42px}
-.app-bar::after{content:'';position:absolute;bottom:0;left:5%;right:5%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,212,255,0.15),transparent)}
-.app-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 12px;cursor:pointer;border:1px solid transparent;border-radius:3px;transition:all 0.3s;position:relative;min-width:56px}
-.app-item:hover{border-color:rgba(0,212,255,0.3);background:rgba(0,212,255,0.04);transform:translateY(-1px)}
-.app-item:hover .app-icon{box-shadow:0 0 12px rgba(0,212,255,0.4);border-color:var(--primary)}
-.app-item:hover .app-label{color:var(--primary)}
-.app-icon{width:28px;height:28px;border:1px solid var(--dim);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all 0.3s;background:rgba(0,15,28,0.8)}
-.app-label{font-size:6px;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase;transition:color 0.3s;white-space:nowrap}
-.app-sep{width:1px;height:24px;background:var(--dim);margin:0 2px;flex-shrink:0}
+.app-bar{display:flex;align-items:center;justify-content:center;gap:4px;border-bottom:1px solid var(--dim);background:rgba(2,8,18,0.95);padding:0 10px;position:relative;height:42px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+.app-bar::-webkit-scrollbar{display:none}
 
 /* Clock widget */
 .clock-widget{position:absolute;right:20px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:12px}
@@ -318,12 +311,8 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
   .layout{position:relative;min-height:100vh;display:flex;flex-direction:column}
 
   /* App bar: horizontal scroll */
-  .app-bar{overflow-x:auto;justify-content:flex-start;gap:0;scrollbar-width:none;-ms-overflow-style:none}
+  .app-bar{overflow-x:auto;justify-content:flex-start;gap:4px;scrollbar-width:none;-ms-overflow-style:none}
   .app-bar::-webkit-scrollbar{display:none}
-  .app-item{min-width:48px;padding:4px 8px}
-  .app-icon{width:24px;height:24px;font-size:12px}
-  .app-label{font-size:5px}
-  .app-sep{display:none}
 
   /* Clock: smaller */
   .clock-widget{position:static;transform:none;gap:6px;padding:4px 10px;justify-content:center;border-bottom:1px solid var(--dim)}
@@ -449,26 +438,6 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
     <!-- App Launcher Bar -->
     <div class="app-bar">
       <div class="F.R.I.D.A.Y.-title">F.R.I.D.A.Y.<small>OS MARK III</small></div>
-      <div class="app-item" onclick="openApp('chrome')"><div class="app-icon">&#127760;</div><div class="app-label">Chrome</div></div>
-      <div class="app-sep"></div>
-      <div class="app-item" onclick="openApp('vscode')"><div class="app-icon">&#128187;</div><div class="app-label">VS Code</div></div>
-      <div class="app-sep"></div>
-      <div class="app-item" onclick="openApp('spotify')"><div class="app-icon">&#127925;</div><div class="app-label">Spotify</div></div>
-      <div class="app-sep"></div>
-      <div class="app-item" onclick="openApp('terminal')"><div class="app-icon">&#9000;</div><div class="app-label">Terminal</div></div>
-      <div class="app-sep"></div>
-      <div class="app-item" onclick="openApp('photoshop')"><div class="app-icon">&#127912;</div><div class="app-label">Photoshop</div></div>
-      <div class="app-sep"></div>
-      <div class="app-item" onclick="openApp('whatsapp')"><div class="app-icon">&#128172;</div><div class="app-label">WhatsApp</div></div>
-      <div class="app-sep"></div>
-      <div class="app-item" onclick="openApp('telegram')"><div class="app-icon">&#9993;</div><div class="app-label">Telegram</div></div>
-      <div class="app-sep"></div>
-      <div class="app-item" onclick="openApp('github')"><div class="app-icon">&#128025;</div><div class="app-label">GitHub</div></div>
-      <div class="app-sep"></div>
-      <div class="app-item" onclick="openApp('files')"><div class="app-icon">&#128193;</div><div class="app-label">Files</div></div>
-      <div class="app-sep"></div>
-      <div class="app-item" onclick="openApp('settings')"><div class="app-icon">&#9881;</div><div class="app-label">Settings</div></div>
-      <div class="app-sep"></div>
       <button class="scatter-btn" id="btn-sys" onclick="togglePanel('panel-sys')" title="System Load">&#9881; SYS</button>
       <button class="scatter-btn" id="btn-weather" onclick="togglePanel('panel-weather')" title="Weather">&#9728; WXR</button>
       <button class="scatter-btn" id="btn-combat" onclick="togglePanel('panel-combat')" title="Combat Mode">&#9876; CBT</button>
@@ -1024,25 +993,6 @@ function loadNews(category,tabEl){
       <div class="news-meta"><span class="news-cat">${n.s}</span><span>${n.m}</span></div>
     </div>`).join('');
   addLog('','[NEWS]',`${category.toUpperCase()} feed loaded. ${items.length} articles.`);
-}
-
-// === APP LAUNCHER ===
-function openApp(app){
-  const urls={
-    chrome:'https://www.google.com',
-    vscode:'https://vscode.dev',
-    spotify:'https://open.spotify.com',
-    terminal:null,
-    photoshop:'https://photopea.com',
-    whatsapp:'https://web.whatsapp.com',
-    telegram:'https://web.telegram.org',
-    github:'https://github.com',
-    files:null,
-    settings:null
-  };
-  addLog('hi','[APP]',`Launching ${app.toUpperCase()}...`);
-  if(urls[app])window.open(urls[app],'_blank');
-  else addLog('wn','[APP]',`${app.toUpperCase()} requires local access.`);
 }
 
 // === MUSIC PLAYER ===
