@@ -1509,43 +1509,49 @@ async function liveAI(input){
     ...aiHistory
   ];
 
-  try{
-    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{
-        'Authorization':'Bearer '+GROQ_API_KEY,
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({
-        model:'llama-3.1-8b-instant',
-        messages:messages,
-        temperature:0.7,
-        max_tokens:300,
-        top_p:0.9
-      })
-    });
+  // Try models in order until one works
+  const models=['llama3-70b-8192','llama-3.3-70b-versatile','meta-llama/llama-4-scout-17b-16e-instruct','llama-3.1-8b-instant'];
 
-    if(!res.ok){
-      const err=await res.json().catch(()=>({}));
-      const errMsg=err.error?.message||('HTTP '+res.status);
-      addLog('wn','[AI]','API error: '+errMsg);
-      console.error('Groq error:',err);
-      aiHistory.pop();
-      return null;
-    }
+  for(const model of models){
+    try{
+      const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',
+        headers:{
+          'Authorization':'Bearer '+GROQ_API_KEY,
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({
+          model:model,
+          messages:messages,
+          temperature:0.7,
+          max_tokens:300,
+          top_p:0.9
+        })
+      });
 
-    const data=await res.json();
-    const reply=data.choices?.[0]?.message?.content||null;
-    if(reply){
-      aiHistory.push({role:'assistant',content:reply});
+      if(!res.ok){
+        const err=await res.json().catch(()=>({}));
+        console.warn('Model '+model+' failed:',err.error?.message||res.status);
+        continue; // try next model
+      }
+
+      const data=await res.json();
+      const reply=data.choices?.[0]?.message?.content||null;
+      if(reply){
+        aiHistory.push({role:'assistant',content:reply});
+        addLog('ok','[AI]','Model: '+model);
+        return reply;
+      }
+    }catch(e){
+      console.warn('Model '+model+' error:',e.message);
+      continue;
     }
-    return reply;
-  }catch(e){
-    addLog('wn','[AI]','Fetch error: '+e.message);
-    console.error('AI fetch error:',e);
-    aiHistory.pop();
-    return null;
   }
+
+  // All models failed
+  addLog('wn','[AI]','All models failed. Check API key at console.groq.com');
+  aiHistory.pop();
+  return null;
 }
 
 function toggleVoice(){
