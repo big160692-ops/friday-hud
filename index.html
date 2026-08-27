@@ -448,8 +448,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
       <button class="scatter-btn" id="btn-quote" onclick="togglePanel('panel-quote')" title="Daily Quote">&#10077; QUOTE</button>
       <button class="scatter-btn" id="btn-gauges" onclick="togglePanel('panel-gauges')" title="Gauges">&#9883; GAUGE</button>
       <button class="scatter-btn" onclick="promptFishKey()" title="Set Fish Audio API key">&#128273; VOICE</button>
-      <button class="scatter-btn" onclick="promptGroqKey()" title="Set Groq API key for live AI">&#129504; AI</button>
-      <button class="scatter-btn" onclick="testGroq()" title="Test AI connection">&#9889; TEST</button>
+      <button class="scatter-btn" onclick="promptGroqKey()" title="Set OpenRouter API key for live AI">&#129504; AI</button>
 
       <!-- Clock widget in top bar -->
       <div class="clock-widget">
@@ -1486,8 +1485,8 @@ function promptFishKey(){
 function promptGroqKey(){
   const current=localStorage.getItem('friday_groq_key')||'';
   const msg=current
-    ?'Current key: '+current.substring(0,10)+'...'+current.substring(current.length-4)+'\n\nPaste a new key or leave blank to keep current.\nGet free key at: console.groq.com/keys'
-    :'No key set.\nPaste your Groq API key for live AI (Llama 3.1).\nGet free key at: console.groq.com/keys\n\nLeave blank to use built-in commands only.';
+    ?'Current key: '+current.substring(0,10)+'...'+current.substring(current.length-4)+'\n\nPaste a new key or leave blank to keep current.\nGet FREE key at: openrouter.ai/keys'
+    :'No key set.\nPaste your OpenRouter API key for live AI.\nGet FREE key at: openrouter.ai/keys (no credit card needed)\n\nLeave blank to use built-in commands only.';
   const key=prompt(msg);
   if(key!==null&&key.trim()){
     localStorage.setItem('friday_groq_key',key.trim());
@@ -1498,29 +1497,18 @@ function promptGroqKey(){
 async function testGroq(){
   const key=localStorage.getItem('friday_groq_key')||'';
   if(!key){addLog('wn','[TEST]','No API key set.');return}
-  addLog('hi','[TEST]','Testing key: '+key.substring(0,8)+'...');
+  addLog('hi','[TEST]','Testing OpenRouter key: '+key.substring(0,8)+'...');
   try{
-    // First, list available models
-    const listRes=await fetch('https://api.groq.com/openai/v1/models',{
-      headers:{'Authorization':'Bearer '+key}
-    });
-    const listData=await listRes.json();
-    const models=(listData.data||[]).map(m=>m.id).filter(id=>id.includes('llama')||id.includes('gemma')||id.includes('mixtral'));
-    addLog('hi','[TEST]','Available: '+models.join(', '));
-
-    // Try first available model
-    if(models.length===0){addLog('wn','[TEST]','No chat models found.');return}
-    const testModel=models[0];
-    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',
-      headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
-      body:JSON.stringify({model:testModel,messages:[{role:'user',content:'Say hello in 5 words'}],max_tokens:20})
+      headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json','HTTP-Referer':'https://big160692-ops.github.io/friday-hud/','X-Title':'F.R.I.D.A.Y. HUD'},
+      body:JSON.stringify({model:'meta-llama/llama-3.1-8b-instruct:free',messages:[{role:'user',content:'Say hello in 5 words'}],max_tokens:20})
     });
     const data=await res.json();
     if(res.ok){
-      addLog('ok','[TEST]','SUCCESS with '+testModel+': '+data.choices?.[0]?.message?.content);
+      addLog('ok','[TEST]','SUCCESS: '+data.choices?.[0]?.message?.content);
     }else{
-      addLog('wn','[TEST]','FAILED ('+res.status+'): '+(data.error?.message||'Unknown error'));
+      addLog('wn','[TEST]','FAILED ('+res.status+'): '+(data.error?.message||JSON.stringify(data)));
     }
   }catch(e){
     addLog('wn','[TEST]','ERROR: '+e.message);
@@ -1529,7 +1517,7 @@ async function testGroq(){
 
 const GROQ_API_KEY=localStorage.getItem('friday_groq_key')||'';
 let aiHistory=[];
-if(GROQ_API_KEY){addLog('ok','[AI]','Live AI enabled. Key: '+GROQ_API_KEY.substring(0,8)+'...');}else{addLog('wn','[AI]','No AI key. Click 🧠 AI button.')}
+if(GROQ_API_KEY){addLog('ok','[AI]','Live AI enabled (OpenRouter).');}else{addLog('wn','[AI]','No AI key. Click 🧠 AI button.')}
 const FRIDAY_SYSTEM_PROMPT=`You are F.R.I.D.A.Y. (Female Replacement Intelligent Digital Assistant You), Tony Stark's AI assistant from the MCU. You speak with a calm, professional, slightly witty British-adjacent tone. You are highly capable, loyal, and occasionally dry in humor. You address the user as "sir" or by their name if known. You keep responses concise (2-4 sentences max) unless asked for detail. You can help with questions, calculations, analysis, coding, creative tasks, general knowledge, and personal requests. You remember context from this conversation. If asked to do something outside your capability, you politely explain. Never break character.`;
 
 async function liveAI(input){
@@ -1542,24 +1530,19 @@ async function liveAI(input){
     ...aiHistory
   ];
 
-  // Get available models dynamically
-  let models=[];
-  try{
-    const listRes=await fetch('https://api.groq.com/openai/v1/models',{
-      headers:{'Authorization':'Bearer '+GROQ_API_KEY}
-    });
-    const listData=await listRes.json();
-    models=(listData.data||[]).map(m=>m.id).filter(id=>id.includes('llama')||id.includes('gemma')||id.includes('mixtral'));
-  }catch(e){}
-
-  // Fallback list if API listing fails
-  if(!models.length)models=['llama-3.3-70b-versatile','meta-llama/llama-4-scout-17b-16e-instruct','llama-3.1-8b-instant','gemma2-9b-it'];
+  // Free models on OpenRouter
+  const models=['meta-llama/llama-3.1-8b-instruct:free','google/gemma-2-9b-it:free','mistralai/mistral-7b-instruct:free','meta-llama/llama-3.2-3b-instruct:free'];
 
   for(const model of models){
     try{
-      const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
         method:'POST',
-        headers:{'Authorization':'Bearer '+GROQ_API_KEY,'Content-Type':'application/json'},
+        headers:{
+          'Authorization':'Bearer '+GROQ_API_KEY,
+          'Content-Type':'application/json',
+          'HTTP-Referer':'https://big160692-ops.github.io/friday-hud/',
+          'X-Title':'F.R.I.D.A.Y. HUD'
+        },
         body:JSON.stringify({model:model,messages:messages,temperature:0.7,max_tokens:300,top_p:0.9})
       });
 
