@@ -1483,8 +1483,12 @@ function promptFishKey(){
 }
 
 function promptGroqKey(){
-  const key=prompt('Paste your Groq API key for live AI (Llama 3).\nGet free key at: console.groq.com/keys\n\nLeave blank to use built-in commands only.');
-  if(key&&key.trim()){
+  const current=localStorage.getItem('friday_groq_key')||'';
+  const msg=current
+    ?'Current key: '+current.substring(0,10)+'...'+current.substring(current.length-4)+'\n\nPaste a new key or leave blank to keep current.\nGet free key at: console.groq.com/keys'
+    :'No key set.\nPaste your Groq API key for live AI (Llama 3).\nGet free key at: console.groq.com/keys\n\nLeave blank to use built-in commands only.';
+  const key=prompt(msg);
+  if(key!==null&&key.trim()){
     localStorage.setItem('friday_groq_key',key.trim());
     location.reload();
   }
@@ -1492,11 +1496,11 @@ function promptGroqKey(){
 
 const GROQ_API_KEY=localStorage.getItem('friday_groq_key')||'';
 let aiHistory=[];
+if(GROQ_API_KEY){addLog('ok','[AI]','Live AI enabled (Llama 3).')}else{addLog('wn','[AI]','No AI key. Click 🧠 AI button.')}
 const FRIDAY_SYSTEM_PROMPT=`You are F.R.I.D.A.Y. (Female Replacement Intelligent Digital Assistant You), Tony Stark's AI assistant from the MCU. You speak with a calm, professional, slightly witty British-adjacent tone. You are highly capable, loyal, and occasionally dry in humor. You address the user as "sir" or by their name if known. You keep responses concise (2-4 sentences max) unless asked for detail. You can help with questions, calculations, analysis, coding, creative tasks, general knowledge, and personal requests. You remember context from this conversation. If asked to do something outside your capability, you politely explain. Never break character.`;
 
 async function liveAI(input){
   if(!GROQ_API_KEY)return null;
-  // Build messages with history
   aiHistory.push({role:'user',content:input});
   if(aiHistory.length>20)aiHistory=aiHistory.slice(-20);
 
@@ -1523,6 +1527,8 @@ async function liveAI(input){
 
     if(!res.ok){
       const err=await res.json().catch(()=>({}));
+      const errMsg=err.error?.message||('HTTP '+res.status);
+      addLog('wn','[AI]','API error: '+errMsg);
       console.error('Groq error:',err);
       aiHistory.pop();
       return null;
@@ -1535,6 +1541,7 @@ async function liveAI(input){
     }
     return reply;
   }catch(e){
+    addLog('wn','[AI]','Fetch error: '+e.message);
     console.error('AI fetch error:',e);
     aiHistory.pop();
     return null;
