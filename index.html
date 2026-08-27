@@ -69,31 +69,26 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .F.R.I.D.A.Y.-title small{font-size:6px;color:var(--muted);letter-spacing:0.15em;margin-left:6px;font-weight:400}
 
 /* Middle grid */
-.mid{display:grid;grid-template-columns:220px 1fr 280px;gap:0;overflow:visible;position:relative;min-height:0}
+.mid{position:relative;flex:1;overflow:hidden;min-height:0}
 
-/* Left column */
-.left-col{display:flex;flex-direction:column;gap:0;border-right:1px solid var(--dim);overflow-y:auto;overflow-x:visible;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;min-height:0;position:relative}
-.left-col .panel{border-radius:0;border-left:none;border-right:none;border-top:none}
-.left-col .panel:last-child{border-bottom:none}
+/* Center core — always visible */
+.center-col{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1}
+#hud{max-width:100%;max-height:100%;object-fit:contain}
 
-/* Right column */
-.right-col{display:flex;flex-direction:column;gap:0;border-left:1px solid var(--dim);overflow-y:auto;overflow-x:visible;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;min-height:0;position:relative}
-.right-col .panel{border-radius:0;border-left:none;border-right:none}
-.right-col .panel:last-child{border-bottom:none}
-
-/* Center */
-.center-col{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:0}
-.center-col #hud{max-width:100%;max-height:100%;object-fit:contain}
+/* Panel layer — sits above core */
+.panel-layer{position:absolute;inset:0;z-index:10;pointer-events:none;overflow:hidden}
+.panel-layer .panel{pointer-events:auto;position:absolute;display:none;min-width:180px;max-width:320px;max-height:80vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent}
+.panel-layer .panel.open{display:block;animation:panelIn 0.25s ease-out}
+@keyframes panelIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
 
 /* Panels */
-.panel{background:var(--panel);border:1px solid var(--dim);padding:10px 12px;position:relative;transition:border-color 0.3s,opacity 0.2s,transform 0.2s,box-shadow 0.2s}
-.panel:hover{border-color:rgba(0,212,255,0.2)}
-.panel::before,.panel::after{content:'';position:absolute;width:8px;height:8px;border-color:rgba(0,212,255,0.25);opacity:0;transition:opacity 0.3s}
+.panel{background:rgba(0,10,20,0.92);border:1px solid rgba(0,180,220,0.2);padding:10px 12px;position:absolute;transition:border-color 0.3s,opacity 0.2s,box-shadow 0.2s;border-radius:4px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:10;cursor:default}
+.panel:hover{border-color:rgba(0,212,255,0.35);box-shadow:0 0 20px rgba(0,212,255,0.08)}
+.panel::before,.panel::after{content:'';position:absolute;width:8px;height:8px;border-color:rgba(0,212,255,0.3);opacity:0;transition:opacity 0.3s}
 .panel:hover::before,.panel:hover::after{opacity:1}
 .panel::before{top:0;left:0;border-top:1px solid;border-left:1px solid}
 .panel::after{bottom:0;right:0;border-bottom:1px solid;border-right:1px solid}
-.panel.dragging{opacity:0.4;transform:scale(0.97);box-shadow:0 0 20px rgba(0,212,255,0.15)}
-.panel.drag-over{border-color:var(--primary)!important;box-shadow:0 0 12px rgba(0,212,255,0.2)}
+.panel.dragging{opacity:0.6;box-shadow:0 0 30px rgba(0,212,255,0.2);z-index:100!important}
 
 .drag-handle{display:inline-flex;align-items:center;gap:3px;cursor:grab;padding:2px 6px;margin-right:6px;border-radius:2px;transition:background 0.2s;user-select:none;flex-shrink:0;border:1px solid transparent}
 .drag-handle:hover{background:rgba(0,212,255,0.1);border-color:rgba(0,212,255,0.2)}
@@ -105,7 +100,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .drop-indicator{height:2px;background:var(--primary);margin:0 0;border-radius:1px;transition:opacity 0.15s;box-shadow:0 0 6px rgba(0,212,255,0.4);opacity:0}
 .drop-indicator.active{opacity:1}
 
-.pt{font-size:7px;letter-spacing:0.2em;color:rgba(0,96,112,0.8);text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--dim);display:flex;justify-content:space-between;align-items:center;cursor:grab;user-select:none}
+.pt{font-size:7px;letter-spacing:0.2em;color:rgba(0,212,255,0.8);text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid rgba(0,180,220,0.15);display:flex;justify-content:space-between;align-items:center;cursor:grab;user-select:none;background:rgba(0,15,30,0.5);margin:-10px -12px 8px;padding:6px 10px;border-radius:4px 4px 0 0}
 .pt:active{cursor:grabbing}
 .pt .mem-btn{font-size:5px;letter-spacing:0.1em;padding:2px 6px;background:transparent;border:1px solid var(--dim);color:var(--muted);cursor:pointer;border-radius:1px;transition:all 0.2s}
 .pt .mem-btn:hover{border-color:var(--primary);color:var(--primary);box-shadow:0 0 6px rgba(0,212,255,0.2)}
@@ -293,10 +288,6 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .calc-result{font-size:7px;color:var(--green);text-align:right;margin-top:2px}
 
 /* Scatter mode */
-.panel-float{position:fixed!important;z-index:50!important;transition:box-shadow 0.3s;border:1px solid var(--dim)!important;border-radius:3px;background:var(--panel)!important}
-.panel-float:hover{z-index:60!important;border-color:rgba(0,212,255,0.4)!important;box-shadow:0 0 24px rgba(0,212,255,0.2)}
-.panel-float .pt{cursor:grab}
-.panel-float .pt:active{cursor:grabbing}
 .scatter-btn{display:flex;align-items:center;gap:4px;padding:3px 10px;background:transparent;border:1px solid var(--dim);color:var(--muted);font-family:var(--font-hud);font-size:7px;letter-spacing:0.1em;cursor:pointer;border-radius:2px;transition:all 0.2s;white-space:nowrap}
 .scatter-btn:hover{border-color:var(--primary);color:var(--primary);box-shadow:0 0 8px rgba(0,212,255,0.15)}
 .scatter-btn.active{border-color:var(--green);color:var(--green);background:rgba(0,232,128,0.06)}
@@ -347,13 +338,19 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
   .F.R.I.D.A.Y.-title{font-size:7px;left:8px;position:static;text-align:center;padding:3px 0;border-bottom:1px solid var(--dim)}
   .F.R.I.D.A.Y.-title small{display:none}
 
-  /* Mid: stack columns */
-  .mid{display:flex;flex-direction:column;overflow:visible}
-  .left-col,.right-col{border:none!important;overflow-y:visible;max-height:none}
-  .left-col .panel,.right-col .panel{border-radius:0;border-left:none!important;border-right:none!important}
-  .center-col{padding:10px 0;min-height:260px}
+  /* Mid */
+  .mid{position:relative;min-height:60vh}
+  .center-col{position:relative;min-height:260px}
   #hud{max-width:80vw;max-height:50vw}
   .wave-wrap{width:100%;max-width:300px}
+
+  /* Panel layer: stack panels vertically */
+  .panel-layer{position:relative;pointer-events:auto;display:flex;flex-direction:column;gap:8px;padding:8px}
+  .panel-layer .panel{position:relative!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;transform:none!important;width:100%!important;max-width:100%;max-height:none;display:block;animation:panelIn 0.25s ease-out}
+  .panel-layer .panel:not(.open){display:none!important}
+
+  /* Toggle btns on mobile */
+  .scatter-btn{font-size:6px;padding:2px 6px}
 
   /* Panels */
   .panel{padding:8px 10px}
@@ -403,10 +400,16 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 
   /* Gauges */
   #gauges{max-width:100%}
+}
 
-  /* Scatter: disable on mobile */
-  .scatter-btn{display:none}
-  .panel-float{position:relative!important;z-index:auto!important}
+@media(max-width:480px){
+  .clock-time{font-size:16px}
+  .weather-main{gap:6px}
+  .weather-temp{font-size:20px}
+  .stat-grid{grid-template-columns:1fr}
+  .music-btn{width:26px;height:26px;font-size:10px}
+  .music-btn.play{width:30px;height:30px}
+  .news-item{padding:4px 0}
 }
 
 @media(max-width:480px){
@@ -466,9 +469,16 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
       <div class="app-sep"></div>
       <div class="app-item" onclick="openApp('settings')"><div class="app-icon">&#9881;</div><div class="app-label">Settings</div></div>
       <div class="app-sep"></div>
-      <button class="scatter-btn" onclick="promptFishKey()" title="Set Fish Audio API key for F.R.I.D.A.Y. voice">&#128273; KEY</button>
-      <div class="app-sep"></div>
-      <button class="scatter-btn" id="scatter-btn" onclick="toggleScatter()">&#9634; SCATTER</button>
+      <button class="scatter-btn" id="btn-sys" onclick="togglePanel('panel-sys')" title="System Load">&#9881; SYS</button>
+      <button class="scatter-btn" id="btn-weather" onclick="togglePanel('panel-weather')" title="Weather">&#9728; WXR</button>
+      <button class="scatter-btn" id="btn-combat" onclick="togglePanel('panel-combat')" title="Combat Mode">&#9876; CBT</button>
+      <button class="scatter-btn" id="btn-ai" onclick="togglePanel('panel-ai')" title="AI Core">&#129302; AI</button>
+      <button class="scatter-btn" id="btn-news" onclick="togglePanel('panel-news')" title="News Feed">&#128240; NEWS</button>
+      <button class="scatter-btn" id="btn-music" onclick="togglePanel('panel-music')" title="Music Player">&#127925; MUS</button>
+      <button class="scatter-btn" id="btn-notes" onclick="togglePanel('panel-notes')" title="Quick Notes">&#128221; NOTES</button>
+      <button class="scatter-btn" id="btn-quote" onclick="togglePanel('panel-quote')" title="Daily Quote">&#10077; QUOTE</button>
+      <button class="scatter-btn" id="btn-gauges" onclick="togglePanel('panel-gauges')" title="Gauges">&#9883; GAUGE</button>
+      <button class="scatter-btn" onclick="promptFishKey()" title="Set Fish Audio API key">&#128273; KEY</button>
 
       <!-- Clock widget in top bar -->
       <div class="clock-widget">
@@ -492,10 +502,17 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 
     <!-- Middle -->
     <div class="mid">
-      <!-- LEFT column -->
-      <div class="left-col">
+      <!-- CENTER: HUD core — always visible -->
+      <div class="center-col">
+        <canvas id="hud" width="320" height="320"></canvas>
+        <div class="wave-wrap"><canvas id="wave-canvas"></canvas></div>
+      </div>
+
+      <!-- PANEL LAYER: floating panels above core -->
+      <div class="panel-layer" id="panel-layer">
+
         <!-- System load -->
-        <div class="panel" draggable="true">
+        <div class="panel" id="panel-sys" style="left:20px;top:20px;width:200px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>System load</div>
           <div class="sbar-row"><div class="sbar-lbl"><span>CPU</span><span id="cv">42%</span></div><div class="sbar-t"><div class="sbar-f" id="cb" style="width:42%"></div></div></div>
           <div class="sbar-row"><div class="sbar-lbl"><span>Neural</span><span id="nv">78%</span></div><div class="sbar-t"><div class="sbar-f" id="nb" style="width:78%"></div></div></div>
@@ -507,7 +524,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Weather widget -->
-        <div class="panel weather-widget" id="weather-panel" draggable="true">
+        <div class="panel" id="panel-weather" style="left:240px;top:20px;width:200px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Weather <span class="weather-refresh" onclick="fetchWeather()" title="Refresh">&#8635; REFRESH</span></div>
           <div id="weather-content">
             <div class="weather-loading">Initializing weather sensors...</div>
@@ -515,7 +532,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Combat mode -->
-        <div class="panel" draggable="true">
+        <div class="panel" id="panel-combat" style="left:20px;top:320px;width:200px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Combat mode</div>
           <button class="mbtn act" onclick="selMode(this)">Stealth</button>
           <button class="mbtn" onclick="selMode(this)">Combat</button>
@@ -540,18 +557,9 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
             <button class="mbtn" onclick="runQuick('quote')">Motivation</button>
           </div>
         </div>
-      </div>
 
-      <!-- CENTER: HUD + waveform -->
-      <div class="center-col">
-        <canvas id="hud" width="320" height="320"></canvas>
-        <div class="wave-wrap"><canvas id="wave-canvas"></canvas></div>
-      </div>
-
-      <!-- RIGHT column -->
-      <div class="right-col">
         <!-- AI Core -->
-        <div class="panel" draggable="true">
+        <div class="panel" id="panel-ai" style="right:20px;top:20px;width:240px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>AI Core <span class="mem-btn" onclick="toggleMem()">MEMORY</span></div>
           <div id="con">
             <div class="log-line ok new"><span class="lpfx">[SYS]</span>All systems nominal.</div>
@@ -581,7 +589,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- News feed -->
-        <div class="panel" draggable="true">
+        <div class="panel" id="panel-news" style="right:20px;top:340px;width:240px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>News Feed</div>
           <div class="news-tabs">
             <button class="news-tab act" onclick="loadNews('tech',this)">Tech</button>
@@ -595,7 +603,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Music player -->
-        <div class="panel music-player" draggable="true">
+        <div class="panel" id="panel-music" style="right:280px;top:20px;width:200px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Now Playing</div>
           <div class="music-info">
             <div class="music-art" id="music-art">&#127925;</div>
@@ -616,14 +624,14 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Notes -->
-        <div class="panel" draggable="true">
+        <div class="panel" id="panel-notes" style="left:240px;top:320px;width:200px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Quick Notes</div>
           <textarea class="notes-area" id="notes-input" placeholder="Type a note... (Enter to save)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addNote()}"></textarea>
           <div class="notes-list" id="notes-list"></div>
         </div>
 
         <!-- Quote -->
-        <div class="panel" draggable="true">
+        <div class="panel" id="panel-quote" style="left:50%;top:30px;transform:translateX(-50%);width:220px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Daily Quote</div>
           <div class="quote-box" id="quote-text">"The best way to predict the future is to invent it."</div>
           <div class="quote-author" id="quote-author">- Alan Kay</div>
@@ -631,10 +639,11 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Gauges -->
-        <div class="panel" style="flex-shrink:0;padding:6px" draggable="true">
+        <div class="panel" id="panel-gauges" style="left:50%;bottom:40px;transform:translateX(-50%);width:280px;padding:6px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Gauges</div>
           <canvas id="gauges" width="268" height="120"></canvas>
         </div>
+
       </div>
     </div>
 
@@ -724,7 +733,7 @@ function aiProcess(input){
   if(/^(my name is|i'm|call me|i am)\s+(.+)/i.test(lo)){const nn=lo.replace(/^(my name is|i'm|call me|i am)\s+/i,'').trim();setName(nn);const m=`Understood. I will address you as ${nn}.`;addMem('ai',m);return{c:'hi',m}}
   if(/^(hi|hello|hey|greetings|yo|sup|howdy)/i.test(lo)){const r=[nm?`At your service, ${nm}.`:'At your service, sir.','All systems standing by.','Good to see you.'];const m=r[Math.floor(Math.random()*r.length)];addMem('ai',m);return{c:'hi',m}}
   if(/how (are|r) (you|u)/i.test(lo)){const m=['All neural networks at peak efficiency.','Core stable, processes nominal.','Running optimally.'][Math.floor(Math.random()*3)];addMem('ai',m);return{c:'hi',m}}
-  if(/^(help|what can you do|commands)/i.test(lo)){const m='Commands: Status, Diagnostics, Who am I, My name, Mode, Weather [city], News [category], Time, Joke, Quote, Note [text], Calc [expr], Scan, Power, Threat, Recall, Clear memory, Forget me';addMem('ai',m);return{c:'hi',m}}
+  if(/^(help|what can you do|commands)/i.test(lo)){const m='Commands: Status, Diagnostics, Who am I, My name, Mode, Weather [city], News [category], Time, Joke, Quote, Note [text], Calc [expr], Scan, Power, Threat, Recall, Clear memory, Forget me, Show/Hide [panel], Show/Hide all panels';addMem('ai',m);return{c:'hi',m}}
   if(/^(status|diagnostics|health|syscheck)/i.test(lo)){const cpu=document.getElementById('cv').textContent;const m=`Diagnostics: CPU ${cpu}, Reactor OPTIMAL, AES-256, All systems NOMINAL`;addMem('ai',m);return{c:'ok',m}}
   if(/^(who am i|what('s| is) my name)/i.test(lo)){const n=getName();const m=n?`You are ${n}.`:'No name on file. Use "My name is [name]".';addMem('ai',m);return{c:'hi',m}}
   if(/^(forget me|erase my name)/i.test(lo)){localStorage.removeItem(UK);const m='Name cleared.';addMem('ai',m);return{c:'wn',m}}
@@ -789,6 +798,19 @@ function aiProcess(input){
   if(/^(recall|history|what did)/i.test(lo)){const r=getCtx(5);if(r.length<2){const m='No history.';addMem('ai',m);return{c:'hi',m}}const m=r.map(e=>`${e.role==='user'?'You':'I'}: ${e.text}`).join(' | ');addMem('ai',m);return{c:'hi',m}}
   if(/^(thanks|thank you|thx)/i.test(lo)){const m='Happy to help.';addMem('ai',m);return{c:'hi',m}}
   if(/^(bye|goodbye|later|exit)/i.test(lo)){const m='Systems on standby.';addMem('ai',m);return{c:'ok',m}}
+
+  // Panel toggle commands
+  if(/^(show|open|display|toggle|hide|close)\s+(system|sys|load)/i.test(lo)){togglePanel('panel-sys');const m=/^(show|open|display|toggle)/i.test(lo)?'System panel opened.':'System panel closed.';addMem('ai',m);return{c:'ok',m}}
+  if(/^(show|open|display|toggle|hide|close)\s+(weather|wxr|forecast)/i.test(lo)){togglePanel('panel-weather');const m=/^(show|open|display|toggle)/i.test(lo)?'Weather panel opened.':'Weather panel closed.';addMem('ai',m);return{c:'ok',m}}
+  if(/^(show|open|display|toggle|hide|close)\s+(combat|cbt|mode)/i.test(lo)){togglePanel('panel-combat');const m=/^(show|open|display|toggle)/i.test(lo)?'Combat panel opened.':'Combat panel closed.';addMem('ai',m);return{c:'ok',m}}
+  if(/^(show|open|display|toggle|hide|close)\s+(ai|core|assistant)/i.test(lo)){togglePanel('panel-ai');const m=/^(show|open|display|toggle)/i.test(lo)?'AI Core panel opened.':'AI Core panel closed.';addMem('ai',m);return{c:'ok',m}}
+  if(/^(show|open|display|toggle|hide|close)\s+(news|headlines|feed)/i.test(lo)){togglePanel('panel-news');const m=/^(show|open|display|toggle)/i.test(lo)?'News panel opened.':'News panel closed.';addMem('ai',m);return{c:'ok',m}}
+  if(/^(show|open|display|toggle|hide|close)\s+(music|mus|player|song)/i.test(lo)){togglePanel('panel-music');const m=/^(show|open|display|toggle)/i.test(lo)?'Music panel opened.':'Music panel closed.';addMem('ai',m);return{c:'ok',m}}
+  if(/^(show|open|display|toggle|hide|close)\s+(notes|note)/i.test(lo)){togglePanel('panel-notes');const m=/^(show|open|display|toggle)/i.test(lo)?'Notes panel opened.':'Notes panel closed.';addMem('ai',m);return{c:'ok',m}}
+  if(/^(show|open|display|toggle|hide|close)\s+(quote|motivation)/i.test(lo)){togglePanel('panel-quote');const m=/^(show|open|display|toggle)/i.test(lo)?'Quote panel opened.':'Quote panel closed.';addMem('ai',m);return{c:'ok',m}}
+  if(/^(show|open|display|toggle|hide|close)\s+(gauges|gauge|dials)/i.test(lo)){togglePanel('panel-gauges');const m=/^(show|open|display|toggle)/i.test(lo)?'Gauges panel opened.':'Gauges panel closed.';addMem('ai',m);return{c:'ok',m}}
+  if(/^(show|open|display)\s+all\s+panels?/i.test(lo)){document.querySelectorAll('.panel-layer .panel').forEach(p=>{p.classList.add('open');p.style.display='block'});updateToggleBtns();const m='All panels opened.';addMem('ai',m);return{c:'ok',m}}
+  if(/^(hide|close)\s+all\s+panels?/i.test(lo)){document.querySelectorAll('.panel-layer .panel').forEach(p=>{p.classList.remove('open');p.style.display='none'});updateToggleBtns();const m='All panels closed.';addMem('ai',m);return{c:'ok',m}}
 
   const defs=[`Processing: "${input}"`,`Acknowledged, ${nm||'sir'}.`,'Directive recorded.','Input analyzed.','Roger that.'];const m=defs[Math.floor(Math.random()*defs.length)];addMem('ai',m);return{c:'hi',m};
 }
@@ -1196,64 +1218,130 @@ function runQuick(action){
   doCmd();
 }
 
-// === SCATTER MODE ===
-let scattered=false;
-function toggleScatter(){
-  scattered=!scattered;
-  const mid=document.querySelector('.mid');
-  const btn=document.getElementById('scatter-btn');
-  const leftCol=mid.querySelector('.left-col');
-  const rightCol=mid.querySelector('.right-col');
-  const centerCol=mid.querySelector('.center-col');
-  if(scattered){
-    btn.classList.add('active');
-    btn.innerHTML='&#9634; ASSEMBLE';
-    // Get all panels from both columns
-    const leftPanels=[...leftCol.querySelectorAll('.panel')];
-    const rightPanels=[...rightCol.querySelectorAll('.panel')];
-    const allPanels=[...leftPanels,...rightPanels];
-    // Save backup info
-    allPanels.forEach((p,i)=>{
-      p.dataset.origParent=p.parentNode===leftCol?'left':'right';
-      p.dataset.origIndex=[...p.parentNode.children].filter(c=>c.classList.contains('panel')).indexOf(p);
-    });
-    // Hide columns
-    leftCol.style.display='none';
-    rightCol.style.display='none';
-    centerCol.style.display='none';
-    // Position panels scattered across screen
-    const w=window.innerWidth,h=window.innerHeight;
-    const positions=[
-      {x:30,y:55,w:230},{x:w/3-90,y:55,w:230},{x:w*2/3-50,y:55,w:230},
-      {x:30,y:h/3+10,w:230},{x:w/3-90,y:h/3+10,w:230},{x:w*2/3-50,y:h/3+10,w:230},
-      {x:30,y:h*2/3-10,w:230},{x:w/3-90,y:h*2/3-10,w:230},{x:w*2/3-50,y:h*2/3-10,w:230}
-    ];
-    allPanels.forEach((p,i)=>{
-      const pos=positions[i]||{x:100+i*30,y:100+i*30,w:220};
-      mid.appendChild(p);
-      p.style.cssText='position:fixed!important;left:'+pos.x+'px;top:'+pos.y+'px;width:'+pos.w+'px;max-height:'+(h-150)+'px;overflow-y:auto;z-index:'+(50+i)+'!important;';
-      p.classList.add('panel-float');
-    });
-    addLog('hi','[SYS]','Scatter mode: Panels free to position.');
+// === PANEL TOGGLE ===
+function togglePanel(id){
+  const p=document.getElementById(id);
+  if(!p)return;
+  const isOpen=p.classList.contains('open');
+  if(isOpen){
+    p.classList.remove('open');
+    p.style.display='none';
   }else{
-    btn.classList.remove('active');
-    btn.innerHTML='&#9634; SCATTER';
-    // Restore panels to original columns
-    const allFloat=[...mid.querySelectorAll('.panel-float')];
-    allFloat.forEach(p=>{
-      const origCol=p.dataset.origParent==='left'?leftCol:rightCol;
-      p.style.cssText='';
-      p.classList.remove('panel-float');
-      delete p.dataset.origParent;
-      delete p.dataset.origIndex;
-      origCol.appendChild(p);
-    });
-    leftCol.style.display='';
-    rightCol.style.display='';
-    centerCol.style.display='';
-    addLog('hi','[SYS]','Assemble mode: Panels restored.');
+    p.classList.add('open');
+    p.style.display='block';
+    // Bring to front
+    bringToFront(p);
+  }
+  updateToggleBtns();
+}
+
+function bringToFront(p){
+  const panels=document.querySelectorAll('.panel-layer .panel.open');
+  let maxZ=10;
+  panels.forEach(el=>{const z=parseInt(el.style.zIndex)||10;if(z>maxZ)maxZ=z});
+  p.style.zIndex=maxZ+1;
+}
+
+function updateToggleBtns(){
+  const map={'panel-sys':'btn-sys','panel-weather':'btn-weather','panel-combat':'btn-combat','panel-ai':'btn-ai','panel-news':'btn-news','panel-music':'btn-music','panel-notes':'btn-notes','panel-quote':'btn-quote','panel-gauges':'btn-gauges'};
+  for(const[pid,bid]of Object.entries(map)){
+    const p=document.getElementById(pid);
+    const b=document.getElementById(bid);
+    if(p&&b){
+      if(p.classList.contains('open'))b.classList.add('active');
+      else b.classList.remove('active');
+    }
   }
 }
+
+// === FREE DRAG PANELS ===
+(function(){
+  let dragPanel=null,ghost=null,ox=0,oy=0;
+
+  document.addEventListener('mousedown',function(e){
+    if(e.target.closest('button,input,textarea,a,.mem-btn,.news-tab,.music-btn,.weather-refresh,.note-del,.quote-btn,.forecast-day'))return;
+    const pt=e.target.closest('.pt');
+    if(!pt)return;
+    const p=pt.closest('.panel');
+    if(!p)return;
+    e.preventDefault();e.stopPropagation();
+
+    const rect=p.getBoundingClientRect();
+    ox=e.clientX-rect.left;oy=e.clientY-rect.top;
+
+    // Create ghost
+    ghost=p.cloneNode(true);
+    ghost.style.cssText='position:fixed!important;z-index:99999!important;pointer-events:none!important;opacity:0.88!important;width:'+rect.width+'px;box-shadow:0 0 40px rgba(0,212,255,0.3),0 12px 32px rgba(0,0,0,0.5)!important;border:1px solid rgba(0,212,255,0.5)!important;border-radius:4px!important;transform:scale(1.02)!important;background:rgba(0,10,20,0.95)!important;left:'+(e.clientX-ox)+'px;top:'+(e.clientY-oy)+'px;';
+    document.body.appendChild(ghost);
+
+    dragPanel=p;
+    p.classList.add('dragging');
+    bringToFront(p);
+
+    function onMove(ev){
+      if(!dragPanel)return;
+      ev.preventDefault();
+      ghost.style.left=(ev.clientX-ox)+'px';
+      ghost.style.top=(ev.clientY-oy)+'px';
+    }
+
+    function onUp(ev){
+      document.removeEventListener('mousemove',onMove);
+      document.removeEventListener('mouseup',onUp);
+      if(!dragPanel)return;
+      dragPanel.classList.remove('dragging');
+      // Move panel to new position
+      dragPanel.style.left=(ev.clientX-ox)+'px';
+      dragPanel.style.top=(ev.clientY-oy)+'px';
+      dragPanel.style.right='auto';
+      dragPanel.style.bottom='auto';
+      dragPanel.style.transform='none';
+      if(ghost&&ghost.parentNode)ghost.remove();
+      dragPanel=null;ghost=null;
+    }
+
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('mouseup',onUp);
+  });
+
+  // Touch support
+  document.addEventListener('touchstart',function(e){
+    if(e.target.closest('button,input,textarea,a,.mem-btn,.news-tab,.music-btn,.weather-refresh,.note-del,.quote-btn,.forecast-day'))return;
+    const pt=e.target.closest('.pt');
+    if(!pt)return;
+    const p=pt.closest('.panel');
+    if(!p)return;
+
+    const touch=e.touches[0];
+    const rect=p.getBoundingClientRect();
+    ox=touch.clientX-rect.left;oy=touch.clientY-rect.top;
+
+    dragPanel=p;
+    p.classList.add('dragging');
+    bringToFront(p);
+
+    function onMove(ev){
+      if(!dragPanel)return;
+      const t=ev.touches[0];
+      dragPanel.style.left=(t.clientX-ox)+'px';
+      dragPanel.style.top=(t.clientY-oy)+'px';
+      dragPanel.style.right='auto';
+      dragPanel.style.bottom='auto';
+      dragPanel.style.transform='none';
+    }
+
+    function onEnd(){
+      document.removeEventListener('touchmove',onMove);
+      document.removeEventListener('touchend',onEnd);
+      if(!dragPanel)return;
+      dragPanel.classList.remove('dragging');
+      dragPanel=null;
+    }
+
+    document.addEventListener('touchmove',onMove,{passive:false});
+    document.addEventListener('touchend',onEnd);
+  },{passive:false});
+})();
 
 // === F.R.I.D.A.Y. VOICE AI ===
 let voiceEnabled=false,recognition=null;
@@ -1517,72 +1605,7 @@ function startRecognition(){
 }
 
 // === DRAG AND DROP PANELS ===
-(function(){
-  const L=document.querySelector('.left-col');
-  const R=document.querySelector('.right-col');
-  const mid=document.querySelector('.mid');
-  let dragPanel=null,ghost=null,ph=null,ox=0,oy=0,isScatterDrag=false;
-  const PID='_ph_';
-  function mkPh(){let p=document.getElementById(PID);if(!p){p=document.createElement('div');p.id=PID}p.style.cssText='height:3px;background:#00d4ff;border-radius:1px;box-shadow:0 0 8px rgba(0,212,255,0.5);flex-shrink:0;margin:0;padding:0;';return p}
-  ph=mkPh();
-  function col(y,x){const lr=L.getBoundingClientRect(),rr=R.getBoundingClientRect();if(x>=lr.left&&x<=lr.right&&y>=lr.top-50&&y<=lr.bottom+50)return L;if(x>=rr.left&&x<=rr.right&&y>=rr.top-50&&y<=rr.bottom+50)return R;return null}
-  function place(c,y){const ps=[...c.querySelectorAll('.panel:not(.dragging):not(.panel-float)')];if(ph.parentNode)ph.remove();for(const p of ps){const r=p.getBoundingClientRect();if(y<r.top+r.height/2){c.insertBefore(ph,p);return}}c.appendChild(ph)}
-
-  document.addEventListener('mousedown',function(e){
-    if(e.target.closest('button,input,textarea,a,.mem-btn,.news-tab,.music-btn,.weather-refresh,.note-del,.quote-btn,.forecast-day'))return;
-    const pt=e.target.closest('.pt');
-    if(!pt)return;
-    const p=pt.closest('.panel');
-    if(!p)return;
-    e.preventDefault();e.stopPropagation();
-
-    const rect=p.getBoundingClientRect();
-    ox=e.clientX-rect.left;oy=e.clientY-rect.top;
-    isScatterDrag=scattered;
-
-    // Create ghost
-    ghost=p.cloneNode(true);
-    ghost.style.cssText='position:fixed!important;z-index:99999!important;pointer-events:none!important;opacity:0.92!important;width:'+rect.width+'px;box-shadow:0 0 40px rgba(0,212,255,0.3),0 12px 32px rgba(0,0,0,0.5)!important;border:1px solid rgba(0,212,255,0.5)!important;border-radius:3px!important;transform:scale(1.02)!important;background:rgba(4,12,20,0.95)!important;left:'+(e.clientX-ox)+'px;top:'+(e.clientY-oy)+'px;';
-    document.body.appendChild(ghost);
-
-    dragPanel=p;
-    p.classList.add('dragging');
-    if(!isScatterDrag) p.style.opacity='0.25';
-
-    function onMove(ev){
-      if(!dragPanel)return;
-      ev.preventDefault();
-      ghost.style.left=(ev.clientX-ox)+'px';
-      ghost.style.top=(ev.clientY-oy)+'px';
-      if(isScatterDrag){
-        dragPanel.style.left=(ev.clientX-ox)+'px';
-        dragPanel.style.top=(ev.clientY-oy)+'px';
-      }else{
-        const c=col(ev.clientY,ev.clientX);
-        if(c)place(c,ev.clientY);else if(ph.parentNode)ph.remove();
-      }
-    }
-
-    function onUp(ev){
-      document.removeEventListener('mousemove',onMove);
-      document.removeEventListener('mouseup',onUp);
-      if(!dragPanel)return;
-      if(!isScatterDrag&&ph.parentNode){ph.parentNode.insertBefore(dragPanel,ph);ph.remove()}
-      dragPanel.classList.remove('dragging');
-      if(isScatterDrag){
-        dragPanel.style.left=(ev.clientX-ox)+'px';
-        dragPanel.style.top=(ev.clientY-oy)+'px';
-      }else{
-        dragPanel.style.opacity='';
-      }
-      if(ghost&&ghost.parentNode)ghost.remove();
-      dragPanel=null;ghost=null;isScatterDrag=false;
-    }
-
-    document.addEventListener('mousemove',onMove);
-    document.addEventListener('mouseup',onUp);
-  });
-})();
+// (Moved to free drag section above)
 
 // === INIT ===
 setTimeout(()=>{fetchWeather();loadNews('tech');renderNotes()},1000);
