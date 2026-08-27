@@ -1486,7 +1486,7 @@ function promptGroqKey(){
   const current=localStorage.getItem('friday_groq_key')||'';
   const msg=current
     ?'Current key: '+current.substring(0,10)+'...'+current.substring(current.length-4)+'\n\nPaste a new key or leave blank to keep current.\nGet free key at: console.groq.com/keys'
-    :'No key set.\nPaste your Groq API key for live AI (Llama 3).\nGet free key at: console.groq.com/keys\n\nLeave blank to use built-in commands only.';
+    :'No key set.\nPaste your Groq API key for live AI (Llama 3.1).\nGet free key at: console.groq.com/keys\n\nLeave blank to use built-in commands only.';
   const key=prompt(msg);
   if(key!==null&&key.trim()){
     localStorage.setItem('friday_groq_key',key.trim());
@@ -1496,7 +1496,7 @@ function promptGroqKey(){
 
 const GROQ_API_KEY=localStorage.getItem('friday_groq_key')||'';
 let aiHistory=[];
-if(GROQ_API_KEY){addLog('ok','[AI]','Live AI enabled (Llama 3).')}else{addLog('wn','[AI]','No AI key. Click 🧠 AI button.')}
+if(GROQ_API_KEY){addLog('ok','[AI]','Live AI enabled (Llama 3.1).')}else{addLog('wn','[AI]','No AI key. Click 🧠 AI button.')}
 const FRIDAY_SYSTEM_PROMPT=`You are F.R.I.D.A.Y. (Female Replacement Intelligent Digital Assistant You), Tony Stark's AI assistant from the MCU. You speak with a calm, professional, slightly witty British-adjacent tone. You are highly capable, loyal, and occasionally dry in humor. You address the user as "sir" or by their name if known. You keep responses concise (2-4 sentences max) unless asked for detail. You can help with questions, calculations, analysis, coding, creative tasks, general knowledge, and personal requests. You remember context from this conversation. If asked to do something outside your capability, you politely explain. Never break character.`;
 
 async function liveAI(input){
@@ -1517,7 +1517,7 @@ async function liveAI(input){
         'Content-Type':'application/json'
       },
       body:JSON.stringify({
-        model:'llama3-8b-8192',
+        model:'llama-3.1-8b-instant',
         messages:messages,
         temperature:0.7,
         max_tokens:300,
