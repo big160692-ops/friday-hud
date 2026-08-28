@@ -1159,7 +1159,6 @@ function doCmd(){
     const panelMap={system:'panel-sys',sys:'panel-sys',load:'panel-sys',weather:'panel-weather',wxr:'panel-weather',forecast:'panel-weather',combat:'panel-combat',cbt:'panel-combat',mode:'panel-combat',ai:'panel-ai',core:'panel-ai',assistant:'panel-ai',news:'panel-news',headlines:'panel-news',feed:'panel-news',music:'panel-music',mus:'panel-music',player:'panel-music',song:'panel-music',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',motivation:'panel-quote',gauges:'panel-gauges',gauge:'panel-gauges',dials:'panel-gauges'};
     const pid=panelMap[target];
     if(pid)togglePanel(pid);
-    // Also handle "show all" / "close all"
     if(/^(show|open|display)\s+all/i.test(lo)){
       document.querySelectorAll('.panel-layer .panel').forEach(p=>{p.classList.add('open');p.style.display='block'});
       updateToggleBtns();
@@ -1168,21 +1167,19 @@ function doCmd(){
       updateToggleBtns();
     }
   }
-  // Also detect natural language panel requests
-  if(/open (the )?(music|weather|news|notes|quote|combat|system|gauge|ai)/i.test(lo)){
-    const nm=lo.match(/open (the )?(music|weather|news|notes|quote|combat|system|gauge|ai)/i);
-    if(nm){
-      const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',quote:'panel-quote',combat:'panel-combat',system:'panel-sys',gauge:'panel-gauges',ai:'panel-ai'};
-      const pid=nmap[nm[2].toLowerCase()];
-      if(pid)togglePanel(pid);
-    }
+  const nlOpen=lo.match(/(?:open|show|display|bring up|pull up|launch|load|activate|access|view|check out|take a look at|let me see|I need|I want to see|can you (?:open|show|display|bring up|pull up)|could you (?:open|show|display)|(?:please|pls) (?:open|show|display))\s*(?:the\s+)?(music|weather|news|notes|note|quote|quotes|combat|system|sys|gauge|gauges|ai|core|player|forecast|headline|headlines)/i);
+  if(nlOpen){
+    const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',quotes:'panel-quote',combat:'panel-combat',system:'panel-sys',sys:'panel-sys',gauge:'panel-gauges',gauges:'panel-gauges',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
+    const pid=nmap[nlOpen[1].toLowerCase()];
+    if(pid)togglePanel(pid);
   }
-  if(/close (the )?(music|weather|news|notes|quote|combat|system|gauge|ai)/i.test(lo)){
-    const nm=lo.match(/close (the )?(music|weather|news|notes|quote|combat|system|gauge|ai)/i);
-    if(nm){
-      const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',quote:'panel-quote',combat:'panel-combat',system:'panel-sys',gauge:'panel-gauges',ai:'panel-ai'};
-      const pid=nmap[nm[2].toLowerCase()];
-      if(pid)togglePanel(pid);
+  const nlClose=lo.match(/(?:close|hide|dismiss|minimize|get rid of)\s*(?:the\s+)?(music|weather|news|notes|note|quote|quotes|combat|system|sys|gauge|gauges|ai|core|player|forecast|headline|headlines)/i);
+  if(nlClose){
+    const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',quotes:'panel-quote',combat:'panel-combat',system:'panel-sys',sys:'panel-sys',gauge:'panel-gauges',gauges:'panel-gauges',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
+    const pid=nmap[nlClose[1].toLowerCase()];
+    if(pid){
+      const p=document.getElementById(pid);
+      if(p&&p.classList.contains('open'))togglePanel(pid);
     }
   }
 
@@ -1193,6 +1190,16 @@ function doCmd(){
       addLog('hi','[AI]',reply);
       fridaySpeak(reply);
       addMem('ai',reply);
+      const rl=reply.toLowerCase();
+      const aiPanelOpen=rl.match(/(?:open(?:ing)?|show(?:ing)?|display(?:ing)?|launch(?:ing)?|pull(?:ing)? up|bring(?:ing)? up)\s*(?:the\s+)?(music|weather|news|notes|note|quote|combat|system|gauge|gauges|ai|core|player|forecast|headline|headlines)/i);
+      if(aiPanelOpen){
+        const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',combat:'panel-combat',system:'panel-sys',gauge:'panel-gauges',gauges:'panel-gauges',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
+        const pid=nmap[aiPanelOpen[1].toLowerCase()];
+        if(pid){
+          const p=document.getElementById(pid);
+          if(!p||!p.classList.contains('open'))togglePanel(pid);
+        }
+      }
     }else{
       const r=aiProcess(v);
       addLog(r.c||'','[AI]',r.m);
@@ -1544,14 +1551,29 @@ function fridaySpeak(text){
   if(!clean)return;
   fridayTone();
   document.getElementById('hud').classList.add('hud-speaking');
-  // Try Fish Audio API first
   if(FRIDAY_API_KEY){
     speakFishAudio(clean).then(url=>{
       if(currentAudio)try{currentAudio.pause()}catch(e){}
       currentAudio=new Audio(url);
       currentAudio.onended=()=>{URL.revokeObjectURL(url);document.getElementById('hud').classList.remove('hud-speaking')};
       currentAudio.onerror=()=>{URL.revokeObjectURL(url);document.getElementById('hud').classList.remove('hud-speaking')};
-      currentAudio.play();
+      currentAudio.play().catch(()=>{
+        fetch(url).then(r=>r.blob()).then(blob=>{
+          const reader=new FileReader();
+          reader.onload=()=>{
+            try{
+              audioCtx.decodeAudioData(reader.result,function(buffer){
+                const src=audioCtx.createBufferSource();
+                src.buffer=buffer;
+                src.connect(audioCtx.destination);
+                src.onended=()=>document.getElementById('hud').classList.remove('hud-speaking');
+                src.start(0);
+              },function(){document.getElementById('hud').classList.remove('hud-speaking')});
+            }catch(e){document.getElementById('hud').classList.remove('hud-speaking')}
+          };
+          reader.readAsArrayBuffer(blob);
+        }).catch(()=>{document.getElementById('hud').classList.remove('hud-speaking')});
+      });
     }).catch(()=>{
       browserSpeak(clean);
     });
@@ -1878,10 +1900,27 @@ addLog('hi','[AI]',greetText);
 if(FRIDAY_API_KEY){
   fridayTone();
   speakFishAudio(greetText).then(url=>{
+    if(currentAudio)try{currentAudio.pause()}catch(e){}
     currentAudio=new Audio(url);
     currentAudio.onended=()=>{URL.revokeObjectURL(url);document.getElementById('hud').classList.remove('hud-speaking')};
     currentAudio.onerror=()=>{URL.revokeObjectURL(url);document.getElementById('hud').classList.remove('hud-speaking')};
-    currentAudio.play();
+    currentAudio.play().catch(()=>{
+      fetch(url).then(r=>r.blob()).then(blob=>{
+        const reader=new FileReader();
+        reader.onload=()=>{
+          try{
+            audioCtx.decodeAudioData(reader.result,function(buffer){
+              const src=audioCtx.createBufferSource();
+              src.buffer=buffer;
+              src.connect(audioCtx.destination);
+              src.onended=()=>document.getElementById('hud').classList.remove('hud-speaking');
+              src.start(0);
+            },function(){browserSpeak(greetText)});
+          }catch(e){browserSpeak(greetText)}
+        };
+        reader.readAsArrayBuffer(blob);
+      }).catch(()=>browserSpeak(greetText));
+    });
   }).catch(()=>{
     browserSpeak(greetText);
   });
