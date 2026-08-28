@@ -1525,13 +1525,12 @@ async function speakFishAudio(text){
     headers:{
       'Authorization':'Bearer '+FRIDAY_API_KEY,
       'Content-Type':'application/json',
-      'model':'s2.1-pro-free'
+      'model':'s2.1-pro'
     },
     body:JSON.stringify({
       text:text,
       reference_id:FRIDAY_VOICE_ID,
-      format:'mp3',
-      prosody:{speed:1.0,volume:0,normalize_loudness:true}
+      format:'mp3'
     })
   });
   if(!resp.ok)throw new Error('HTTP '+resp.status);
@@ -1877,22 +1876,14 @@ function playViaHtmlAudio(blob){
 // Fetch and play immediately
 addLog('hi','[AI]',greetText);
 if(FRIDAY_API_KEY){
-  speakFishAudio(greetText).then(blob=>{
-    // Convert blob URL response to actual blob
-    return blob;
-  }).catch(()=>null);
-  // Direct fetch for Web Audio playback
-  const body=JSON.stringify({text:greetText,reference_id:FRIDAY_VOICE_ID,format:'mp3',prosody:{speed:1.0,volume:0,normalize_loudness:true}});
-  fetch('https://api.fish.audio/v1/tts',{
-    method:'POST',
-    headers:{'Authorization':'Bearer '+FRIDAY_API_KEY,'Content-Type':'application/json','model':'s2.1-pro-free'},
-    body:body
-  }).then(r=>r.blob()).then(blob=>{
-    fridayTone();
-    setTimeout(()=>playViaWebAudio(blob),350);
+  fridayTone();
+  speakFishAudio(greetText).then(url=>{
+    currentAudio=new Audio(url);
+    currentAudio.onended=()=>{URL.revokeObjectURL(url);document.getElementById('hud').classList.remove('hud-speaking')};
+    currentAudio.onerror=()=>{URL.revokeObjectURL(url);document.getElementById('hud').classList.remove('hud-speaking')};
+    currentAudio.play();
   }).catch(()=>{
-    fridayTone();
-    setTimeout(()=>browserSpeak(greetText),350);
+    browserSpeak(greetText);
   });
 }else{
   fridayTone();
