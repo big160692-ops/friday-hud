@@ -1724,7 +1724,8 @@ async function testGroq(){
 if(!localStorage.getItem('friday_fish_key'))localStorage.setItem('friday_fish_key',atob('c2stZmlzaC0wX2pmMWNHdXJpcW5xZERiSlQ2anVkdkJNUmxYT3JKaTl1MWEzalJtbGlV'));
 if(!localStorage.getItem('friday_groq_key'))localStorage.setItem('friday_groq_key',atob('c2stb3ItdjEtMzcxYjhkZmM1MzcwZmYwMTZiMjA0OWNhYWJmMGE3MzE1YjJiODc5MDJhNmRlNzZlNGI4MGY4NjY0MDE1ZWFkNA=='));
 const GROQ_API_KEY=localStorage.getItem('friday_groq_key')||'';
-let aiHistory=[];
+let aiHistory=JSON.parse(localStorage.getItem('friday_ai_history')||'[]');
+function saveAIHistory(){localStorage.setItem('friday_ai_history',JSON.stringify(aiHistory.slice(-30)))}
 if(GROQ_API_KEY){addLog('ok','[AI]','Live AI enabled (OpenRouter).');}else{addLog('wn','[AI]','No AI key.')}
 
 function buildLiveContext(){
@@ -1779,20 +1780,24 @@ async function liveAI(input){
   if(!GROQ_API_KEY)return null;
   aiHistory.push({role:'user',content:input});
   if(aiHistory.length>20)aiHistory=aiHistory.slice(-20);
+  saveAIHistory();
+
+  // Build memory context from localStorage (persistent across sessions)
+  const fullMem=loadMem().slice(-30);
+  const memContext=fullMem.map(e=>`${e.role==='user'?'User':'F.R.I.D.A.Y.'}: ${e.text}`).join('\n');
 
   const messages=[
-    {role:'system',content:FRIDAY_SYSTEM_PROMPT+'\nUser name: '+(getName()||'sir')},
+    {role:'system',content:FRIDAY_SYSTEM_PROMPT+'\nUser name: '+(getName()||'sir')+'\n\nPERSISTENT MEMORY (past conversations):\n'+memContext},
     ...aiHistory
   ];
 
-  // Inject live HUD context into the last user message instead of adding duplicate
+  // Inject live HUD context into the last user message
   const liveContext=buildLiveContext();
   if(liveContext&&messages.length>1){
     const lastUserIdx=messages.length-1;
     messages[lastUserIdx]={role:'user',content:messages[lastUserIdx].content+'\n\n[LIVE HUD DATA]\n'+liveContext};
   }
 
-  // Free chat models on OpenRouter (confirmed working - MiniMax M3 returns clean content)
   const models=['minimax/minimax-m3:free','nvidia/nemotron-3.5-lightning:free','openrouter/free'];
 
   for(const model of models){
@@ -1814,6 +1819,7 @@ async function liveAI(input){
       const reply=data.choices?.[0]?.message?.content||null;
       if(reply){
         aiHistory.push({role:'assistant',content:reply});
+        saveAIHistory();
         return reply;
       }
     }catch(e){continue}
@@ -1821,6 +1827,7 @@ async function liveAI(input){
 
   addLog('wn','[AI]','All models failed.');
   aiHistory.pop();
+  saveAIHistory();
   return null;
 }
 
