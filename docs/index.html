@@ -949,7 +949,6 @@ function initAudio(){
     document.getElementById('btn-play').innerHTML='&#9654;';
   });
 }
-initAudio();
 
 // Auto-load from music/ folder
 async function loadMusicFolder(){
@@ -1005,16 +1004,20 @@ function handleMusicFiles(files){
 function formatTime(s){const m=Math.floor(s/60);const sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec}
 
 function togglePlay(){
-  if(!TRACKS.length||!audioEl)return;
-  if(isPlaying)audioEl.pause();
-  else{audioEl.src=localFiles[TRACKS[curTrack].vid];audioEl.play().catch(()=>{})}
+  if(!TRACKS.length)return;
+  if(!audioEl)initAudio();
+  if(isPlaying){audioEl.pause();return}
+  audioEl.src=localFiles[TRACKS[curTrack].vid];
+  audioEl.load();
+  audioEl.play().catch(e=>{addLog('err','[MUS]','Play blocked: '+e.message)});
 }
 
 function playTrack(idx){
   curTrack=idx;
   if(!audioEl)initAudio();
   audioEl.src=localFiles[TRACKS[idx].vid];
-  audioEl.play().catch(()=>{});
+  audioEl.load();
+  audioEl.play().catch(e=>{addLog('err','[MUS]','Play blocked: '+e.message)});
   isPlaying=true;
   updateMusicMeta();
 }
