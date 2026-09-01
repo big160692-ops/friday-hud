@@ -1120,7 +1120,7 @@ async function spotifyLogin(){
 
 function spotifyLogout(){
   spotifyToken='';spotifyUser=null;spotifyPlaylists=[];TRACKS=[];currentPlaylistId='';
-  localStorage.removeItem('spotify_token');localStorage.removeItem('spotify_expiry');
+  localStorage.removeItem('spotify_token');localStorage.removeItem('spotify_expiry');localStorage.removeItem('spotify_pkce_done');
   updateSpotifyUI();addLog('wn','[MUS]','Logged out of Spotify.');
 }
 
@@ -1142,6 +1142,7 @@ async function exchangeCodeForToken(code){
   spotifyExpiry=Date.now()+(data.expires_in||3600)*1000;
   localStorage.setItem('spotify_token',spotifyToken);
   localStorage.setItem('spotify_expiry',spotifyExpiry.toString());
+  localStorage.setItem('spotify_pkce_done','1');
   localStorage.removeItem('spotify_pkce_verifier');
   addLog('ok','[MUS]','Spotify authenticated!');
   loadSpotifyProfile();
@@ -1255,6 +1256,11 @@ function updateSpotifyUI(){
 }
 
 handleSpotifyCallback();
+// Clear old tokens that aren't from PKCE flow
+if(spotifyToken&&!localStorage.getItem('spotify_pkce_done')){
+  spotifyToken='';spotifyExpiry=0;
+  localStorage.removeItem('spotify_token');localStorage.removeItem('spotify_expiry');
+}
 if(spotifyToken)loadSpotifyProfile();else updateSpotifyUI();
 renderSavedPlaylists();
 
