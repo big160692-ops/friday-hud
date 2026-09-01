@@ -1582,6 +1582,27 @@ function updateToggleBtns(){
 (function(){
   let dragPanel=null,ghost=null,ox=0,oy=0;
 
+  function getPanelLeft(p){
+    const s=p.style;
+    if(s.left&&s.left!=='auto')return parseInt(s.left);
+    if(s.right&&s.right!=='auto'){
+      const pw=parseInt(getComputedStyle(p).width)||p.offsetWidth;
+      const pw2=p.parentElement?p.parentElement.offsetWidth:window.innerWidth;
+      return pw2-parseInt(s.right)-pw;
+    }
+    return p.getBoundingClientRect().left-(p.parentElement?p.parentElement.getBoundingClientRect().left:0);
+  }
+  function getPanelTop(p){
+    const s=p.style;
+    if(s.top&&s.top!=='auto')return parseInt(s.top);
+    if(s.bottom&&s.bottom!=='auto'){
+      const ph=parseInt(getComputedStyle(p).height)||p.offsetHeight;
+      const ph2=p.parentElement?p.parentElement.offsetHeight:window.innerHeight;
+      return ph2-parseInt(s.bottom)-ph;
+    }
+    return p.getBoundingClientRect().top-(p.parentElement?p.parentElement.getBoundingClientRect().top:0);
+  }
+
   document.addEventListener('mousedown',function(e){
     if(e.target.closest('button,input,textarea,a,.mem-btn,.music-btn,.weather-refresh,.note-del,.quote-btn,.forecast-day'))return;
     const pt=e.target.closest('.pt');
@@ -1590,12 +1611,12 @@ function updateToggleBtns(){
     if(!p)return;
     e.preventDefault();e.stopPropagation();
 
-    const rect=p.getBoundingClientRect();
-    ox=e.clientX-rect.left;oy=e.clientY-rect.top;
+    const panelLeft=getPanelLeft(p);
+    const panelTop=getPanelTop(p);
+    ox=e.clientX-panelLeft;oy=e.clientY-panelTop;
 
-    // Create ghost
     ghost=p.cloneNode(true);
-    ghost.style.cssText='position:fixed!important;z-index:99999!important;pointer-events:none!important;opacity:0.88!important;width:'+rect.width+'px;box-shadow:0 0 40px rgba(0,212,255,0.3),0 12px 32px rgba(0,0,0,0.5)!important;border:1px solid rgba(0,212,255,0.5)!important;border-radius:4px!important;transform:scale(1.02)!important;background:rgba(0,10,20,0.95)!important;left:'+(e.clientX-ox)+'px;top:'+(e.clientY-oy)+'px;';
+    ghost.style.cssText='position:fixed!important;z-index:99999!important;pointer-events:none!important;opacity:0.88!important;width:'+p.offsetWidth+'px;box-shadow:0 0 40px rgba(0,212,255,0.3),0 12px 32px rgba(0,0,0,0.5)!important;border:1px solid rgba(0,212,255,0.5)!important;border-radius:4px!important;transform:scale(1.02)!important;background:rgba(0,10,20,0.95)!important;left:'+(e.clientX-ox)+'px;top:'+(e.clientY-oy)+'px;';
     document.body.appendChild(ghost);
 
     dragPanel=p;
@@ -1614,7 +1635,6 @@ function updateToggleBtns(){
       document.removeEventListener('mouseup',onUp);
       if(!dragPanel)return;
       dragPanel.classList.remove('dragging');
-      // Move panel to new position
       dragPanel.style.left=(ev.clientX-ox)+'px';
       dragPanel.style.top=(ev.clientY-oy)+'px';
       dragPanel.style.right='auto';
@@ -1637,8 +1657,9 @@ function updateToggleBtns(){
     if(!p)return;
 
     const touch=e.touches[0];
-    const rect=p.getBoundingClientRect();
-    ox=touch.clientX-rect.left;oy=touch.clientY-rect.top;
+    const panelLeft=getPanelLeft(p);
+    const panelTop=getPanelTop(p);
+    ox=touch.clientX-panelLeft;oy=touch.clientY-panelTop;
 
     dragPanel=p;
     p.classList.add('dragging');
