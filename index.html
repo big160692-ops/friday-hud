@@ -1124,7 +1124,7 @@ async function searchYouTube(){
   if(!data||!data.length){
     const pipedHosts=['https://pipedapi.kavin.rocks','https://pipedapi.adminforge.de','https://api.piped.projectsegfau.lt'];
     for(const host of pipedHosts){
-      try{const r=await fetch(host+'/search?q='+encodeURIComponent(q)&filter=music_songs',{signal:AbortSignal.timeout?AbortSignal.timeout(5000):undefined});if(r.ok){const d=await r.json();data=(d.items||[]).map(v=>({videoId:v.url?.split('v=')[1]||v.url?.split('/').pop(),title:v.title,author:v.uploaderName,duration:v.duration,views:v.views}));if(data&&data.length)break}}catch(e){}
+      try{const r=await fetch(host+'/search?q='+encodeURIComponent(q)+'&filter=music_songs',{signal:AbortSignal.timeout?AbortSignal.timeout(5000):undefined});if(r.ok){const d=await r.json();data=(d.items||[]).map(v=>({videoId:v.url?.split('v=')[1]||v.url?.split('/').pop(),title:v.title,author:v.uploaderName,duration:v.duration,views:v.views}));if(data&&data.length)break}}catch(e){}
     }
   }
 
