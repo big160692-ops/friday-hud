@@ -734,9 +734,6 @@ function aiProcess(input){
       `Local feed incoming. I've pre-selected the stories that won't cause an existential crisis.`,
       `Pulling your area's headlines now. Try not to doomscroll, sir.`
     ];
-      `Pulling up ${c} headlines. Try not to doomscroll too hard, sir.`,
-      `Accessing ${c} news stream. The internet never sleeps — much like me.`
-    ];
     const m=jokes[Math.floor(Math.random()*jokes.length)];
     addMem('ai',m);
     return{c:'ok',m};
@@ -1203,8 +1200,8 @@ function doCmd(){
     const responses=[
       `Here's today's local feed, sir. Try not to doomscroll.`,
       `Loading local headlines. The world never stops, and neither do I.`,
-      `${c.toUpperCase()} feed is live. I've curated the best, you're welcome.`,
-      `Pulling up today's ${c} news. Shall I summarize the highlights?`
+      `Local feed is live. I've curated the best, you're welcome.`,
+      `Pulling up today's local news. Shall I summarize the highlights?`
     ];
     const m=responses[Math.floor(Math.random()*responses.length)];
     addLog('hi','[AI]',m);
