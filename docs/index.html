@@ -951,6 +951,33 @@ function initAudio(){
 }
 initAudio();
 
+// Auto-load from music/ folder
+async function loadMusicFolder(){
+  try{
+    const r=await fetch('music/tracks.json');
+    if(!r.ok)return;
+    const list=await r.json();
+    for(const item of list){
+      try{
+        const resp=await fetch('music/'+encodeURIComponent(item.file));
+        if(!resp.ok)continue;
+        const blob=await resp.blob();
+        const url=URL.createObjectURL(blob);
+        const id='local_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
+        localFiles[id]=url;
+        TRACKS.push({t:item.name,a:'Local File',vid:id});
+      }catch(e){}
+    }
+    if(TRACKS.length){
+      renderTrackList();
+      addLog('ok','[MUS]','Loaded '+TRACKS.length+' track(s) from music/');
+      updateMusicMeta();
+    }
+  }catch(e){}
+}
+loadMusicFolder();
+
+// Drag and drop
 const dropZone=document.getElementById('music-drop');
 dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.style.borderColor='var(--primary)';dropZone.style.background='rgba(0,212,255,0.05)'});
 dropZone.addEventListener('dragleave',e=>{dropZone.style.borderColor='var(--dim)';dropZone.style.background='transparent'});
