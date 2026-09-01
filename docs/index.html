@@ -580,7 +580,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
           <!-- Spotify Login -->
           <div id="spotify-login" style="margin-bottom:6px">
             <div id="spotify-setup" style="padding:4px 0">
-              <input id="spotify-clientid" placeholder="Spotify Client ID" style="width:calc(100% - 70px);padding:3px 6px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);color:var(--text);font-size:7px;font-family:var(--font-hud);border-radius:2px;outline:none">
+              <input id="spotify-clientid" placeholder="Spotify Client ID" value="9684682c7e814cef94a981b40d9f9838" style="width:calc(100% - 70px);padding:3px 6px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);color:var(--text);font-size:7px;font-family:var(--font-hud);border-radius:2px;outline:none">
               <button onclick="saveSpotifyClientId()" style="width:60px;padding:3px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:var(--primary);font-size:6px;letter-spacing:0.08em;cursor:pointer;border-radius:2px;font-family:var(--font-hud);vertical-align:middle">SAVE</button>
             </div>
             <div style="font-size:5.5px;color:var(--muted);line-height:1.5;margin:2px 0 4px">
@@ -594,6 +594,18 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
           <!-- Playlist Selector (shown when logged in) -->
           <div id="spotify-playlists" style="display:none;margin-bottom:6px;max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent">
           </div>
+
+          <!-- Add other users' playlists -->
+          <div style="margin-bottom:6px">
+            <div style="font-size:5.5px;color:var(--muted);margin-bottom:3px;letter-spacing:0.08em">ADD PLAYLIST BY URL</div>
+            <div style="display:flex;gap:3px">
+              <input id="spotify-add-playlist" placeholder="Paste Spotify playlist URL..." style="flex:1;padding:3px 6px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);color:var(--text);font-size:7px;font-family:var(--font-hud);border-radius:2px;outline:none">
+              <button onclick="addExternalPlaylist()" style="padding:3px 6px;background:rgba(30,215,96,0.1);border:1px solid rgba(30,215,96,0.3);color:#1ed760;font-size:6px;letter-spacing:0.08em;cursor:pointer;border-radius:2px;font-family:var(--font-hud)">ADD</button>
+            </div>
+          </div>
+
+          <!-- Saved external playlists -->
+          <div id="spotify-saved" style="display:none;margin-bottom:6px;max-height:80px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent"></div>
 
           <!-- Now Playing -->
           <div class="music-info">
@@ -1081,7 +1093,7 @@ let ytPlayer=null,ytReady=false;
 let spotifyToken=localStorage.getItem('spotify_token')||'';
 let spotifyRefresh=localStorage.getItem('spotify_refresh')||'';
 let spotifyExpiry=parseInt(localStorage.getItem('spotify_expiry')||'0');
-let spotifyClientId=localStorage.getItem('spotify_client_id')||'';
+let spotifyClientId=localStorage.getItem('spotify_client_id')||'9684682c7e814cef94a981b40d9f9838';
 let spotifyUser=null;
 let spotifyPlaylists=[];
 let currentPlaylistId='';
@@ -1267,11 +1279,61 @@ function updateSpotifyUI(){
   }
 }
 
+// === EXTERNAL PLAYLISTS (other users) ===
+let savedPlaylists=JSON.parse(localStorage.getItem('spotify_saved_playlists')||'[]');
+
+function parseSpotifyPlaylistId(url){
+  const m=url.match(/spotify\.com\/playlist\/([a-zA-Z0-9]+)/);
+  return m?m[1]:null;
+}
+
+async function addExternalPlaylist(){
+  const inp=document.getElementById('spotify-add-playlist');
+  const url=inp.value.trim();
+  if(!url){addLog('wn','[MUS]','Paste a Spotify playlist URL.');return}
+  const pid=parseSpotifyPlaylistId(url);
+  if(!pid){addLog('wn','[MUS]','Invalid Spotify playlist URL. Use format: open.spotify.com/playlist/ID');return}
+  if(savedPlaylists.find(p=>p.id===pid)){addLog('wn','[MUS]','Playlist already added.');inp.value='';return}
+  if(!spotifyToken){addLog('wn','[MUS]','Login to Spotify first.');return}
+  const r=await spotifyFetch('https://api.spotify.com/v1/playlists/'+pid+'?fields=id,name,images,owner(display_name),tracks(total)');
+  if(!r||!r.ok){addLog('wn','[MUS]','Could not fetch playlist. Check URL or login.');return}
+  const pl=await r.json();
+  savedPlaylists.push({id:pl.id,name:pl.name,image:pl.images&&pl.images[0]?pl.images[0].url:'',owner:pl.owner.display_name,total:pl.tracks.total});
+  localStorage.setItem('spotify_saved_playlists',JSON.stringify(savedPlaylists));
+  inp.value='';
+  renderSavedPlaylists();
+  addLog('ok','[MUS]','Added: '+pl.name+' by '+pl.owner.display_name);
+}
+
+function removeSavedPlaylist(pid){
+  savedPlaylists=savedPlaylists.filter(p=>p.id!==pid);
+  localStorage.setItem('spotify_saved_playlists',JSON.stringify(savedPlaylists));
+  renderSavedPlaylists();
+}
+
+function renderSavedPlaylists(){
+  const el=document.getElementById('spotify-saved');
+  if(!savedPlaylists.length){el.style.display='none';return}
+  el.style.display='block';
+  el.innerHTML='<div style="font-size:5.5px;color:var(--muted);margin-bottom:3px;letter-spacing:0.08em">OTHER USERS\' PLAYLISTS</div>'+
+  savedPlaylists.map(p=>`
+    <div style="display:flex;align-items:center;gap:5px;padding:3px 4px;cursor:pointer;border-radius:2px;transition:background 0.2s;border:1px solid transparent" onmouseover="this.style.background='rgba(30,215,96,0.05)'" onmouseout="this.style.background='transparent'">
+      <img src="${p.image}" style="width:20px;height:20px;border-radius:2px;object-fit:cover;${p.image?'':'display:none'}">
+      <div style="min-width:0;flex:1" onclick="loadSpotifyPlaylist('${p.id}')">
+        <div style="font-size:6.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+        <div style="font-size:5px;color:var(--muted)">${p.owner} &middot; ${p.total} tracks</div>
+      </div>
+      <span onclick="event.stopPropagation();removeSavedPlaylist('${p.id}')" style="font-size:7px;color:var(--muted);cursor:pointer;padding:2px" title="Remove">&times;</span>
+    </div>
+  `).join('');
+}
+
 // Init redirect URI display
 document.getElementById('spotify-redirect-display').textContent=getRedirectUri();
 document.getElementById('spotify-clientid').value=spotifyClientId;
 handleSpotifyCallback();
 if(spotifyToken)loadSpotifyProfile();
+renderSavedPlaylists();
 updateMusicUI();
 
 function loadYouTubeAPI(){
