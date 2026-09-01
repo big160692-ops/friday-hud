@@ -457,7 +457,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
       <button class="scatter-btn" id="btn-music" onclick="togglePanel('panel-music')" title="Music Player">&#127925; MUS</button>
       <button class="scatter-btn" id="btn-notes" onclick="togglePanel('panel-notes')" title="Quick Notes">&#128221; NOTES</button>
       <button class="scatter-btn" id="btn-quote" onclick="togglePanel('panel-quote')" title="Daily Quote">&#10077; QUOTE</button>
-      <button class="scatter-btn" id="btn-gauges" onclick="togglePanel('panel-gauges')" title="Gauges">&#9883; GAUGE</button>
+      <button class="scatter-btn" id="btn-gauges" onclick="togglePanel('panel-sys')" title="Gauges">&#9883; GAUGE</button>
       <button class="scatter-btn" onclick="promptFishKey()" title="Set Fish Audio API key">&#128273; VOICE</button>
       <button class="scatter-btn" onclick="promptGroqKey()" title="Set OpenRouter API key for live AI">&#129504; AI</button>
       <button class="scatter-btn" onclick="testGroq()" title="Test AI connection">&#9889; TEST</button>
@@ -493,15 +493,18 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
       <!-- PANEL LAYER: floating panels above core -->
       <div class="panel-layer" id="panel-layer">
 
-        <!-- System load -->
-        <div class="panel" id="panel-sys" style="left:20px;top:20px;width:200px">
-          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span><span id="sys-title">System Load</span></div>
-          <div id="device-info" style="font-size:7px;color:var(--muted);margin-bottom:6px;letter-spacing:0.08em;border-bottom:1px solid var(--dim);padding-bottom:4px">Detecting hardware...</div>
-          <div class="sbar-row"><div class="sbar-lbl"><span>CPU</span><span id="cv">--</span></div><div class="sbar-t"><div class="sbar-f" id="cb" style="width:0%"></div></div></div>
-          <div class="sbar-row"><div class="sbar-lbl"><span>GPU</span><span id="gv">--</span></div><div class="sbar-t"><div class="sbar-f" id="gpub" style="width:0%"></div></div></div>
-          <div class="sbar-row"><div class="sbar-lbl"><span>RAM</span><span id="memv">--</span></div><div class="sbar-t"><div class="sbar-f" id="memb" style="width:0%"></div></div></div>
-          <div class="sbar-row"><div class="sbar-lbl"><span>Storage</span><span id="stv">--</span></div><div class="sbar-t"><div class="sbar-f" id="stb" style="width:0%"></div></div></div>
-          <div id="hw-details" style="font-size:6px;color:var(--muted);margin-top:4px;letter-spacing:0.06em;line-height:1.4"></div>
+        <!-- System + Gauges combined -->
+        <div class="panel" id="panel-sys" style="left:20px;top:20px;width:420px;padding:12px 14px">
+          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span><span id="sys-title">System</span></div>
+          <div id="device-info" style="font-size:8px;color:var(--muted);margin-bottom:8px;letter-spacing:0.08em;border-bottom:1px solid var(--dim);padding-bottom:6px">Detecting hardware...</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-bottom:8px">
+            <div class="sbar-row"><div class="sbar-lbl"><span>CPU</span><span id="cv">--</span></div><div class="sbar-t"><div class="sbar-f" id="cb" style="width:0%"></div></div></div>
+            <div class="sbar-row"><div class="sbar-lbl"><span>GPU</span><span id="gv">--</span></div><div class="sbar-t"><div class="sbar-f" id="gpub" style="width:0%"></div></div></div>
+            <div class="sbar-row"><div class="sbar-lbl"><span>RAM</span><span id="memv">--</span></div><div class="sbar-t"><div class="sbar-f" id="memb" style="width:0%"></div></div></div>
+            <div class="sbar-row"><div class="sbar-lbl"><span>Storage</span><span id="stv">--</span></div><div class="sbar-t"><div class="sbar-f" id="stb" style="width:0%"></div></div></div>
+          </div>
+          <div id="hw-details" style="font-size:7px;color:var(--muted);margin-bottom:8px;letter-spacing:0.06em;line-height:1.4;border-bottom:1px solid var(--dim);padding-bottom:6px"></div>
+          <div style="text-align:center"><canvas id="gauges" width="390" height="130"></canvas></div>
         </div>
 
         <!-- Weather widget -->
@@ -620,13 +623,6 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
           <div class="quote-author" id="quote-author">- Alan Kay</div>
           <button class="quote-btn" onclick="newQuote()">&#8635; NEW QUOTE</button>
         </div>
-
-        <!-- Gauges -->
-        <div class="panel" id="panel-gauges" style="left:50%;bottom:40px;transform:translateX(-50%);width:340px;padding:6px">
-          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Hardware Gauges</div>
-          <canvas id="gauges" width="328" height="140"></canvas>
-        </div>
-
       </div>
     </div>
 
@@ -811,7 +807,7 @@ function aiProcess(input){
   if(/^(show|open|display|toggle|hide|close)\s+(music|mus|player|song)/i.test(lo)){togglePanel('panel-music');const m=/^(show|open|display|toggle)/i.test(lo)?'Music panel opened.':'Music panel closed.';addMem('ai',m);return{c:'ok',m}}
   if(/^(show|open|display|toggle|hide|close)\s+(notes|note)/i.test(lo)){togglePanel('panel-notes');const m=/^(show|open|display|toggle)/i.test(lo)?'Notes panel opened.':'Notes panel closed.';addMem('ai',m);return{c:'ok',m}}
   if(/^(show|open|display|toggle|hide|close)\s+(quote|motivation)/i.test(lo)){togglePanel('panel-quote');const m=/^(show|open|display|toggle)/i.test(lo)?'Quote panel opened.':'Quote panel closed.';addMem('ai',m);return{c:'ok',m}}
-  if(/^(show|open|display|toggle|hide|close)\s+(gauges|gauge|dials)/i.test(lo)){togglePanel('panel-gauges');const m=/^(show|open|display|toggle)/i.test(lo)?'Gauges panel opened.':'Gauges panel closed.';addMem('ai',m);return{c:'ok',m}}
+  if(/^(show|open|display|toggle|hide|close)\s+(gauges|gauge|dials)/i.test(lo)){togglePanel('panel-sys');const m=/^(show|open|display|toggle)/i.test(lo)?'Gauges panel opened.':'Gauges panel closed.';addMem('ai',m);return{c:'ok',m}}
   if(/^(show|open|display)\s+all\s+panels?/i.test(lo)){document.querySelectorAll('.panel-layer .panel').forEach(p=>{p.classList.add('open');p.style.display='block'});updateToggleBtns();const m='All panels opened.';addMem('ai',m);return{c:'ok',m}}
   if(/^(hide|close)\s+all\s+panels?/i.test(lo)){document.querySelectorAll('.panel-layer .panel').forEach(p=>{p.classList.remove('open');p.style.display='none'});updateToggleBtns();const m='All panels closed.';addMem('ai',m);return{c:'ok',m}}
 
@@ -1219,7 +1215,7 @@ function doCmd(){
     const action=panelMatch[1];
     const target=panelMatch[2];
     const isOpen=/^(show|open|display|toggle)/i.test(action);
-    const panelMap={system:'panel-sys',sys:'panel-sys',load:'panel-sys',weather:'panel-weather',wxr:'panel-weather',forecast:'panel-weather',combat:'panel-combat',cbt:'panel-combat',mode:'panel-combat',ai:'panel-ai',core:'panel-ai',assistant:'panel-ai',news:'panel-news',headlines:'panel-news',feed:'panel-news',music:'panel-music',mus:'panel-music',player:'panel-music',song:'panel-music',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',motivation:'panel-quote',gauges:'panel-gauges',gauge:'panel-gauges',dials:'panel-gauges'};
+    const panelMap={system:'panel-sys',sys:'panel-sys',load:'panel-sys',weather:'panel-weather',wxr:'panel-weather',forecast:'panel-weather',combat:'panel-combat',cbt:'panel-combat',mode:'panel-combat',ai:'panel-ai',core:'panel-ai',assistant:'panel-ai',news:'panel-news',headlines:'panel-news',feed:'panel-news',music:'panel-music',mus:'panel-music',player:'panel-music',song:'panel-music',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',motivation:'panel-quote',gauges:'panel-sys',gauge:'panel-sys',dials:'panel-sys'};
     const pid=panelMap[target];
     if(pid)togglePanel(pid);
     if(/^(show|open|display)\s+all/i.test(lo)){
@@ -1232,13 +1228,13 @@ function doCmd(){
   }
   const nlOpen=lo.match(/(?:open|show|display|bring up|pull up|launch|load|activate|access|view|check out|take a look at|let me see|I need|I want to see|can you (?:open|show|display|bring up|pull up)|could you (?:open|show|display)|(?:please|pls) (?:open|show|display))\s*(?:the\s+)?(music|weather|news|notes|note|quote|quotes|combat|system|sys|gauge|gauges|ai|core|player|forecast|headline|headlines)/i);
   if(nlOpen){
-    const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',quotes:'panel-quote',combat:'panel-combat',system:'panel-sys',sys:'panel-sys',gauge:'panel-gauges',gauges:'panel-gauges',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
+    const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',quotes:'panel-quote',combat:'panel-combat',system:'panel-sys',sys:'panel-sys',gauge:'panel-sys',gauges:'panel-sys',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
     const pid=nmap[nlOpen[1].toLowerCase()];
     if(pid)togglePanel(pid);
   }
   const nlClose=lo.match(/(?:close|hide|dismiss|minimize|get rid of)\s*(?:the\s+)?(music|weather|news|notes|note|quote|quotes|combat|system|sys|gauge|gauges|ai|core|player|forecast|headline|headlines)/i);
   if(nlClose){
-    const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',quotes:'panel-quote',combat:'panel-combat',system:'panel-sys',sys:'panel-sys',gauge:'panel-gauges',gauges:'panel-gauges',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
+    const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',quotes:'panel-quote',combat:'panel-combat',system:'panel-sys',sys:'panel-sys',gauge:'panel-sys',gauges:'panel-sys',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
     const pid=nmap[nlClose[1].toLowerCase()];
     if(pid){
       const p=document.getElementById(pid);
@@ -1256,7 +1252,7 @@ function doCmd(){
       const rl=reply.toLowerCase();
       const aiPanelOpen=rl.match(/(?:open(?:ing)?|show(?:ing)?|display(?:ing)?|launch(?:ing)?|pull(?:ing)? up|bring(?:ing)? up)\s*(?:the\s+)?(music|weather|news|notes|note|quote|combat|system|gauge|gauges|ai|core|player|forecast|headline|headlines)/i);
       if(aiPanelOpen){
-        const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',combat:'panel-combat',system:'panel-sys',gauge:'panel-gauges',gauges:'panel-gauges',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
+        const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',combat:'panel-combat',system:'panel-sys',gauge:'panel-sys',gauges:'panel-sys',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
         const pid=nmap[aiPanelOpen[1].toLowerCase()];
         if(pid){
           const p=document.getElementById(pid);
@@ -1451,10 +1447,10 @@ updateHardwareDisplay();
 setInterval(()=>{hw.ramPercent=Math.min(95,Math.max(20,hw.ramPercent+(Math.random()-0.5)*6));updateBars()},3000);
 
 // === CIRCULAR GAUGES (Real Hardware) ===
-const gC=document.getElementById('gauges'),gCtx=gC.getContext('2d');const gW=328,gH=140;
+const gC=document.getElementById('gauges'),gCtx=gC.getContext('2d');const gW=390,gH=130;
 function drawGauges(){
   gCtx.clearRect(0,0,gW,gH);
-  const gx1=55,gy1=70,gr1=48;const gx2=164,gy2=70,gr2=48;const gx3=273,gy3=70,gr3=48;
+  const gx1=65,gy1=65,gr1=50;const gx2=195,gy2=65,gr2=50;const gx3=325,gy3=65,gr3=50;
   function drawGauge(gx,gy,gr,value,label,color1,color2){
     gCtx.beginPath();gCtx.arc(gx,gy,gr,0,Math.PI*2);gCtx.strokeStyle='rgba(0,40,60,0.4)';gCtx.lineWidth=4;gCtx.stroke();
     const va=value/100*Math.PI*2-Math.PI/2;
@@ -1518,7 +1514,7 @@ function bringToFront(p){
 }
 
 function updateToggleBtns(){
-  const map={'panel-sys':'btn-sys','panel-weather':'btn-weather','panel-combat':'btn-combat','panel-ai':'btn-ai','panel-news':'btn-news','panel-music':'btn-music','panel-notes':'btn-notes','panel-quote':'btn-quote','panel-gauges':'btn-gauges'};
+  const map={'panel-sys':'btn-sys','panel-weather':'btn-weather','panel-combat':'btn-combat','panel-ai':'btn-ai','panel-news':'btn-news','panel-music':'btn-music','panel-notes':'btn-notes','panel-quote':'btn-quote'};
   for(const[pid,bid]of Object.entries(map)){
     const p=document.getElementById(pid);
     const b=document.getElementById(bid);
@@ -1526,6 +1522,13 @@ function updateToggleBtns(){
       if(p.classList.contains('open'))b.classList.add('active');
       else b.classList.remove('active');
     }
+  }
+  // Gauges button maps to same panel as SYS
+  const sysPanel=document.getElementById('panel-sys');
+  const gaugeBtn=document.getElementById('btn-gauges');
+  if(sysPanel&&gaugeBtn){
+    if(sysPanel.classList.contains('open'))gaugeBtn.classList.add('active');
+    else gaugeBtn.classList.remove('active');
   }
 }
 
