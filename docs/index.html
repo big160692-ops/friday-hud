@@ -118,7 +118,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .stat-v.warn{color:var(--warn)}
 .stat-s{font-size:6px;color:#0a3040;margin-top:1px}
 
-.tdots{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
+
 .td{width:9px;height:9px;border-radius:1px;background:#060f18;border:1px solid #0a2030;transition:all 0.3s}
 .td.a{background:var(--green);border-color:#004a30;box-shadow:0 0 4px rgba(0,232,128,0.3);animation:tdPulse 2s ease-in-out infinite}
 .td.y{background:#ffc020;border-color:#604000;box-shadow:0 0 4px rgba(255,192,32,0.3)}
@@ -171,16 +171,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 #spotify-playlists::-webkit-scrollbar-thumb,#spotify-tracks::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
 
 /* Notes widget */
-.notes-area{width:100%;min-height:60px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);border-radius:2px;color:var(--text);font-family:var(--font-hud);font-size:8px;padding:6px;resize:none;outline:none;transition:border-color 0.2s;line-height:1.6}
-.notes-area:focus{border-color:rgba(0,212,255,0.3)}
-.notes-area::placeholder{color:var(--muted)}
-.notes-list{max-height:80px;overflow-y:auto;margin-top:6px;scrollbar-width:thin;scrollbar-color:var(--dim) transparent}
-.note-entry{font-size:7px;color:var(--text);padding:3px 0;border-bottom:1px solid rgba(10,37,53,0.2);display:flex;justify-content:space-between;align-items:center;gap:4px}
-.note-entry:last-child{border-bottom:none}
-.note-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.note-del{color:var(--muted);cursor:pointer;font-size:8px;flex-shrink:0;transition:color 0.2s}
-.note-del:hover{color:var(--warn)}
-.note-time{font-size:6px;color:var(--muted);flex-shrink:0}
+
 
 /* Music player */
 .music-player{position:relative;overflow:hidden}
@@ -270,10 +261,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .mem-clear:hover{background:rgba(255,96,48,0.1);box-shadow:0 0 8px rgba(255,96,48,0.15)}
 
 /* Quote widget */
-.quote-box{font-size:8px;color:var(--text);font-style:italic;line-height:1.5;padding:4px 0;border-left:2px solid var(--dim);padding-left:8px;margin:4px 0}
-.quote-author{font-size:7px;color:var(--muted);font-style:normal;margin-top:3px;text-align:right}
-.quote-btn{font-size:6px;color:var(--muted);cursor:pointer;border:none;background:none;font-family:var(--font-hud);letter-spacing:0.08em;transition:color 0.2s;margin-top:4px}
-.quote-btn:hover{color:var(--primary)}
+
 
 /* Calculator */
 .calc-display{font-family:var(--font-head);font-size:14px;color:var(--primary);text-align:right;padding:4px 8px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);border-radius:2px;margin-bottom:4px;min-height:22px;word-break:break-all}
@@ -343,8 +331,6 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
   .news-list{max-height:200px}
   .news-title{font-size:7.5px}
   .news-meta{font-size:6px}
-  .notes-area{min-height:60px;font-size:10px;padding:8px}
-  .note-entry{font-size:9px;padding:4px 0}
   .music-art{width:32px;height:32px;font-size:14px}
   .music-track{font-size:8px}
   .music-artist{font-size:7px}
@@ -406,13 +392,10 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
   .voice-btn{width:44px;height:44px;font-size:20px}
   .cmb-btn{min-height:50px}
   .news-item{padding:8px 0}
-  .note-entry{padding:6px 0}
   .jbtn{min-height:44px}
   .jinp{min-height:44px}
-  .quote-btn{min-height:40px;padding:8px 12px}
   .forecast-day{min-height:50px}
   .weather-refresh{min-height:40px;min-width:40px}
-  .note-del{min-height:36px;min-width:36px}
   .mem-btn{min-height:40px}
   .drag-handle{padding:6px 10px}
 }
@@ -447,12 +430,9 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
       <div class="F.R.I.D.A.Y.-title">F.R.I.D.A.Y.<small>OS MARK III</small></div>
       <button class="scatter-btn" id="btn-sys" onclick="togglePanel('panel-sys')" title="System Load">&#9881; SYS</button>
       <button class="scatter-btn" id="btn-weather" onclick="togglePanel('panel-weather')" title="Weather">&#9728; WXR</button>
-      <button class="scatter-btn" id="btn-combat" onclick="togglePanel('panel-combat')" title="Combat Mode">&#9876; CBT</button>
       <button class="scatter-btn" id="btn-ai" onclick="togglePanel('panel-ai')" title="AI Core">&#129302; AI</button>
       <button class="scatter-btn" id="btn-news" onclick="togglePanel('panel-news')" title="News Feed">&#128240; NEWS</button>
       <button class="scatter-btn" id="btn-music" onclick="togglePanel('panel-music')" title="Music Player">&#127925; MUS</button>
-      <button class="scatter-btn" id="btn-notes" onclick="togglePanel('panel-notes')" title="Quick Notes">&#128221; NOTES</button>
-      <button class="scatter-btn" id="btn-quote" onclick="togglePanel('panel-quote')" title="Daily Quote">&#10077; QUOTE</button>
 
       <!-- Clock widget in top bar -->
       <div class="clock-widget">
@@ -508,32 +488,6 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Combat mode -->
-        <div class="panel open" id="panel-combat" style="left:20px;top:340px;width:200px">
-          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Combat mode</div>
-          <button class="mbtn act" onclick="selMode(this)">Stealth</button>
-          <button class="mbtn" onclick="selMode(this)">Combat</button>
-          <button class="mbtn" onclick="selMode(this)">Recon</button>
-          <button class="mbtn" onclick="selMode(this)">Sentry</button>
-          <button class="mbtn" onclick="selMode(this)">Override</button>
-          <div style="margin-top:6px;border-top:1px solid var(--dim);padding-top:6px">
-            <div class="pt" style="margin-bottom:4px">Threat matrix</div>
-            <div class="tdots">
-              <div class="td a"></div><div class="td a"></div><div class="td a"></div>
-              <div class="td y"></div><div class="td"></div><div class="td"></div>
-              <div class="td"></div><div class="td"></div><div class="td"></div>
-              <div class="td"></div><div class="td"></div><div class="td"></div>
-            </div>
-            <div style="font-size:6px;color:var(--green);margin-top:4px;letter-spacing:0.08em">4/12 zones active</div>
-          </div>
-          <div style="margin-top:6px;border-top:1px solid var(--dim);padding-top:6px">
-            <div class="pt" style="margin-bottom:4px">Quick actions</div>
-            <button class="mbtn" onclick="runQuick('status')">System Status</button>
-            <button class="mbtn" onclick="runQuick('scan')">Area Scan</button>
-            <button class="mbtn" onclick="runQuick('joke')">Entertain Me</button>
-            <button class="mbtn" onclick="runQuick('quote')">Motivation</button>
-          </div>
-        </div>
-
         <!-- AI Core -->
         <div class="panel open" id="panel-ai" style="right:20px;top:320px;width:280px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>AI Core <span class="mem-btn" onclick="toggleMem()">MEMORY</span></div>
@@ -603,19 +557,6 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Notes -->
-        <div class="panel open" id="panel-notes" style="left:240px;top:340px;width:200px">
-          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Quick Notes</div>
-          <textarea class="notes-area" id="notes-input" placeholder="Type a note... (Enter to save)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addNote()}"></textarea>
-          <div class="notes-list" id="notes-list"></div>
-        </div>
-
-        <!-- Quote -->
-        <div class="panel open" id="panel-quote" style="left:20px;top:560px;width:220px;transform:none">
-          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Daily Quote</div>
-          <div class="quote-box" id="quote-text">"The best way to predict the future is to invent it."</div>
-          <div class="quote-author" id="quote-author">- Alan Kay</div>
-          <button class="quote-btn" onclick="newQuote()">&#8635; NEW QUOTE</button>
-        </div>
       </div>
     </div>
 
@@ -657,7 +598,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 (function(){const c=document.getElementById('particles');for(let i=0;i<12;i++){const p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.setProperty('--dur',(12+Math.random()*18)+'s');p.style.setProperty('--delay',(Math.random()*14)+'s');c.appendChild(p)}})();
 
 // === MEMORY ===
-const SK='friday_mem',UK='friday_name',NK='friday_notes';
+const SK='friday_mem',UK='friday_name';
 function loadMem(){try{return JSON.parse(localStorage.getItem(SK))||[]}catch(e){return[]}}
 function saveMem(m){localStorage.setItem(SK,JSON.stringify(m))}
 function addMem(role,text){const m=loadMem();m.push({role,text,time:new Date().toISOString(),id:Date.now()});if(m.length>200)m.splice(0,m.length-200);saveMem(m)}
@@ -665,38 +606,7 @@ function getCtx(n){return loadMem().slice(-n)}
 function getName(){return localStorage.getItem(UK)||''}
 function setName(n){localStorage.setItem(UK,n)}
 
-// === NOTES ===
-function loadNotes(){try{return JSON.parse(localStorage.getItem(NK))||[]}catch(e){return[]}}
-function saveNotes(n){localStorage.setItem(NK,JSON.stringify(n))}
-function addNote(){const inp=document.getElementById('notes-input');const v=inp.value.trim();if(!v)return;const notes=loadNotes();notes.push({text:v,time:new Date().toISOString()});if(notes.length>50)notes.splice(0,notes.length-50);saveNotes(notes);inp.value='';renderNotes();addLog('ok','[SYS]','Note saved.')}
-function deleteNote(i){const notes=loadNotes();notes.splice(i,1);saveNotes(notes);renderNotes()}
-function renderNotes(){const el=document.getElementById('notes-list');const notes=loadNotes();if(!notes.length){el.innerHTML='';return}el.innerHTML=notes.slice(-8).reverse().map((n,i)=>{const d=new Date(n.time);const t=d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});return`<div class="note-entry"><span class="note-time">${t}</span><span class="note-text">${escH(n.text)}</span><span class="note-del" onclick="deleteNote(${notes.length-1-i})">&times;</span></div>`}).join('')}
 function escH(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-
-// === QUOTES ===
-const QUOTES=[
-  {t:'The best way to predict the future is to invent it.',a:'Alan Kay'},
-  {t:'Innovation distinguishes between a leader and a follower.',a:'Steve Jobs'},
-  {t:'Stay hungry, stay foolish.',a:'Stewart Brand'},
-  {t:'The only way to do great work is to love what you do.',a:'Steve Jobs'},
-  {t:'Life is what happens when you are busy making other plans.',a:'John Lennon'},
-  {t:'The future belongs to those who believe in the beauty of their dreams.',a:'Eleanor Roosevelt'},
-  {t:'It is during our darkest moments that we must focus to see the light.',a:'Aristotle'},
-  {t:'The greatest glory in living lies not in never falling, but in rising every time we fall.',a:'Nelson Mandela'},
-  {t:'Tell me and I forget. Teach me and I remember. Involve me and I learn.',a:'Benjamin Franklin'},
-  {t:'The way to get started is to quit talking and begin doing.',a:'Walt Disney'},
-  {t:'If life were predictable it would cease to be life, and be without flavor.',a:'Eleanor Roosevelt'},
-  {t:'If you look at what you have in life, you will always have more.',a:'Oprah Winfrey'},
-  {t:'If you set your goals ridiculously high and it is a failure, you will fail above everyone else success.',a:'James Cameron'},
-  {t:'Spread love everywhere you go. Let no one ever come to you without leaving happier.',a:'Mother Teresa'},
-  {t:'Always remember that you are absolutely unique. Just like everyone else.',a:'Margaret Mead'},
-  {t:'The best time to plant a tree was 20 years ago. The second best time is now.',a:'Chinese Proverb'},
-  {t:'Technology is best when it brings people together.',a:'Matt Mullenweg'},
-  {t:'The advance of technology is based on making it fit in so that you do not really even notice it.',a:'Bill Gates'},
-  {t:'Any sufficiently advanced technology is indistinguishable from magic.',a:'Arthur C. Clarke'},
-  {t:'First, solve the problem. Then, write the code.',a:'John Johnson'}
-];
-function newQuote(){const q=QUOTES[Math.floor(Math.random()*QUOTES.length)];document.getElementById('quote-text').textContent='"'+q.t+'"';document.getElementById('quote-author').textContent='- '+q.a}
 
 // === AI ENGINE ===
 function aiProcess(input){
@@ -705,12 +615,11 @@ function aiProcess(input){
   if(/^(my name is|i'm|call me|i am)\s+(.+)/i.test(lo)){const nn=lo.replace(/^(my name is|i'm|call me|i am)\s+/i,'').trim();setName(nn);const m=`Understood. I will address you as ${nn}.`;addMem('ai',m);return{c:'hi',m}}
   if(/^(hi|hello|hey|greetings|yo|sup|howdy)/i.test(lo)){const r=[nm?`At your service, ${nm}.`:'At your service, sir.','All systems standing by.','Good to see you.'];const m=r[Math.floor(Math.random()*r.length)];addMem('ai',m);return{c:'hi',m}}
   if(/how (are|r) (you|u)/i.test(lo)){const m=['All neural networks at peak efficiency.','Core stable, processes nominal.','Running optimally.'][Math.floor(Math.random()*3)];addMem('ai',m);return{c:'hi',m}}
-  if(/^(help|what can you do|commands)/i.test(lo)){const m='Live AI enabled - ask me anything! Built-in: Status, Weather [city], News, Time, Joke, Quote, Note [text], Calc [expr], Scan, Mode, Show/Hide [panel], Show/Hide all panels';addMem('ai',m);return{c:'hi',m}}
+  if(/^(help|what can you do|commands)/i.test(lo)){const m='Live AI enabled - ask me anything! Built-in: Status, Weather [city], News, Time, Joke, Calc [expr], Scan, Show/Hide [panel], Show/Hide all panels';addMem('ai',m);return{c:'hi',m}}
   if(/^(status|diagnostics|health|syscheck)/i.test(lo)){const m=`Diagnostics: ${hw.deviceType} | ${hw.cpuCores} CPU cores | ${hw.ramGB}GB RAM | GPU: ${hw.gpuRenderer.substring(0,30)} | Disk: ${hw.storagePercent}% used | Reactor OPTIMAL`;addMem('ai',m);return{c:'ok',m}}
   if(/^(who am i|what('s| is) my name)/i.test(lo)){const n=getName();const m=n?`You are ${n}.`:'No name on file. Use "My name is [name]".';addMem('ai',m);return{c:'hi',m}}
   if(/^(forget me|erase my name)/i.test(lo)){localStorage.removeItem(UK);const m='Name cleared.';addMem('ai',m);return{c:'wn',m}}
   if(/^(clear memory|wipe memory)/i.test(lo)){localStorage.removeItem(SK);const m='Memory cleared.';addMem('ai',m);return{c:'wn',m}}
-  if(/^(mode|switch to|activate)\s+(stealth|combat|recon|sentry)/i.test(lo)){const md=lo.match(/(stealth|combat|recon|sentry)/i)[0];document.querySelectorAll('.mbtn').forEach(b=>b.classList.toggle('act',b.textContent.toLowerCase()===md));const m=`Mode: ${md.toUpperCase()} engaged.`;addMem('ai',m);return{c:'ok',m}}
 
   // Weather command — fetch FIRST so AI gets forecast data
   if(/^(weather|forecast|conditions|temp|temperature|how hot|how cold|is it raining|is it sunny)/i.test(lo)){
@@ -748,13 +657,6 @@ function aiProcess(input){
     return{c:'ok',m};
   }
 
-  // Note command
-  if(/^note\s+(.+)/i.test(lo)){
-    const text=lo.replace(/^note\s+/i,'').trim();
-    const notes=loadNotes();notes.push({text,time:new Date().toISOString()});saveNotes(notes);renderNotes();
-    const m=`Note saved: "${text.substring(0,40)}${text.length>40?'...':''}"`;
-    addMem('ai',m);return{c:'ok',m};
-  }
 
   // Calculator
   if(/^(calc|calculate|compute|math)\s+(.+)/i.test(lo)){
@@ -766,15 +668,6 @@ function aiProcess(input){
       const m=`${safe} = ${result}`;
       addMem('ai',m);return{c:'ok',m};
     }catch(e){const m='Calculation error.';addMem('ai',m);return{c:'wn',m}}
-  }
-
-  // Quote
-  if(/^(quote|motivation|inspire)/i.test(lo)){
-    const q=QUOTES[Math.floor(Math.random()*QUOTES.length)];
-    document.getElementById('quote-text').textContent='"'+q.t+'"';
-    document.getElementById('quote-author').textContent='- '+q.a;
-    const m=`"${q.t}" - ${q.a}`;
-    addMem('ai',m);return{c:'hi',m};
   }
 
   if(/^(time|date|timestamp)/i.test(lo)){const m=new Date().toLocaleString();addMem('ai',m);return{c:'hi',m}}
@@ -789,12 +682,9 @@ function aiProcess(input){
   // Panel toggle commands
   if(/^(show|open|display|toggle|hide|close)\s+(system|sys|load)/i.test(lo)){togglePanel('panel-sys');const m=/^(show|open|display|toggle)/i.test(lo)?'System panel opened.':'System panel closed.';addMem('ai',m);return{c:'ok',m}}
   if(/^(show|open|display|toggle|hide|close)\s+(weather|wxr|forecast)/i.test(lo)){togglePanel('panel-weather');const m=/^(show|open|display|toggle)/i.test(lo)?'Weather panel opened.':'Weather panel closed.';addMem('ai',m);return{c:'ok',m}}
-  if(/^(show|open|display|toggle|hide|close)\s+(combat|cbt|mode)/i.test(lo)){togglePanel('panel-combat');const m=/^(show|open|display|toggle)/i.test(lo)?'Combat panel opened.':'Combat panel closed.';addMem('ai',m);return{c:'ok',m}}
   if(/^(show|open|display|toggle|hide|close)\s+(ai|core|assistant)/i.test(lo)){togglePanel('panel-ai');const m=/^(show|open|display|toggle)/i.test(lo)?'AI Core panel opened.':'AI Core panel closed.';addMem('ai',m);return{c:'ok',m}}
   if(/^(show|open|display|toggle|hide|close)\s+(news|headlines|feed)/i.test(lo)){togglePanel('panel-news');const m=/^(show|open|display|toggle)/i.test(lo)?'News panel opened.':'News panel closed.';addMem('ai',m);return{c:'ok',m}}
   if(/^(show|open|display|toggle|hide|close)\s+(music|mus|player|song)/i.test(lo)){togglePanel('panel-music');const m=/^(show|open|display|toggle)/i.test(lo)?'Music panel opened.':'Music panel closed.';addMem('ai',m);return{c:'ok',m}}
-  if(/^(show|open|display|toggle|hide|close)\s+(notes|note)/i.test(lo)){togglePanel('panel-notes');const m=/^(show|open|display|toggle)/i.test(lo)?'Notes panel opened.':'Notes panel closed.';addMem('ai',m);return{c:'ok',m}}
-  if(/^(show|open|display|toggle|hide|close)\s+(quote|motivation)/i.test(lo)){togglePanel('panel-quote');const m=/^(show|open|display|toggle)/i.test(lo)?'Quote panel opened.':'Quote panel closed.';addMem('ai',m);return{c:'ok',m}}
   if(/^(show|open|display|toggle|hide|close)\s+(gauges|gauge|dials)/i.test(lo)){togglePanel('panel-sys');const m=/^(show|open|display|toggle)/i.test(lo)?'Gauges panel opened.':'Gauges panel closed.';addMem('ai',m);return{c:'ok',m}}
   if(/^(show|open|display)\s+all\s+panels?/i.test(lo)){document.querySelectorAll('.panel-layer .panel').forEach(p=>{p.classList.add('open');p.style.display='block'});updateToggleBtns();const m='All panels opened.';addMem('ai',m);return{c:'ok',m}}
   if(/^(hide|close)\s+all\s+panels?/i.test(lo)){document.querySelectorAll('.panel-layer .panel').forEach(p=>{p.classList.remove('open');p.style.display='none'});updateToggleBtns();const m='All panels closed.';addMem('ai',m);return{c:'ok',m}}
@@ -1265,12 +1155,12 @@ function doCmd(){
   }
 
   // Panel toggle — open/close first, then AI responds
-  const panelMatch=lo.match(/^(show|open|display|toggle|hide|close)\s+(system|sys|load|weather|wxr|forecast|combat|cbt|mode|ai|core|assistant|news|headlines|feed|music|mus|player|song|notes|note|quote|motivation|gauges|gauge|dials)/);
+  const panelMatch=lo.match(/^(show|open|display|toggle|hide|close)\s+(system|sys|load|weather|wxr|forecast|ai|core|assistant|news|headlines|feed|music|mus|player|song|gauges|gauge|dials)/);
   if(panelMatch){
     const action=panelMatch[1];
     const target=panelMatch[2];
     const isOpen=/^(show|open|display|toggle)/i.test(action);
-    const panelMap={system:'panel-sys',sys:'panel-sys',load:'panel-sys',weather:'panel-weather',wxr:'panel-weather',forecast:'panel-weather',combat:'panel-combat',cbt:'panel-combat',mode:'panel-combat',ai:'panel-ai',core:'panel-ai',assistant:'panel-ai',news:'panel-news',headlines:'panel-news',feed:'panel-news',music:'panel-music',mus:'panel-music',player:'panel-music',song:'panel-music',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',motivation:'panel-quote',gauges:'panel-sys',gauge:'panel-sys',dials:'panel-sys'};
+    const panelMap={system:'panel-sys',sys:'panel-sys',load:'panel-sys',weather:'panel-weather',wxr:'panel-weather',forecast:'panel-weather',ai:'panel-ai',core:'panel-ai',assistant:'panel-ai',news:'panel-news',headlines:'panel-news',feed:'panel-news',music:'panel-music',mus:'panel-music',player:'panel-music',song:'panel-music',gauges:'panel-sys',gauge:'panel-sys',dials:'panel-sys'};
     const pid=panelMap[target];
     if(pid)togglePanel(pid);
     if(/^(show|open|display)\s+all/i.test(lo)){
@@ -1281,15 +1171,15 @@ function doCmd(){
       updateToggleBtns();
     }
   }
-  const nlOpen=lo.match(/(?:open|show|display|bring up|pull up|launch|load|activate|access|view|check out|take a look at|let me see|I need|I want to see|can you (?:open|show|display|bring up|pull up)|could you (?:open|show|display)|(?:please|pls) (?:open|show|display))\s*(?:the\s+)?(music|weather|news|notes|note|quote|quotes|combat|system|sys|gauge|gauges|ai|core|player|forecast|headline|headlines)/i);
+  const nlOpen=lo.match(/(?:open|show|display|bring up|pull up|launch|load|activate|access|view|check out|take a look at|let me see|I need|I want to see|can you (?:open|show|display|bring up|pull up)|could you (?:open|show|display)|(?:please|pls) (?:open|show|display))\s*(?:the\s+)?(music|weather|news|system|sys|gauge|gauges|ai|core|player|forecast|headline|headlines)/i);
   if(nlOpen){
-    const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',quotes:'panel-quote',combat:'panel-combat',system:'panel-sys',sys:'panel-sys',gauge:'panel-sys',gauges:'panel-sys',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
+    const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',system:'panel-sys',sys:'panel-sys',gauge:'panel-sys',gauges:'panel-sys',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
     const pid=nmap[nlOpen[1].toLowerCase()];
     if(pid)togglePanel(pid);
   }
-  const nlClose=lo.match(/(?:close|hide|dismiss|minimize|get rid of)\s*(?:the\s+)?(music|weather|news|notes|note|quote|quotes|combat|system|sys|gauge|gauges|ai|core|player|forecast|headline|headlines)/i);
+  const nlClose=lo.match(/(?:close|hide|dismiss|minimize|get rid of)\s*(?:the\s+)?(music|weather|news|system|sys|gauge|gauges|ai|core|player|forecast|headline|headlines)/i);
   if(nlClose){
-    const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',quotes:'panel-quote',combat:'panel-combat',system:'panel-sys',sys:'panel-sys',gauge:'panel-sys',gauges:'panel-sys',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
+    const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',system:'panel-sys',sys:'panel-sys',gauge:'panel-sys',gauges:'panel-sys',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
     const pid=nmap[nlClose[1].toLowerCase()];
     if(pid){
       const p=document.getElementById(pid);
@@ -1305,7 +1195,7 @@ function doCmd(){
       fridaySpeak(reply);
       addMem('ai',reply);
       const rl=reply.toLowerCase();
-      const aiPanelOpen=rl.match(/(?:open(?:ing)?|show(?:ing)?|display(?:ing)?|launch(?:ing)?|pull(?:ing)? up|bring(?:ing)? up)\s*(?:the\s+)?(music|weather|news|notes|note|quote|combat|system|gauge|gauges|ai|core|player|forecast|headline|headlines)/i);
+      const aiPanelOpen=rl.match(/(?:open(?:ing)?|show(?:ing)?|display(?:ing)?|launch(?:ing)?|pull(?:ing)? up|bring(?:ing)? up)\s*(?:the\s+)?(music|weather|news|system|gauge|gauges|ai|core|player|forecast|headline|headlines)/i);
       if(aiPanelOpen){
         const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',combat:'panel-combat',system:'panel-sys',gauge:'panel-sys',gauges:'panel-sys',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
         const pid=nmap[aiPanelOpen[1].toLowerCase()];
@@ -1351,7 +1241,6 @@ function tickClock(){
 }
 tickClock();setInterval(tickClock,1000);
 
-function selMode(el){document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('act'));el.classList.add('act')}
 
 // === WAVEFORM ===
 const waveC=document.getElementById('wave-canvas');const wCtx=waveC.getContext('2d');let waveOff=0;
@@ -1540,11 +1429,6 @@ function drawGauges(){
 drawGauges();
 
 // === QUICK ACTIONS ===
-function runQuick(action){
-  const commands={status:'status',scan:'scan',joke:'tell me a joke',quote:'quote'};
-  document.getElementById('ji').value=commands[action]||action;
-  doCmd();
-}
 
 // === PANEL TOGGLE ===
 function togglePanel(id){
@@ -1571,7 +1455,7 @@ function bringToFront(p){
 }
 
 function updateToggleBtns(){
-  const map={'panel-sys':'btn-sys','panel-weather':'btn-weather','panel-combat':'btn-combat','panel-ai':'btn-ai','panel-news':'btn-news','panel-music':'btn-music','panel-notes':'btn-notes','panel-quote':'btn-quote'};
+  const map={'panel-sys':'btn-sys','panel-weather':'btn-weather','panel-ai':'btn-ai','panel-news':'btn-news','panel-music':'btn-music'};
   for(const[pid,bid]of Object.entries(map)){
     const p=document.getElementById(pid);
     const b=document.getElementById(bid);
@@ -1608,7 +1492,7 @@ function updateToggleBtns(){
   }
 
   document.addEventListener('mousedown',function(e){
-    if(e.target.closest('button,input,textarea,a,.mem-btn,.music-btn,.weather-refresh,.note-del,.quote-btn,.forecast-day'))return;
+    if(e.target.closest('button,input,textarea,a,.mem-btn,.music-btn,.weather-refresh,.forecast-day'))return;
     const pt=e.target.closest('.pt');
     if(!pt)return;
     const p=pt.closest('.panel');
@@ -1654,7 +1538,7 @@ function updateToggleBtns(){
 
   // Touch support
   document.addEventListener('touchstart',function(e){
-    if(e.target.closest('button,input,textarea,a,.mem-btn,.music-btn,.weather-refresh,.note-del,.quote-btn,.forecast-day'))return;
+    if(e.target.closest('button,input,textarea,a,.mem-btn,.music-btn,.weather-refresh,.forecast-day'))return;
     const pt=e.target.closest('.pt');
     if(!pt)return;
     const p=pt.closest('.panel');
@@ -1930,12 +1814,10 @@ EXAMPLES OF HOW YOU SPEAK:
 CAPABILITIES YOU HAVE IN THIS HUD:
 - WEATHER: You have real-time weather data. Reference it when asked.
 - NEWS: Tech, world, science, business feeds available.
-- NOTES: Quick Notes panel for saving/recalling notes.
 - CALCULATOR: Compute math expressions.
 - MUSIC: Music player with tracks.
 - SYSTEM STATUS: You can report real device hardware — CPU cores, RAM, GPU model, storage usage. The device type (PC/Android/iOS/Mac) is auto-detected.
-- COMBAT MODES: Stealth, Combat, Recon, Sentry, Override.
-- PANELS: You can open/close panels: weather (WXR), news, music, notes, quote, combat (CBT), system (SYS), gauges, AI core. When user asks to open a panel, confirm and say which panel you're opening.
+- PANELS: You can open/close panels: weather (WXR), news, music, system (SYS), gauges, AI core. When user asks to open a panel, confirm and say which panel you're opening.
 
 RULES:
 - If asked about weather, reference the weather context if available.
@@ -2101,7 +1983,7 @@ function startRecognition(){
 // (Moved to free drag section above)
 
 // === INIT ===
-setTimeout(()=>{fetchWeather();loadNews();renderNotes()},1000);
+setTimeout(()=>{fetchWeather();loadNews()},1000);
 
 // Pre-fetch and play F.R.I.D.A.Y. greeting instantly — no clicks needed
 const greetingTexts=[
