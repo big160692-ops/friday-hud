@@ -167,6 +167,8 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .news-meta{font-size:6px;color:var(--muted);margin-top:2px;display:flex;justify-content:space-between}
 .news-cat{color:var(--secondary);text-transform:uppercase;letter-spacing:0.1em}
 .news-loading{font-size:8px;color:var(--muted);text-align:center;padding:12px 0}
+#spotify-playlists::-webkit-scrollbar,#spotify-tracks::-webkit-scrollbar{width:3px}
+#spotify-playlists::-webkit-scrollbar-thumb,#spotify-tracks::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
 
 /* Notes widget */
 .notes-area{width:100%;min-height:60px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);border-radius:2px;color:var(--text);font-family:var(--font-hud);font-size:8px;padding:6px;resize:none;outline:none;transition:border-color 0.2s;line-height:1.6}
@@ -572,13 +574,33 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 
         <!-- Music player -->
         <div class="panel" id="panel-music" style="right:280px;top:20px;width:400px">
-          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Now Playing</div>
+          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Music <span id="spotify-status" style="font-size:6px;margin-left:auto;color:var(--muted)"></span></div>
           <div id="yt-embed" style="position:absolute;width:0;height:0;overflow:hidden"></div>
+
+          <!-- Spotify Login -->
+          <div id="spotify-login" style="margin-bottom:6px">
+            <div id="spotify-setup" style="padding:4px 0">
+              <input id="spotify-clientid" placeholder="Spotify Client ID" style="width:calc(100% - 70px);padding:3px 6px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);color:var(--text);font-size:7px;font-family:var(--font-hud);border-radius:2px;outline:none">
+              <button onclick="saveSpotifyClientId()" style="width:60px;padding:3px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:var(--primary);font-size:6px;letter-spacing:0.08em;cursor:pointer;border-radius:2px;font-family:var(--font-hud);vertical-align:middle">SAVE</button>
+            </div>
+            <div style="font-size:5.5px;color:var(--muted);line-height:1.5;margin:2px 0 4px">
+              1. Go to <span style="color:var(--primary)">developer.spotify.com/dashboard</span><br>
+              2. Create app &rarr; set Redirect URI to <span style="color:var(--primary)" id="spotify-redirect-display"></span><br>
+              3. Copy Client ID above &rarr; SAVE &rarr; LOGIN
+            </div>
+            <button id="spotify-login-btn" onclick="spotifyLogin()" style="width:100%;padding:4px;background:rgba(30,215,96,0.15);border:1px solid rgba(30,215,96,0.4);color:#1ed760;font-size:7px;letter-spacing:0.1em;cursor:pointer;border-radius:2px;font-family:var(--font-hud)">LOGIN WITH SPOTIFY</button>
+          </div>
+
+          <!-- Playlist Selector (shown when logged in) -->
+          <div id="spotify-playlists" style="display:none;margin-bottom:6px;max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent">
+          </div>
+
+          <!-- Now Playing -->
           <div class="music-info">
             <div class="music-art" id="music-art">&#127925;</div>
             <div class="music-meta">
-              <div class="music-track" id="music-track">Demons</div>
-              <div class="music-artist" id="music-artist">Imagine Dragons</div>
+              <div class="music-track" id="music-track">Select a playlist</div>
+              <div class="music-artist" id="music-artist">Login to Spotify first</div>
             </div>
           </div>
           <div class="music-progress" onclick="seekMusic(event)"><div class="music-progress-fill" id="music-fill" style="width:0%"></div></div>
@@ -590,6 +612,10 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
             <button class="music-btn" onclick="nextTrack()" title="Next">&#9654;&#9654;</button>
             <button class="music-btn" onclick="toggleRepeat()" id="btn-repeat" title="Repeat">&#8634;</button>
           </div>
+
+          <!-- Track list -->
+          <div id="spotify-tracks" style="max-height:120px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-top:4px"></div>
+
           <button onclick="openInSpotify()" style="width:100%;margin-top:6px;padding:4px;background:rgba(30,215,96,0.1);border:1px solid rgba(30,215,96,0.3);color:#1ed760;font-size:7px;letter-spacing:0.1em;cursor:pointer;border-radius:2px;font-family:var(--font-hud)">OPEN IN SPOTIFY</button>
         </div>
 
@@ -1036,8 +1062,8 @@ function loadFallbackNews(el){
 
 function loadNews(){detectLocationForNews()}
 
-// === MUSIC PLAYER ===
-const TRACKS=[
+// === MUSIC PLAYER (Spotify Integrated) ===
+const DEFAULT_TRACKS=[
   {t:'Demons',a:'Imagine Dragons',d:'3:56',vid:'mEF2r8J3cvY'},
   {t:'Believer',a:'Imagine Dragons',d:'3:24',vid:'7wtfhZwyrcc'},
   {t:'Thunder',a:'Imagine Dragons',d:'3:07',vid:'fKopy74Hus0'},
@@ -1047,8 +1073,206 @@ const TRACKS=[
   {t:'On Top of the World',a:'Imagine Dragons',d:'3:12',vid:'w5vR137KRic'},
   {t:'Shots',a:'Imagine Dragons',d:'3:52',vid:'nR2Pa-3Cclo'}
 ];
+let TRACKS=[...DEFAULT_TRACKS];
 let curTrack=0,isPlaying=false,musicPos=0,musicTimer=null,shuffleOn=false,repeatOn=false;
 let ytPlayer=null,ytReady=false;
+
+// === SPOTIFY AUTH ===
+let spotifyToken=localStorage.getItem('spotify_token')||'';
+let spotifyRefresh=localStorage.getItem('spotify_refresh')||'';
+let spotifyExpiry=parseInt(localStorage.getItem('spotify_expiry')||'0');
+let spotifyClientId=localStorage.getItem('spotify_client_id')||'';
+let spotifyUser=null;
+let spotifyPlaylists=[];
+let currentPlaylistId='';
+
+function getRedirectUri(){
+  return window.location.origin+window.location.pathname;
+}
+
+function saveSpotifyClientId(){
+  const v=document.getElementById('spotify-clientid').value.trim();
+  if(!v){addLog('wn','[MUS]','Enter a Client ID first.');return}
+  spotifyClientId=v;
+  localStorage.setItem('spotify_client_id',v);
+  addLog('ok','[MUS]','Spotify Client ID saved.');
+  document.getElementById('spotify-redirect-display').textContent=getRedirectUri();
+}
+
+function spotifyLogin(){
+  if(!spotifyClientId){
+    spotifyClientId=document.getElementById('spotify-clientid').value.trim();
+    if(!spotifyClientId){addLog('wn','[MUS]','Enter your Spotify Client ID first.');return}
+    localStorage.setItem('spotify_client_id',spotifyClientId);
+  }
+  const scopes='playlist-read-private playlist-read-collaborative user-library-read streaming user-read-playback-state user-modify-playback-state';
+  const url='https://accounts.spotify.com/authorize?client_id='+encodeURIComponent(spotifyClientId)+'&response_type=token&redirect_uri='+encodeURIComponent(getRedirectUri())+'&scope='+encodeURIComponent(scopes)+'&show_dialog=false';
+  window.location.href=url;
+}
+
+function spotifyLogout(){
+  spotifyToken='';spotifyRefresh='';spotifyUser=null;spotifyPlaylists=[];
+  localStorage.removeItem('spotify_token');localStorage.removeItem('spotify_refresh');localStorage.removeItem('spotify_expiry');
+  updateSpotifyUI();
+  addLog('wn','[MUS]','Logged out of Spotify.');
+}
+
+function handleSpotifyCallback(){
+  const hash=window.location.hash;
+  if(!hash||!hash.includes('access_token'))return;
+  const params=new URLSearchParams(hash.substring(1));
+  spotifyToken=params.get('access_token')||'';
+  spotifyRefresh=params.get('refresh_token')||'';
+  const expiresIn=parseInt(params.get('expires_in')||'3600');
+  spotifyExpiry=Date.now()+expiresIn*1000;
+  localStorage.setItem('spotify_token',spotifyToken);
+  if(spotifyRefresh)localStorage.setItem('spotify_refresh',spotifyRefresh);
+  localStorage.setItem('spotify_expiry',spotifyExpiry.toString());
+  window.history.replaceState(null,'',window.location.pathname);
+  addLog('ok','[MUS]','Spotify authenticated!');
+  loadSpotifyProfile();
+}
+
+async function spotifyFetch(url,opts){
+  if(!spotifyToken)return null;
+  if(Date.now()>spotifyExpiry-60000){
+    // Token expired, try to re-auth
+    addLog('wn','[MUS]','Token expired. Please re-login.');
+    spotifyToken='';spotifyUser=null;
+    localStorage.removeItem('spotify_token');
+    updateSpotifyUI();
+    return null;
+  }
+  const r=await fetch(url,{...opts,headers:{'Authorization':'Bearer '+spotifyToken,...(opts&&opts.headers||{})}});
+  if(r.status===401){
+    spotifyToken='';spotifyUser=null;
+    localStorage.removeItem('spotify_token');
+    updateSpotifyUI();
+    addLog('wn','[MUS]','Token expired. Re-login needed.');
+    return null;
+  }
+  return r;
+}
+
+async function loadSpotifyProfile(){
+  const r=await spotifyFetch('https://api.spotify.com/v1/me');
+  if(!r||!r.ok)return;
+  spotifyUser=await r.json();
+  addLog('ok','[MUS]','Logged in as: '+spotifyUser.display_name);
+  document.getElementById('spotify-status').textContent=spotifyUser.display_name;
+  document.getElementById('spotify-status').style.color='#1ed760';
+  await loadSpotifyPlaylists();
+}
+
+async function loadSpotifyPlaylists(){
+  spotifyPlaylists=[];
+  let url='https://api.spotify.com/v1/me/playlists?limit=50';
+  while(url){
+    const r=await spotifyFetch(url);
+    if(!r||!r.ok)break;
+    const data=await r.json();
+    spotifyPlaylists.push(...data.items);
+    url=data.next||null;
+  }
+  renderSpotifyPlaylists();
+  addLog('ok','[MUS]',spotifyPlaylists.length+' playlists loaded.');
+}
+
+function renderSpotifyPlaylists(){
+  const el=document.getElementById('spotify-playlists');
+  if(!spotifyUser||!spotifyPlaylists.length){el.style.display='none';return}
+  el.style.display='block';
+  el.innerHTML=spotifyPlaylists.map(p=>`
+    <div onclick="loadSpotifyPlaylist('${p.id}')" style="display:flex;align-items:center;gap:5px;padding:3px 4px;cursor:pointer;border-radius:2px;transition:background 0.2s;${currentPlaylistId===p.id?'background:rgba(30,215,96,0.1);border:1px solid rgba(30,215,96,0.3)':'border:1px solid transparent'}" onmouseover="this.style.background='rgba(30,215,96,0.05)'" onmouseout="this.style.background='${currentPlaylistId===p.id?'rgba(30,215,96,0.1)':'transparent'}'">
+      <img src="${p.images&&p.images[0]?p.images[0].url:''}" style="width:22px;height:22px;border-radius:2px;object-fit:cover;${p.images&&p.images[0]?'':'display:none'}">
+      <div style="min-width:0;flex:1">
+        <div style="font-size:6.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+        <div style="font-size:5px;color:var(--muted)">${p.tracks.total} tracks</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadSpotifyPlaylist(playlistId){
+  currentPlaylistId=playlistId;
+  renderSpotifyPlaylists();
+  TRACKS=[];
+  let url='https://api.spotify.com/v1/playlists/'+playlistId+'/tracks?limit=100&fields=items(track(name,artists,album,duration_ms,uri)),next';
+  while(url){
+    const r=await spotifyFetch(url);
+    if(!r||!r.ok)break;
+    const data=await r.json();
+    data.items.forEach(item=>{
+      if(!item.track)return;
+      const t=item.track;
+      const artists=(t.artists||[]).map(a=>a.name).join(', ');
+      const durMs=t.duration_ms||0;
+      const durMin=Math.floor(durMs/60000);
+      const durSec=Math.floor((durMs%60000)/1000);
+      const durStr=durMin+':'+(durSec<10?'0':'')+durSec;
+      TRACKS.push({
+        t:t.name,
+        a:artists,
+        d:durStr,
+        vid:'',
+        uri:t.uri,
+        albumImg:t.album&&t.album.images&&t.album.images[0]?t.album.images[0].url:''
+      });
+    });
+    url=data.next||null;
+  }
+  if(!TRACKS.length){
+    TRACKS=[...DEFAULT_TRACKS];
+    addLog('wn','[MUS]','Playlist empty. Using defaults.');
+  }else{
+    addLog('ok','[MUS]',TRACKS.length+' tracks loaded from playlist.');
+  }
+  curTrack=0;
+  playTrack(0);
+  renderSpotifyTracks();
+}
+
+function renderSpotifyTracks(){
+  const el=document.getElementById('spotify-tracks');
+  if(!TRACKS.length||TRACKS===DEFAULT_TRACKS){el.innerHTML='';return}
+  el.innerHTML=TRACKS.map((tr,i)=>`
+    <div onclick="playTrack(${i})" style="display:flex;align-items:center;gap:5px;padding:2px 4px;cursor:pointer;border-radius:2px;transition:background 0.2s;${i===curTrack?'background:rgba(30,215,96,0.08)':''}" onmouseover="this.style.background='rgba(30,215,96,0.04)'" onmouseout="this.style.background='${i===curTrack?'rgba(30,215,96,0.08)':''}'">
+      <img src="${tr.albumImg||''}" style="width:18px;height:18px;border-radius:2px;object-fit:cover;${tr.albumImg?'':'display:none'}">
+      <div style="min-width:0;flex:1">
+        <div style="font-size:6px;color:${i===curTrack?'#1ed760':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.t}</div>
+        <div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.a}</div>
+      </div>
+      <div style="font-size:5px;color:var(--muted)">${tr.d}</div>
+    </div>
+  `).join('');
+}
+
+function updateSpotifyUI(){
+  const loginEl=document.getElementById('spotify-login');
+  const plEl=document.getElementById('spotify-playlists');
+  const statusEl=document.getElementById('spotify-status');
+  if(spotifyToken&&spotifyUser){
+    loginEl.style.display='none';
+    statusEl.textContent=spotifyUser.display_name;
+    statusEl.style.color='#1ed760';
+    loadSpotifyPlaylists();
+  }else if(spotifyToken&&!spotifyUser){
+    statusEl.textContent='Connecting...';
+    statusEl.style.color='var(--muted)';
+    loadSpotifyProfile();
+  }else{
+    loginEl.style.display='block';
+    plEl.style.display='none';
+    statusEl.textContent='';
+  }
+}
+
+// Init redirect URI display
+document.getElementById('spotify-redirect-display').textContent=getRedirectUri();
+document.getElementById('spotify-clientid').value=spotifyClientId;
+handleSpotifyCallback();
+if(spotifyToken)loadSpotifyProfile();
+updateMusicUI();
 
 function loadYouTubeAPI(){
   if(window.YT&&window.YT.Player)return;
@@ -1079,7 +1303,7 @@ function loadYouTubeAPI(){
 loadYouTubeAPI();
 
 function updateMusicUI(){
-  const tr=TRACKS[curTrack];
+  const tr=TRACKS[curTrack]||TRACKS[0];
   document.getElementById('music-track').textContent=tr.t;
   document.getElementById('music-artist').textContent=tr.a;
   document.getElementById('music-dur').textContent=tr.d;
@@ -1100,7 +1324,12 @@ function updateMusicUI(){
   document.getElementById('btn-shuffle').className='music-btn'+(shuffleOn?' active':'');
   document.getElementById('btn-repeat').className='music-btn'+(repeatOn?' active':'');
   const art=document.getElementById('music-art');
-  if(art)art.innerHTML='<img src="https://img.youtube.com/vi/'+TRACKS[curTrack].vid+'/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px">';
+  if(tr.albumImg){
+    if(art)art.innerHTML='<img src="'+tr.albumImg+'" style="width:100%;height:100%;object-fit:cover;border-radius:4px">';
+  }else if(tr.vid){
+    if(art)art.innerHTML='<img src="https://img.youtube.com/vi/'+tr.vid+'/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px">';
+  }
+  renderSpotifyTracks();
 }
 function formatTime(s){const m=Math.floor(s/60);const sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec}
 
@@ -1139,12 +1368,16 @@ function seekMusic(e){
 }
 function openInSimpMusic(){
   const vid=TRACKS[curTrack].vid;
-  window.open('simpmusic://watch?v='+vid,'_blank');
+  if(vid)window.open('simpmusic://watch?v='+vid,'_blank');
 }
 function openInSpotify(){
-  const t=TRACKS[curTrack].t;
-  const a=TRACKS[curTrack].a;
-  window.open('https://open.spotify.com/search/'+encodeURIComponent(t+' '+a),'_blank');
+  const tr=TRACKS[curTrack];
+  if(tr.uri&&tr.uri.startsWith('spotify:')){
+    // Open in Spotify app/web
+    window.open('https://open.spotify.com/track/'+tr.uri.split(':')[2],'_blank');
+  }else{
+    window.open('https://open.spotify.com/search/'+encodeURIComponent(tr.t+' '+tr.a),'_blank');
+  }
 }
 updateMusicUI();
 
