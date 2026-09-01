@@ -1197,7 +1197,7 @@ function doCmd(){
       const rl=reply.toLowerCase();
       const aiPanelOpen=rl.match(/(?:open(?:ing)?|show(?:ing)?|display(?:ing)?|launch(?:ing)?|pull(?:ing)? up|bring(?:ing)? up)\s*(?:the\s+)?(music|weather|news|system|gauge|gauges|ai|core|player|forecast|headline|headlines)/i);
       if(aiPanelOpen){
-        const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',notes:'panel-notes',note:'panel-notes',quote:'panel-quote',combat:'panel-combat',system:'panel-sys',gauge:'panel-sys',gauges:'panel-sys',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
+        const nmap={music:'panel-music',weather:'panel-weather',news:'panel-news',system:'panel-sys',gauge:'panel-sys',gauges:'panel-sys',ai:'panel-ai',core:'panel-ai',player:'panel-music',forecast:'panel-weather',headline:'panel-news',headlines:'panel-news'};
         const pid=nmap[aiPanelOpen[1].toLowerCase()];
         if(pid){
           const p=document.getElementById(pid);
