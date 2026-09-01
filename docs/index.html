@@ -1209,14 +1209,20 @@ async function loadSpotifyPlaylist(playlistId){
   currentPlaylistId=playlistId;
   renderSpotifyPlaylists();
   TRACKS=[];
-  let url='https://api.spotify.com/v1/playlists/'+playlistId+'/tracks?limit=100&fields=items(track(name,artists,album,duration_ms,uri)),next';
+  let url;
+  if(playlistId==='liked_songs'){
+    url='https://api.spotify.com/v1/me/tracks?limit=50';
+  }else{
+    url='https://api.spotify.com/v1/playlists/'+playlistId+'/tracks?limit=100&fields=items(track(name,artists,album,duration_ms,uri)),next';
+  }
   while(url){
     const r=await spotifyFetch(url);
     if(!r||!r.ok)break;
     const data=await r.json();
-    data.items.forEach(item=>{
-      if(!item.track)return;
-      const t=item.track;
+    const items=data.items||[];
+    items.forEach(item=>{
+      const t=item.track||item;
+      if(!t)return;
       const artists=(t.artists||[]).map(a=>a.name).join(', ');
       const durMs=t.duration_ms||0;
       const durMin=Math.floor(durMs/60000);
@@ -1283,6 +1289,7 @@ function updateSpotifyUI(){
 let savedPlaylists=JSON.parse(localStorage.getItem('spotify_saved_playlists')||'[]');
 
 function parseSpotifyPlaylistId(url){
+  if(url.includes('open.spotify.com/collection/tracks'))return 'liked_songs';
   const m=url.match(/spotify\.com\/playlist\/([a-zA-Z0-9]+)/);
   return m?m[1]:null;
 }
@@ -1292,7 +1299,16 @@ async function addExternalPlaylist(){
   const url=inp.value.trim();
   if(!url){addLog('wn','[MUS]','Paste a Spotify playlist URL.');return}
   const pid=parseSpotifyPlaylistId(url);
-  if(!pid){addLog('wn','[MUS]','Invalid Spotify playlist URL. Use format: open.spotify.com/playlist/ID');return}
+  if(!pid){addLog('wn','[MUS]','Invalid Spotify URL. Use playlist URL or open.spotify.com/collection/tracks for Liked Songs.');return}
+  if(pid==='liked_songs'){
+    if(savedPlaylists.find(p=>p.id==='liked_songs')){addLog('wn','[MUS]','Liked Songs already added.');inp.value='';return}
+    savedPlaylists.push({id:'liked_songs',name:'Liked Songs',image:'',owner:spotifyUser?spotifyUser.display_name:'You',total:'?'});
+    localStorage.setItem('spotify_saved_playlists',JSON.stringify(savedPlaylists));
+    inp.value='';
+    renderSavedPlaylists();
+    addLog('ok','[MUS]','Added: Liked Songs');
+    return;
+  }
   if(savedPlaylists.find(p=>p.id===pid)){addLog('wn','[MUS]','Playlist already added.');inp.value='';return}
   if(!spotifyToken){addLog('wn','[MUS]','Login to Spotify first.');return}
   const r=await spotifyFetch('https://api.spotify.com/v1/playlists/'+pid+'?fields=id,name,images,owner(display_name),tracks(total)');
