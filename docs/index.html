@@ -1106,20 +1106,34 @@ function renderTrackList(){
 }
 function removeTrack(i){TRACKS.splice(i,1);localStorage.setItem('yt_custom_tracks',JSON.stringify(TRACKS));if(curTrack>=TRACKS.length)curTrack=Math.max(0,TRACKS.length-1);updateMusicUI()}
 
-// === YOUTUBE SEARCH (via Invidious, no API key) ===
+// === YOUTUBE SEARCH ===
 async function searchYouTube(){
   const q=document.getElementById('yt-search').value.trim();if(!q)return;
   const el=document.getElementById('yt-results');
   el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">Searching...</div>';
-  const instances=['https://inv.nadeko.net','https://invidious.nerdvpn.de','https://vid.puffyan.us','https://invidious.privacyredirect.com','https://yt.artemislena.eu'];
+
+  // Try Invidious instances
+  const invHosts=['https://inv.nadeko.net','https://invidious.nerdvpn.de','https://vid.puffyan.us','https://invidious.privacyredirect.com','https://yt.artemislena.eu','https://invidious.lunar.icu'];
   let data=null;
-  for(const host of instances){
-    try{const r=await fetch(host+'/api/v1/search?q='+encodeURIComponent(q)+'&type=video&sort_by=relevance');if(r.ok){data=await r.json();break}}catch(e){}
+
+  for(const host of invHosts){
+    try{const r=await fetch(host+'/api/v1/search?q='+encodeURIComponent(q)+'&type=video&sort_by=relevance',{signal:AbortSignal.timeout?AbortSignal.timeout(5000):undefined});if(r.ok){data=await r.json();if(data&&data.length)break}}catch(e){}
   }
-  if(!data||!data.length){el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">No results</div>';return}
-  el.innerHTML=data.slice(0,10).map(v=>{
-    const vid=v.videoId;const title=v.title||'';const chan=v.author||'';
-    return`<div onclick="addTrack('${vid}','${title.replace(/'/g,"\\'")}','${chan.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:5px;padding:3px 4px;cursor:pointer;border-radius:2px;transition:background 0.2s" onmouseover="this.style.background='rgba(255,0,0,0.05)'" onmouseout="this.style.background='transparent'"><img src="https://img.youtube.com/vi/${vid}/default.jpg" style="width:24px;height:18px;border-radius:2px;object-fit:cover"><div style="min-width:0;flex:1"><div style="font-size:6px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${chan}</div></div></div>`;
+
+  // Fallback to Piped
+  if(!data||!data.length){
+    const pipedHosts=['https://pipedapi.kavin.rocks','https://pipedapi.adminforge.de','https://api.piped.projectsegfau.lt'];
+    for(const host of pipedHosts){
+      try{const r=await fetch(host+'/search?q='+encodeURIComponent(q)&filter=music_songs',{signal:AbortSignal.timeout?AbortSignal.timeout(5000):undefined});if(r.ok){const d=await r.json();data=(d.items||[]).map(v=>({videoId:v.url?.split('v=')[1]||v.url?.split('/').pop(),title:v.title,author:v.uploaderName,duration:v.duration,views:v.views}));if(data&&data.length)break}}catch(e){}
+    }
+  }
+
+  if(!data||!data.length){el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">No results found</div>';return}
+  el.innerHTML=data.slice(0,12).map(v=>{
+    const vid=v.videoId;const title=v.title||'';const chan=v.author||v.authorName||'';
+    const dur=v.duration||0;const durStr=dur?Math.floor(dur/60)+':'+(dur%60<10?'0':'')+dur%60:'';
+    const views=v.views||0;const viewStr=views>=1e6?(views/1e6).toFixed(1)+'M':views>=1e3?(views/1e3).toFixed(0)+'K':views;
+    return`<div onclick="addTrack('${vid}','${title.replace(/'/g,"\\'")}','${chan.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:5px;padding:3px 4px;cursor:pointer;border-radius:2px;transition:background 0.2s" onmouseover="this.style.background='rgba(255,0,0,0.05)'" onmouseout="this.style.background='transparent'"><img src="https://img.youtube.com/vi/${vid}/mqdefault.jpg" style="width:32px;height:24px;border-radius:2px;object-fit:cover;flex-shrink:0"><div style="min-width:0;flex:1"><div style="font-size:6px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${chan}${viewStr?' · '+viewStr+' views':''}${durStr?' · '+durStr:''}</div></div></div>`;
   }).join('');
 }
 function addTrack(vid,title,artist){
