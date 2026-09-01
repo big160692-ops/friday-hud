@@ -996,10 +996,13 @@ async function searchYouTube(){
   el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">Searching...</div>';
 
   try{
-    const ctx={client:{hl:'en',gl:'US',clientName:'WEB',clientVersion:'2.20240101.00.00'}};
-    const r=await fetch('https://www.youtube.com/youtubei/v1/search?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:ctx,query:q})});
-    if(!r.ok)throw new Error('YouTube API error');
-    const d=await r.json();
+    const proxyUrl='https://api.allorigins.win/raw?url='+encodeURIComponent('https://www.youtube.com/results?search_query='+encodeURIComponent(q));
+    const r=await fetch(proxyUrl);
+    if(!r.ok)throw new Error('Fetch failed');
+    const html=await r.text();
+    const match=html.match(/var ytInitialData\s*=\s*(\{.*?\});\s*<\/script>/s);
+    if(!match)throw new Error('No data found');
+    const d=JSON.parse(match[1]);
     const sections=d?.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents||[];
     let videos=[];
     for(const sec of sections){
@@ -1007,17 +1010,18 @@ async function searchYouTube(){
       for(const item of items){
         const vr=item.videoRenderer;
         if(vr&&vr.videoId){
-          const dur=vr.lengthText?parseInt(vr.lengthText.simpleText.split(':')[0])*60+parseInt(vr.lengthText.simpleText.split(':').pop()):0;
-          const views=vr.viewCountText?parseInt((vr.viewCountText.simpleText||'0').replace(/[^0-9]/g,'')):0;
-          videos.push({vid:vr.videoId,title:vr.title?.runs?.[0]?.text||'',chan:vr.ownerText?.runs?.[0]?.text||vr.longBylineText?.runs?.[0]?.text||'',dur:dur,views:views});
+          const durParts=(vr.lengthText?.simpleText||'').split(':').map(Number);
+          const dur=durParts.length===3?durParts[0]*3600+durParts[1]*60+durParts[2]:durParts.length===2?durParts[0]*60+durParts[1]:0;
+          const viewStr=vr.viewCountText?.simpleText||'';
+          const views=parseInt(viewStr.replace(/[^0-9]/g,''))||0;
+          videos.push({vid:vr.videoId,title:vr.title?.runs?.[0]?.text||'',chan:vr.ownerText?.runs?.[0]?.text||vr.longBylineText?.runs?.[0]?.text||'',dur:dur,views:views,viewStr:viewStr});
         }
       }
     }
     if(!videos.length){el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">No results found</div>';return}
     el.innerHTML=videos.slice(0,15).map(v=>{
       const durStr=v.dur?Math.floor(v.dur/60)+':'+(v.dur%60<10?'0':'')+v.dur%60:'';
-      const viewStr=v.views>=1e6?(v.views/1e6).toFixed(1)+'M':v.views>=1e3?(v.views/1e3).toFixed(0)+'K':v.views;
-      return`<div onclick="addTrack('${v.vid}','${v.title.replace(/'/g,"\\'")}','${v.chan.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:5px;padding:3px 4px;cursor:pointer;border-radius:2px;transition:background 0.2s" onmouseover="this.style.background='rgba(255,0,0,0.05)'" onmouseout="this.style.background='transparent'"><img src="https://img.youtube.com/vi/${v.vid}/mqdefault.jpg" style="width:32px;height:24px;border-radius:2px;object-fit:cover;flex-shrink:0"><div style="min-width:0;flex:1"><div style="font-size:6px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.title}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.chan}${viewStr?' · '+viewStr+' views':''}${durStr?' · '+durStr:''}</div></div></div>`;
+      return`<div onclick="addTrack('${v.vid}','${v.title.replace(/'/g,"\\'")}','${v.chan.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:5px;padding:3px 4px;cursor:pointer;border-radius:2px;transition:background 0.2s" onmouseover="this.style.background='rgba(255,0,0,0.05)'" onmouseout="this.style.background='transparent'"><img src="https://img.youtube.com/vi/${v.vid}/mqdefault.jpg" style="width:32px;height:24px;border-radius:2px;object-fit:cover;flex-shrink:0"><div style="min-width:0;flex:1"><div style="font-size:6px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.title}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.chan}${v.viewStr?' · '+v.viewStr:''}${durStr?' · '+durStr:''}</div></div></div>`;
     }).join('');
   }catch(e){
     el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">Search failed: '+e.message+'</div>';
