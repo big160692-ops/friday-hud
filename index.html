@@ -486,7 +486,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
       <div class="panel-layer" id="panel-layer">
 
         <!-- System + Gauges combined -->
-        <div class="panel" id="panel-sys" style="left:20px;top:20px;width:540px;padding:12px 14px">
+        <div class="panel open" id="panel-sys" style="left:20px;top:20px;width:320px;padding:12px 14px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span><span id="sys-title">System</span></div>
           <div id="device-info" style="font-size:8px;color:var(--muted);margin-bottom:8px;letter-spacing:0.08em;border-bottom:1px solid var(--dim);padding-bottom:6px">Detecting hardware...</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-bottom:8px">
@@ -500,7 +500,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Weather widget -->
-        <div class="panel" id="panel-weather" style="left:240px;top:20px;width:200px">
+        <div class="panel open" id="panel-weather" style="left:360px;top:20px;width:200px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Weather <span class="weather-refresh" onclick="fetchWeather()" title="Refresh">&#8635; REFRESH</span></div>
           <div id="weather-content">
             <div class="weather-loading">Initializing weather sensors...</div>
@@ -508,7 +508,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Combat mode -->
-        <div class="panel" id="panel-combat" style="left:20px;top:320px;width:200px">
+        <div class="panel open" id="panel-combat" style="left:20px;top:300px;width:200px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Combat mode</div>
           <button class="mbtn act" onclick="selMode(this)">Stealth</button>
           <button class="mbtn" onclick="selMode(this)">Combat</button>
@@ -535,7 +535,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- AI Core -->
-        <div class="panel" id="panel-ai" style="right:20px;top:20px;width:240px">
+        <div class="panel open" id="panel-ai" style="right:20px;top:20px;width:240px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>AI Core <span class="mem-btn" onclick="toggleMem()">MEMORY</span></div>
           <div id="con">
             <div class="log-line ok new"><span class="lpfx">[SYS]</span>All systems nominal.</div>
@@ -565,7 +565,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- News feed -->
-        <div class="panel" id="panel-news" style="right:20px;top:340px;width:240px">
+        <div class="panel open" id="panel-news" style="right:20px;top:300px;width:240px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Local News <span id="news-loc" style="font-size:6px;color:var(--muted);margin-left:auto"></span></div>
           <div class="news-list" id="news-list">
             <div class="news-loading">Detecting location for local news...</div>
@@ -573,14 +573,21 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Music player -->
-        <div class="panel" id="panel-music" style="right:280px;top:20px;width:400px">
-          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Now Playing</div>
+        <div class="panel open" id="panel-music" style="right:280px;top:20px;width:300px">
+          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Music</div>
           <div id="yt-embed" style="position:absolute;width:0;height:0;overflow:hidden"></div>
+          <div style="margin-bottom:6px">
+            <div style="display:flex;gap:3px">
+              <input id="yt-search" placeholder="Search YouTube..." style="flex:1;padding:3px 6px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);color:var(--text);font-size:7px;font-family:var(--font-hud);border-radius:2px;outline:none" onkeydown="if(event.key==='Enter')searchYouTube()">
+              <button onclick="searchYouTube()" style="padding:3px 6px;background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;font-size:6px;letter-spacing:0.08em;cursor:pointer;border-radius:2px;font-family:var(--font-hud)">SEARCH</button>
+            </div>
+            <div id="yt-results" style="max-height:90px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-top:4px"></div>
+          </div>
           <div class="music-info">
             <div class="music-art" id="music-art">&#127925;</div>
             <div class="music-meta">
-              <div class="music-track" id="music-track">Demons</div>
-              <div class="music-artist" id="music-artist">Imagine Dragons</div>
+              <div class="music-track" id="music-track">No track selected</div>
+              <div class="music-artist" id="music-artist">Search above to add music</div>
             </div>
           </div>
           <div class="music-progress" onclick="seekMusic(event)"><div class="music-progress-fill" id="music-fill" style="width:0%"></div></div>
@@ -592,17 +599,18 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
             <button class="music-btn" onclick="nextTrack()" title="Next">&#9654;&#9654;</button>
             <button class="music-btn" onclick="toggleRepeat()" id="btn-repeat" title="Repeat">&#8634;</button>
           </div>
+          <div id="yt-tracklist" style="max-height:80px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-top:4px"></div>
         </div>
 
         <!-- Notes -->
-        <div class="panel" id="panel-notes" style="left:240px;top:320px;width:200px">
+        <div class="panel open" id="panel-notes" style="left:240px;top:300px;width:200px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Quick Notes</div>
           <textarea class="notes-area" id="notes-input" placeholder="Type a note... (Enter to save)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addNote()}"></textarea>
           <div class="notes-list" id="notes-list"></div>
         </div>
 
         <!-- Quote -->
-        <div class="panel" id="panel-quote" style="left:50%;top:30px;transform:translateX(-50%);width:220px">
+        <div class="panel open" id="panel-quote" style="left:50%;top:530px;transform:translateX(-50%);width:220px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Daily Quote</div>
           <div class="quote-box" id="quote-text">"The best way to predict the future is to invent it."</div>
           <div class="quote-author" id="quote-author">- Alan Kay</div>
@@ -1038,16 +1046,7 @@ function loadFallbackNews(el){
 function loadNews(){detectLocationForNews()}
 
 // === MUSIC PLAYER ===
-const TRACKS=[
-  {t:'Demons',a:'Imagine Dragons',d:'3:56',vid:'mEF2r8J3cvY'},
-  {t:'Believer',a:'Imagine Dragons',d:'3:24',vid:'7wtfhZwyrcc'},
-  {t:'Thunder',a:'Imagine Dragons',d:'3:07',vid:'fKopy74Hus0'},
-  {t:'Radioactive',a:'Imagine Dragons',d:'4:12',vid:'ktvTqknDobU'},
-  {t:'Natural',a:'Imagine Dragons',d:'3:06',vid:'KR0BgGHbDq4'},
-  {t:'Whatever It Takes',a:'Imagine Dragons',d:'3:21',vid:'Ag1OQq_D9Y8'},
-  {t:'On Top of the World',a:'Imagine Dragons',d:'3:12',vid:'w5vR137KRic'},
-  {t:'Shots',a:'Imagine Dragons',d:'3:52',vid:'nR2Pa-3Cclo'}
-];
+let TRACKS=JSON.parse(localStorage.getItem('yt_custom_tracks')||'[]');
 let curTrack=0,isPlaying=false,musicPos=0,musicTimer=null,shuffleOn=false,repeatOn=false;
 let ytPlayer=null,ytReady=false;
 
@@ -1059,7 +1058,7 @@ function loadYouTubeAPI(){
   window.onYouTubeIframeAPIReady=function(){
     ytPlayer=new YT.Player('yt-embed',{
       height:'0',width:'0',
-      videoId:TRACKS[0].vid,
+      videoId:TRACKS.length?TRACKS[0].vid:'',
       playerVars:{autoplay:0,controls:0,disablekb:1},
       events:{
         onReady:function(){ytReady=true},
@@ -1067,11 +1066,8 @@ function loadYouTubeAPI(){
           if(e.data===YT.PlayerState.ENDED){
             if(repeatOn){ytPlayer.seekTo(0);ytPlayer.playVideo()}
             else nextTrack();
-          }else if(e.data===YT.PlayerState.PLAYING){
-            isPlaying=true;updateMusicUI();
-          }else if(e.data===YT.PlayerState.PAUSED){
-            isPlaying=false;updateMusicUI();
-          }
+          }else if(e.data===YT.PlayerState.PLAYING){isPlaying=true;updateMusicUI()}
+          else if(e.data===YT.PlayerState.PAUSED){isPlaying=false;updateMusicUI()}
         }
       }
     });
@@ -1080,63 +1076,59 @@ function loadYouTubeAPI(){
 loadYouTubeAPI();
 
 function updateMusicUI(){
+  if(!TRACKS.length){document.getElementById('music-track').textContent='No track selected';document.getElementById('music-artist').textContent='Search above to add music';document.getElementById('music-art').innerHTML='&#127925;';return}
   const tr=TRACKS[curTrack];
   document.getElementById('music-track').textContent=tr.t;
   document.getElementById('music-artist').textContent=tr.a;
-  document.getElementById('music-dur').textContent=tr.d;
   if(ytReady&&ytPlayer&&ytPlayer.getDuration){
-    const dur=ytPlayer.getDuration();
-    const cur=ytPlayer.getCurrentTime();
-    musicPos=Math.floor(cur);
-    const total=Math.floor(dur);
-    document.getElementById('music-cur').textContent=formatTime(cur);
-    document.getElementById('music-dur').textContent=formatTime(dur);
-    document.getElementById('music-fill').style.width=(total?cur/total*100:0)+'%';
-  }else{
-    const parts=tr.d.split(':');const total=parseInt(parts[0])*60+parseInt(parts[1]);
-    document.getElementById('music-cur').textContent=formatTime(musicPos);
-    document.getElementById('music-fill').style.width=(total?musicPos/total*100:0)+'%';
+    document.getElementById('music-cur').textContent=formatTime(ytPlayer.getCurrentTime());
+    document.getElementById('music-dur').textContent=formatTime(ytPlayer.getDuration());
+    document.getElementById('music-fill').style.width=(ytPlayer.getDuration()?ytPlayer.getCurrentTime()/ytPlayer.getDuration()*100:0)+'%';
   }
   document.getElementById('btn-play').innerHTML=isPlaying?'&#10074;&#10074;':'&#9654;';
   document.getElementById('btn-shuffle').className='music-btn'+(shuffleOn?' active':'');
   document.getElementById('btn-repeat').className='music-btn'+(repeatOn?' active':'');
-  const art=document.getElementById('music-art');
-  if(art)art.innerHTML='<img src="https://img.youtube.com/vi/'+TRACKS[curTrack].vid+'/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px">';
+  document.getElementById('music-art').innerHTML='<img src="https://img.youtube.com/vi/'+tr.vid+'/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px">';
+  renderTrackList();
 }
 function formatTime(s){const m=Math.floor(s/60);const sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec}
 
-function togglePlay(){
-  if(!ytReady||!ytPlayer)return;
-  if(isPlaying){ytPlayer.pauseVideo()}
-  else{ytPlayer.playVideo()}
-  isPlaying=!isPlaying;
-  updateMusicUI();
+function togglePlay(){if(!ytReady||!ytPlayer||!TRACKS.length)return;if(isPlaying)ytPlayer.pauseVideo();else ytPlayer.playVideo();isPlaying=!isPlaying;updateMusicUI()}
+function playTrack(idx){curTrack=idx;if(ytReady&&ytPlayer&&TRACKS[idx]){ytPlayer.loadVideoById(TRACKS[idx].vid);isPlaying=true}updateMusicUI()}
+function nextTrack(){if(!TRACKS.length)return;if(shuffleOn)curTrack=Math.floor(Math.random()*TRACKS.length);else curTrack=(curTrack+1)%TRACKS.length;playTrack(curTrack)}
+function prevTrack(){if(!TRACKS.length)return;curTrack=(curTrack-1+TRACKS.length)%TRACKS.length;playTrack(curTrack)}
+function toggleShuffle(){shuffleOn=!shuffleOn;updateMusicUI()}
+function toggleRepeat(){repeatOn=!repeatOn;updateMusicUI()}
+function seekMusic(e){if(!ytReady||!ytPlayer)return;const r=e.target.getBoundingClientRect();ytPlayer.seekTo(ytPlayer.getDuration()*((e.clientX-r.left)/r.width),true)}
+function renderTrackList(){
+  const el=document.getElementById('yt-tracklist');if(!TRACKS.length){el.innerHTML='';return}
+  el.innerHTML=TRACKS.map((tr,i)=>`<div onclick="playTrack(${i})" style="display:flex;align-items:center;gap:5px;padding:2px 4px;cursor:pointer;border-radius:2px;${i===curTrack?'background:rgba(255,0,0,0.08)':''}" onmouseover="this.style.background='rgba(255,0,0,0.04)'" onmouseout="this.style.background='${i===curTrack?'rgba(255,0,0,0.08)':''}'"><img src="https://img.youtube.com/vi/${tr.vid}/default.jpg" style="width:18px;height:18px;border-radius:2px;object-fit:cover"><div style="min-width:0;flex:1"><div style="font-size:6px;color:${i===curTrack?'#ff4444':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.t}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.a}</div></div><span onclick="event.stopPropagation();removeTrack(${i})" style="font-size:7px;color:var(--muted);cursor:pointer;padding:2px">&times;</span></div>`).join('');
 }
-function playTrack(idx){
-  curTrack=idx;musicPos=0;
-  if(ytReady&&ytPlayer){
-    ytPlayer.loadVideoById(TRACKS[idx].vid);
-    isPlaying=true;
-  }
-  updateMusicUI();
+function removeTrack(i){TRACKS.splice(i,1);localStorage.setItem('yt_custom_tracks',JSON.stringify(TRACKS));if(curTrack>=TRACKS.length)curTrack=Math.max(0,TRACKS.length-1);updateMusicUI()}
+
+// === YOUTUBE SEARCH ===
+async function searchYouTube(){
+  const q=document.getElementById('yt-search').value.trim();if(!q)return;
+  const el=document.getElementById('yt-results');
+  el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">Searching...</div>';
+  try{
+    const r=await fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&q='+encodeURIComponent(q)+'&type=video&videoCategoryId=10&maxResults=10&key=AIzaSyAa8yy0GdcGPHdtD083HiGGx_S0vMPScDM');
+    if(!r.ok){el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">Search failed</div>';return}
+    const data=await r.json();
+    const items=data.items||[];
+    if(!items.length){el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">No results</div>';return}
+    el.innerHTML=items.map(v=>{
+      const vid=v.id.videoId;const title=v.snippet.title;const chan=v.snippet.channelTitle;
+      return`<div onclick="addTrack('${vid}','${title.replace(/'/g,"\\'")}','${chan.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:5px;padding:3px 4px;cursor:pointer;border-radius:2px;transition:background 0.2s" onmouseover="this.style.background='rgba(255,0,0,0.05)'" onmouseout="this.style.background='transparent'"><img src="https://img.youtube.com/vi/${vid}/default.jpg" style="width:24px;height:18px;border-radius:2px;object-fit:cover"><div style="min-width:0;flex:1"><div style="font-size:6px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${chan}</div></div></div>`;
+    }).join('');
+  }catch(e){el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">Error</div>'}
 }
-function nextTrack(){
-  if(shuffleOn){curTrack=Math.floor(Math.random()*TRACKS.length)}
-  else{curTrack=(curTrack+1)%TRACKS.length}
-  playTrack(curTrack);
-}
-function prevTrack(){
-  curTrack=(curTrack-1+TRACKS.length)%TRACKS.length;
-  playTrack(curTrack);
-}
-function toggleShuffle(){shuffleOn=!shuffleOn;updateMusicUI();addLog('','[MUS]',shuffleOn?'Shuffle ON':'Shuffle OFF')}
-function toggleRepeat(){repeatOn=!repeatOn;updateMusicUI();addLog('','[MUS]',repeatOn?'Repeat ON':'Repeat OFF')}
-function seekMusic(e){
-  if(!ytReady||!ytPlayer)return;
-  const rect=e.target.getBoundingClientRect();
-  const x=e.clientX-rect.left;
-  const dur=ytPlayer.getDuration();
-  ytPlayer.seekTo(dur*(x/rect.width),true);
+function addTrack(vid,title,artist){
+  if(TRACKS.find(t=>t.vid===vid))return;
+  TRACKS.push({t:title,a:artist,vid:vid});
+  localStorage.setItem('yt_custom_tracks',JSON.stringify(TRACKS));
+  if(TRACKS.length===1){playTrack(0)}
+  renderTrackList();addLog('ok','[MUS]','Added: '+title);
 }
 updateMusicUI();
 
