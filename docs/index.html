@@ -522,23 +522,26 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Music player -->
-        <div class="panel open" id="panel-music" style="right:20px;top:20px;width:380px">
+        <div class="panel open" id="panel-music" style="right:20px;top:20px;width:320px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Music</div>
-          <div style="margin-bottom:6px">
-            <div style="display:flex;gap:3px">
-              <input id="yt-search" placeholder="Search YouTube Music..." style="flex:1;padding:4px 8px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);color:var(--text);font-size:8px;font-family:var(--font-hud);border-radius:2px;outline:none" onkeydown="if(event.key==='Enter')searchYouTube()">
-              <button onclick="searchYouTube()" style="padding:4px 8px;background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;font-size:7px;letter-spacing:0.08em;cursor:pointer;border-radius:2px;font-family:var(--font-hud)">SEARCH</button>
-            </div>
+          <div id="music-drop" style="border:1px dashed var(--dim);border-radius:3px;padding:10px;text-align:center;margin-bottom:6px;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--dim)'" onclick="document.getElementById('music-file-input').click()">
+            <div style="font-size:8px;color:var(--muted);margin-bottom:2px">&#127925; Drop music here or click to browse</div>
+            <div style="font-size:6px;color:rgba(26,74,90,0.5)">mp3, wav, ogg, m4a</div>
+            <input type="file" id="music-file-input" accept="audio/*" multiple style="display:none" onchange="handleMusicFiles(this.files)">
           </div>
-          <div id="yt-player-wrap" style="width:100%;height:214px;background:#000;border-radius:3px;overflow:hidden;margin-bottom:6px;display:none">
+          <div style="display:flex;gap:3px;margin-bottom:6px">
+            <input id="yt-search" placeholder="Or search YouTube..." style="flex:1;padding:3px 6px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);color:var(--text);font-size:7px;font-family:var(--font-hud);border-radius:2px;outline:none" onkeydown="if(event.key==='Enter')searchYouTube()">
+            <button onclick="searchYouTube()" style="padding:3px 6px;background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;font-size:6px;letter-spacing:0.08em;cursor:pointer;border-radius:2px;font-family:var(--font-hud)">YT</button>
+          </div>
+          <div id="yt-player-wrap" style="width:100%;height:180px;background:#000;border-radius:3px;overflow:hidden;margin-bottom:6px;display:none">
             <div id="yt-player"></div>
           </div>
-          <div id="yt-results" style="max-height:120px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-bottom:6px"></div>
+          <div id="yt-results" style="max-height:80px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-bottom:6px"></div>
           <div class="music-info">
             <div class="music-art" id="music-art">&#127925;</div>
             <div class="music-meta">
-              <div class="music-track" id="music-track">No track selected</div>
-              <div class="music-artist" id="music-artist">Search above to find music</div>
+              <div class="music-track" id="music-track">No track loaded</div>
+              <div class="music-artist" id="music-artist">Drop files or search YouTube</div>
             </div>
           </div>
           <div class="music-progress" onclick="seekMusic(event)"><div class="music-progress-fill" id="music-fill" style="width:0%"></div></div>
@@ -548,7 +551,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
             <button class="music-btn play" onclick="togglePlay()" id="btn-play" title="Play">&#9654;</button>
             <button class="music-btn" onclick="nextTrack()" title="Next">&#9654;&#9654;</button>
           </div>
-          <div id="yt-tracklist" style="max-height:80px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-top:4px"></div>
+          <div id="yt-tracklist" style="max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-top:4px"></div>
         </div>
       </div>
     </div>
@@ -930,45 +933,162 @@ function loadNews(){detectLocationForNews()}
 
 // === MUSIC PLAYER ===
 let TRACKS=JSON.parse(localStorage.getItem('yt_custom_tracks')||'[]');
-let curTrack=0,isPlaying=false,musicTimer=null;
+let curTrack=0,isPlaying=false;
+let audioEl=null;
 let ytPlayer=null,ytReady=false;
 
-function loadYouTubeAPI(){
-  if(window.YT&&window.YT.Player){
-    initYTPlayer();return;
-  }
-  const tag=document.createElement('script');
-  tag.src='https://www.youtube.com/iframe_api';
-  document.head.appendChild(tag);
-  window.onYouTubeIframeAPIReady=initYTPlayer;
-}
+// Local file URLs stored in memory (not localStorage - too big)
+let localFiles={};
 
-function initYTPlayer(){
-  const wrap=document.getElementById('yt-player-wrap');
-  wrap.style.display='block';
-  ytPlayer=new YT.Player('yt-player',{
-    width:'100%',height:'100%',
-    playerVars:{autoplay:0,controls:1,disablekb:0,modestbranding:1,rel:0,fs:0},
-    events:{
-      onReady:function(){ytReady=true;addLog('ok','[MUS]','YouTube player ready')},
-      onStateChange:function(e){
-        if(e.data===YT.PlayerState.PLAYING){
-          isPlaying=true;
-          document.getElementById('btn-play').innerHTML='&#10074;&#10074;';
-          updateMusicMeta();
-        }else if(e.data===YT.PlayerState.PAUSED){
-          isPlaying=false;
-          document.getElementById('btn-play').innerHTML='&#9654;';
-        }else if(e.data===YT.PlayerState.ENDED){
-          isPlaying=false;
-          document.getElementById('btn-play').innerHTML='&#9654;';
-        }
-      }
-    }
+function initAudio(){
+  if(audioEl)return;
+  audioEl=new Audio();
+  audioEl.addEventListener('timeupdate',()=>{
+    if(!audioEl.duration)return;
+    document.getElementById('music-cur').textContent=formatTime(audioEl.currentTime);
+    document.getElementById('music-dur').textContent=formatTime(audioEl.duration);
+    document.getElementById('music-fill').style.width=(audioEl.currentTime/audioEl.duration*100)+'%';
+  });
+  audioEl.addEventListener('ended',()=>{nextTrack()});
+  audioEl.addEventListener('play',()=>{
+    isPlaying=true;
+    document.getElementById('btn-play').innerHTML='&#10074;&#10074;';
+    updateMusicMeta();
+  });
+  audioEl.addEventListener('pause',()=>{
+    isPlaying=false;
+    document.getElementById('btn-play').innerHTML='&#9654;';
   });
 }
-loadYouTubeAPI();
+initAudio();
 
+// Drag and drop
+const dropZone=document.getElementById('music-drop');
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.style.borderColor='var(--primary)';dropZone.style.background='rgba(0,212,255,0.05)'});
+dropZone.addEventListener('dragleave',e=>{dropZone.style.borderColor='var(--dim)';dropZone.style.background='transparent'});
+dropZone.addEventListener('drop',e=>{
+  e.preventDefault();
+  dropZone.style.borderColor='var(--dim)';
+  dropZone.style.background='transparent';
+  handleMusicFiles(e.dataTransfer.files);
+});
+
+function handleMusicFiles(files){
+  for(const f of files){
+    if(!f.type.startsWith('audio/'))continue;
+    const url=URL.createObjectURL(f);
+    const name=f.name.replace(/\.[^.]+$/,'');
+    const id='local_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
+    localFiles[id]=url;
+    TRACKS.push({t:name,a:'Local File',vid:id,local:true});
+  }
+  localStorage.setItem('yt_custom_tracks',JSON.stringify(TRACKS.filter(t=>!t.local)));
+  renderTrackList();
+  addLog('ok','[MUS]','Added '+files.length+' file(s)');
+  if(TRACKS.length&&curTrack===0&&!isPlaying)playTrack(0);
+}
+
+function formatTime(s){const m=Math.floor(s/60);const sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec}
+
+function togglePlay(){
+  if(!TRACKS.length)return;
+  const tr=TRACKS[curTrack];
+  if(tr.local){
+    if(!audioEl)initAudio();
+    if(isPlaying)audioEl.pause();
+    else{audioEl.src=localFiles[tr.vid];audioEl.play().catch(()=>{})}
+  }else if(tr.vid){
+    if(!ytReady||!ytPlayer)return;
+    if(isPlaying)ytPlayer.pauseVideo();
+    else ytPlayer.playVideo();
+  }
+}
+
+function playTrack(idx){
+  curTrack=idx;
+  const tr=TRACKS[idx];
+  if(tr.local){
+    if(!audioEl)initAudio();
+    audioEl.src=localFiles[tr.vid];
+    audioEl.play().catch(()=>{});
+    isPlaying=true;
+  }else if(tr.vid){
+    if(ytReady&&ytPlayer){
+      ytPlayer.loadVideoById(tr.vid);
+      isPlaying=true;
+    }
+  }
+  updateMusicMeta();
+}
+
+function nextTrack(){
+  if(!TRACKS.length)return;
+  curTrack=(curTrack+1)%TRACKS.length;
+  playTrack(curTrack);
+}
+function prevTrack(){
+  if(!TRACKS.length)return;
+  curTrack=(curTrack-1+TRACKS.length)%TRACKS.length;
+  playTrack(curTrack);
+}
+
+function seekMusic(e){
+  const r=e.target.getBoundingClientRect();
+  const pct=(e.clientX-r.left)/r.width;
+  const tr=TRACKS[curTrack];
+  if(tr.local&&audioEl&&audioEl.duration){
+    audioEl.currentTime=audioEl.duration*pct;
+  }else if(ytReady&&ytPlayer){
+    try{ytPlayer.seekTo(ytPlayer.getDuration()*pct,true)}catch(e){}
+  }
+}
+
+function updateMusicMeta(){
+  if(!TRACKS.length){
+    document.getElementById('music-track').textContent='No track loaded';
+    document.getElementById('music-artist').textContent='Drop files or search YouTube';
+    document.getElementById('music-art').innerHTML='&#127925;';
+    return;
+  }
+  const tr=TRACKS[curTrack];
+  document.getElementById('music-track').textContent=tr.t;
+  document.getElementById('music-artist').textContent=tr.a;
+  if(!tr.local&&tr.vid){
+    document.getElementById('music-art').innerHTML='<img src="https://img.youtube.com/vi/'+tr.vid+'/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px">';
+  }else{
+    document.getElementById('music-art').innerHTML='&#127925;';
+  }
+  renderTrackList();
+}
+
+function addTrack(vid,title,artist){
+  if(TRACKS.find(t=>t.vid===vid))return;
+  TRACKS.push({t:title,a:artist,vid:vid});
+  localStorage.setItem('yt_custom_tracks',JSON.stringify(TRACKS.filter(t=>!t.local)));
+  renderTrackList();
+  addLog('ok','[MUS]','Added: '+title);
+}
+
+function removeTrack(i){
+  const tr=TRACKS[i];
+  if(tr.local&&localFiles[tr.vid]){URL.revokeObjectURL(localFiles[tr.vid]);delete localFiles[tr.vid]}
+  TRACKS.splice(i,1);
+  if(curTrack>=TRACKS.length)curTrack=Math.max(0,TRACKS.length-1);
+  localStorage.setItem('yt_custom_tracks',JSON.stringify(TRACKS.filter(t=>!t.local)));
+  renderTrackList();
+  updateMusicMeta();
+}
+
+function renderTrackList(){
+  const el=document.getElementById('yt-tracklist');
+  if(!TRACKS.length){el.innerHTML='';return}
+  el.innerHTML=TRACKS.map((tr,i)=>{
+    const icon=tr.local?'&#127925;':'<img src="https://img.youtube.com/vi/'+tr.vid+'/default.jpg" style="width:18px;height:18px;border-radius:2px;object-fit:cover">';
+    return`<div onclick="playTrack(${i})" style="display:flex;align-items:center;gap:5px;padding:2px 4px;cursor:pointer;border-radius:2px;${i===curTrack?'background:rgba(255,0,0,0.08)':''}" onmouseover="this.style.background='rgba(255,0,0,0.04)'" onmouseout="this.style.background='${i===curTrack?'rgba(255,0,0,0.08)':''}'"><div style="width:18px;height:18px;border-radius:2px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px">${icon}</div><div style="min-width:0;flex:1"><div style="font-size:6px;color:${i===curTrack?'#ff4444':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.t}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.a}</div></div><span onclick="event.stopPropagation();removeTrack(${i})" style="font-size:7px;color:var(--muted);cursor:pointer;padding:2px">&times;</span></div>`;
+  }).join('');
+}
+
+// === YOUTUBE SEARCH ===
 function searchYouTube(){
   const q=document.getElementById('yt-search').value.trim();
   if(!q)return;
@@ -983,90 +1103,32 @@ function searchYouTube(){
   addLog('ok','[MUS]','Searching: '+q);
 }
 
-function updateMusicMeta(){
-  if(!ytReady||!ytPlayer)return;
-  try{
-    const data=ytPlayer.getVideoData();
-    if(data&&data.title){
-      document.getElementById('music-track').textContent=data.title;
-      document.getElementById('music-artist').textContent=data.author||'';
-      document.getElementById('music-art').innerHTML='<img src="https://img.youtube.com/vi/'+data.video_id+'/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px">';
+// YouTube IFrame API
+function loadYouTubeAPI(){
+  if(window.YT&&window.YT.Player){initYTPlayer();return}
+  const tag=document.createElement('script');
+  tag.src='https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+  window.onYouTubeIframeAPIReady=initYTPlayer;
+}
+function initYTPlayer(){
+  document.getElementById('yt-player-wrap').style.display='block';
+  ytPlayer=new YT.Player('yt-player',{
+    width:'100%',height:'100%',
+    playerVars:{autoplay:0,controls:1,disablekb:0,modestbranding:1,rel:0,fs:0},
+    events:{
+      onReady:function(){ytReady=true;addLog('ok','[MUS]','YouTube ready')},
+      onStateChange:function(e){
+        if(e.data===YT.PlayerState.PLAYING){isPlaying=true;document.getElementById('btn-play').innerHTML='&#10074;&#10074;';updateMusicMeta()}
+        else if(e.data===YT.PlayerState.PAUSED){isPlaying=false;document.getElementById('btn-play').innerHTML='&#9654;'}
+        else if(e.data===YT.PlayerState.ENDED){isPlaying=false;document.getElementById('btn-play').innerHTML='&#9654;'}
+      }
     }
-  }catch(e){}
+  });
 }
+loadYouTubeAPI();
 
-function formatTime(s){const m=Math.floor(s/60);const sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec}
-
-function togglePlay(){
-  if(!ytReady||!ytPlayer)return;
-  try{
-    const state=ytPlayer.getPlayerState();
-    if(state===1){ytPlayer.pauseVideo();isPlaying=false}
-    else{ytPlayer.playVideo();isPlaying=true}
-  }catch(e){}
-}
-function playTrack(idx){
-  curTrack=idx;
-  if(ytReady&&ytPlayer&&TRACKS[idx]){
-    ytPlayer.loadVideoById(TRACKS[idx].vid);
-    isPlaying=true;
-    updateMusicMeta();
-  }
-}
-function nextTrack(){
-  if(!ytReady||!ytPlayer)return;
-  try{ytPlayer.nextVideo()}catch(e){}
-}
-function prevTrack(){
-  if(!ytReady||!ytPlayer)return;
-  try{ytPlayer.previousVideo()}catch(e){}
-}
-function seekMusic(e){
-  if(!ytReady||!ytPlayer)return;
-  const r=e.target.getBoundingClientRect();
-  const pct=(e.clientX-r.left)/r.width;
-  ytPlayer.seekTo(ytPlayer.getDuration()*pct,true);
-}
-function addTrack(vid,title,artist){
-  if(TRACKS.find(t=>t.vid===vid))return;
-  TRACKS.push({t:title,a:artist,vid:vid});
-  localStorage.setItem('yt_custom_tracks',JSON.stringify(TRACKS));
-  renderTrackList();
-  addLog('ok','[MUS]','Added: '+title);
-}
-function removeTrack(i){
-  TRACKS.splice(i,1);
-  localStorage.setItem('yt_custom_tracks',JSON.stringify(TRACKS));
-  if(curTrack>=TRACKS.length)curTrack=Math.max(0,TRACKS.length-1);
-  renderTrackList();
-}
-function renderTrackList(){
-  const el=document.getElementById('yt-tracklist');
-  if(!TRACKS.length){el.innerHTML='';return}
-  el.innerHTML=TRACKS.map((tr,i)=>`<div onclick="playTrack(${i})" style="display:flex;align-items:center;gap:5px;padding:2px 4px;cursor:pointer;border-radius:2px;${i===curTrack?'background:rgba(255,0,0,0.08)':''}" onmouseover="this.style.background='rgba(255,0,0,0.04)'" onmouseout="this.style.background='${i===curTrack?'rgba(255,0,0,0.08)':''}'"><img src="https://img.youtube.com/vi/${tr.vid}/default.jpg" style="width:18px;height:18px;border-radius:2px;object-fit:cover"><div style="min-width:0;flex:1"><div style="font-size:6px;color:${i===curTrack?'#ff4444':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.t}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.a}</div></div><span onclick="event.stopPropagation();removeTrack(${i})" style="font-size:7px;color:var(--muted);cursor:pointer;padding:2px">&times;</span></div>`).join('');
-}
-function updateMusicUI(){
-  if(!TRACKS.length){document.getElementById('music-track').textContent='No track selected';document.getElementById('music-artist').textContent='Search above to find music';document.getElementById('music-art').innerHTML='&#127925;';return}
-  const tr=TRACKS[curTrack];
-  document.getElementById('music-track').textContent=tr.t;
-  document.getElementById('music-artist').textContent=tr.a;
-  document.getElementById('music-art').innerHTML='<img src="https://img.youtube.com/vi/'+tr.vid+'/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px">';
-  renderTrackList();
-}
-
-// Progress updater
-setInterval(()=>{
-  if(ytReady&&ytPlayer&&isPlaying){
-    try{
-      const cur=ytPlayer.getCurrentTime()||0;
-      const dur=ytPlayer.getDuration()||0;
-      document.getElementById('music-cur').textContent=formatTime(cur);
-      document.getElementById('music-dur').textContent=formatTime(dur);
-      document.getElementById('music-fill').style.width=(dur?cur/dur*100:0)+'%';
-      updateMusicMeta();
-    }catch(e){}
-  }
-},1000);
+function updateMusicUI(){updateMusicMeta();renderTrackList()}
 updateMusicUI();
 
 // === MEMORY PANEL ===
