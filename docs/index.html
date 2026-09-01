@@ -959,7 +959,7 @@ async function loadMusicFolder(){
     const list=await r.json();
     for(const item of list){
       try{
-        const resp=await fetch('music/'+encodeURIComponent(item.file));
+        const resp=await fetch('music/'+item.file);
         if(!resp.ok)continue;
         const blob=await resp.blob();
         const url=URL.createObjectURL(blob);
