@@ -167,9 +167,6 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .news-meta{font-size:6px;color:var(--muted);margin-top:2px;display:flex;justify-content:space-between}
 .news-cat{color:var(--secondary);text-transform:uppercase;letter-spacing:0.1em}
 .news-loading{font-size:8px;color:var(--muted);text-align:center;padding:12px 0}
-.news-tabs{display:flex;gap:3px;margin-bottom:6px}
-.news-tab{font-size:6px;letter-spacing:0.08em;padding:2px 6px;background:transparent;border:1px solid var(--dim);color:var(--muted);cursor:pointer;border-radius:1px;transition:all 0.2s;text-transform:uppercase}
-.news-tab:hover,.news-tab.act{border-color:var(--primary);color:var(--primary);background:rgba(0,212,255,0.04)}
 
 /* Notes widget */
 .notes-area{width:100%;min-height:60px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);border-radius:2px;color:var(--text);font-family:var(--font-hud);font-size:8px;padding:6px;resize:none;outline:none;transition:border-color 0.2s;line-height:1.6}
@@ -344,8 +341,6 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
   .news-list{max-height:200px}
   .news-title{font-size:7.5px}
   .news-meta{font-size:6px}
-  .news-tabs{flex-wrap:wrap;gap:3px}
-  .news-tab{font-size:7px;padding:3px 8px}
   .notes-area{min-height:60px;font-size:10px;padding:8px}
   .note-entry{font-size:9px;padding:4px 0}
   .music-art{width:32px;height:32px;font-size:14px}
@@ -410,7 +405,6 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
   .cmb-btn{min-height:50px}
   .news-item{padding:8px 0}
   .note-entry{padding:6px 0}
-  .news-tab{min-height:36px}
   .jbtn{min-height:44px}
   .jinp{min-height:44px}
   .quote-btn{min-height:40px;padding:8px 12px}
@@ -570,15 +564,9 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 
         <!-- News feed -->
         <div class="panel" id="panel-news" style="right:20px;top:340px;width:240px">
-          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>News Feed</div>
-          <div class="news-tabs">
-            <button class="news-tab act" onclick="loadNews('tech',this)">Tech</button>
-            <button class="news-tab" onclick="loadNews('world',this)">World</button>
-            <button class="news-tab" onclick="loadNews('science',this)">Science</button>
-            <button class="news-tab" onclick="loadNews('business',this)">Business</button>
-          </div>
+          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Local News <span id="news-loc" style="font-size:6px;color:var(--muted);margin-left:auto"></span></div>
           <div class="news-list" id="news-list">
-            <div class="news-loading">Fetching headlines...</div>
+            <div class="news-loading">Detecting location for local news...</div>
           </div>
         </div>
 
@@ -602,7 +590,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
             <button class="music-btn" onclick="nextTrack()" title="Next">&#9654;&#9654;</button>
             <button class="music-btn" onclick="toggleRepeat()" id="btn-repeat" title="Repeat">&#8634;</button>
           </div>
-          <button onclick="openInSimpMusic()" style="width:100%;margin-top:6px;padding:4px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:var(--primary);font-size:7px;letter-spacing:0.1em;cursor:pointer;border-radius:2px;font-family:var(--font-hud)">OPEN IN SIMPMUSIC</button>
+          <button onclick="openInSpotify()" style="width:100%;margin-top:6px;padding:4px;background:rgba(30,215,96,0.1);border:1px solid rgba(30,215,96,0.3);color:#1ed760;font-size:7px;letter-spacing:0.1em;cursor:pointer;border-radius:2px;font-family:var(--font-hud)">OPEN IN SPOTIFY</button>
         </div>
 
         <!-- Notes -->
@@ -737,17 +725,15 @@ function aiProcess(input){
   }
 
   // News command
-  if(/^(news|headlines)/i.test(lo)){
-    const cat=lo.replace(/^(news|headlines)\s*/i,'').trim()||'tech';
-    const validCats=['tech','world','science','business'];
-    const c=validCats.includes(cat)?cat:'tech';
-    loadNews(c);
+  if(/^(news|headlines|local)/i.test(lo)){
+    loadNews();
     togglePanel('panel-news');
-    document.querySelectorAll('.news-tab').forEach(t=>t.classList.toggle('act',t.textContent.toLowerCase()===c));
     const jokes=[
-      `Loading ${c} headlines. Try to stay calm, sir — the world is a dramatic place.`,
-      `Fetching today's ${c} news. I'd summarize, but the headlines speak for themselves.`,
-      `${c.toUpperCase()} feed incoming. I've pre-selected the stories that won't cause an existential crisis.`,
+      `Loading local headlines. Try to stay calm, sir — the world is a dramatic place.`,
+      `Fetching today's local news. I'd summarize, but the headlines speak for themselves.`,
+      `Local feed incoming. I've pre-selected the stories that won't cause an existential crisis.`,
+      `Pulling your area's headlines now. Try not to doomscroll, sir.`
+    ];
       `Pulling up ${c} headlines. Try not to doomscroll too hard, sir.`,
       `Accessing ${c} news stream. The internet never sleeps — much like me.`
     ];
@@ -974,63 +960,84 @@ function fetchWeatherCmd(city){
 }
 
 // === NEWS FEED ===
-const NEWS_SOURCES={
-  tech:{feeds:['technology','gadgets','software','ai','cybersecurity','startups'],items:[
-    {t:'OpenAI announces GPT-5 with breakthrough reasoning capabilities',s:'TechCrunch',m:'2h ago'},
-    {t:'Apple Vision Pro 2 rumored to launch with lighter design and lower price',s:'The Verge',m:'3h ago'},
-    {t:'Quantum computing milestone: IBM achieves 1000-qubit processor',s:'Ars Technica',m:'4h ago'},
-    {t:'Tesla自动驾驶 system gets major safety upgrade after recall',s:'Reuters Tech',m:'5h ago'},
-    {t:'SpaceX Starship completes first orbital flight test successfully',s:'Space.com',m:'6h ago'},
-    {t:'Google DeepMind solves new protein folding challenge',s:'Nature',m:'7h ago'},
-    {t:'Microsoft Copilot now integrated into all Office applications',s:'ZDNet',m:'8h ago'},
-    {t:'New JavaScript runtime Bun 2.0 outperforms Node.js by 3x',s:'Hacker News',m:'9h ago'},
-    {t:'Rust language adoption doubles in enterprise software development',s:'InfoWorld',m:'10h ago'},
-    {t:'Samsung unveils foldable tablet with transparent OLED display',s:'Engadget',m:'11h ago'}
-  ]},
-  world:{feeds:['politics','international','breaking'],items:[
-    {t:'G7 leaders agree on new framework for AI governance',s:'BBC News',m:'1h ago'},
-    {t:'United Nations climate summit reaches historic agreement on emissions',s:'Reuters',m:'3h ago'},
-    {t:'European Union passes landmark digital privacy legislation',s:'AP News',m:'4h ago'},
-    {t:'Major earthquake relief efforts underway in Southeast Asia',s:'Al Jazeera',m:'5h ago'},
-    {t:'International Space Station celebrates 25 years of continuous habitation',s:'NASA',m:'6h ago'},
-    {t:'Global internet connectivity reaches 5 billion users milestone',s:'ITU',m:'7h ago'},
-    {t:'New trade agreement between US and Pacific nations signed',s:'Bloomberg',m:'8h ago'},
-    {t:'WHO declares new public health emergency protocols',s:'WHO',m:'9h ago'}
-  ]},
-  science:{feeds:['research','discovery','space','physics'],items:[
-    {t:'James Webb telescope discovers potentially habitable exoplanet',s:'NASA',m:'2h ago'},
-    {t:'CERN scientists observe new particle that could rewrite physics',s:'CERN',m:'3h ago'},
-    {t:'CRISPR gene therapy shows 95% success rate in clinical trials',s:'Nature Medicine',m:'5h ago'},
-    {t:'Mars soil sample reveals evidence of ancient microbial life',s:'Space.com',m:'6h ago'},
-    {t:'Nuclear fusion reactor achieves net energy gain for 10 minutes',s:'Science Magazine',m:'7h ago'},
-    {t:'New deep-sea species discovered in Mariana Trench',s:'National Geographic',m:'8h ago'},
-    {t:'Brain-computer interface allows paralyzed patient to walk',s:'MIT Tech Review',m:'9h ago'},
-    {t:'Artificial photosynthesis breakthrough could solve energy crisis',s:'New Scientist',m:'10h ago'}
-  ]},
-  business:{feeds:['markets','economy','finance','crypto'],items:[
-    {t:'S&P 500 hits all-time high as tech sector rallies',s:'CNBC',m:'1h ago'},
-    {t:'Bitcoin surpasses $150,000 amid institutional adoption wave',s:'CoinDesk',m:'2h ago'},
-    {t:'Federal Reserve signals potential rate cut in Q3 2026',s:'Bloomberg',m:'3h ago'},
-    {t:'Apple becomes first $5 trillion market cap company',s:'Wall Street Journal',m:'4h ago'},
-    {t:'Global semiconductor shortage officially ends as new fabs come online',s:'Reuters',m:'5h ago'},
-    {t:'Remote work trend accelerates with 4-day work week adoption',s:'Forbes',m:'6h ago'},
-    {t:'Electric vehicle sales surpass combustion engines for first time',s:'Financial Times',m:'7h ago'},
-    {t:'AI startup funding reaches $100 billion in first half of 2026',s:'TechCrunch',m:'8h ago'}
-  ]}
-};
-function loadNews(category,tabEl){
-  if(tabEl){document.querySelectorAll('.news-tab').forEach(t=>t.classList.remove('act'));tabEl.classList.add('act')}
+let userLocation={lat:0,lon:0,city:'',country:''};
+
+function detectLocationForNews(){
+  if(!navigator.geolocation){
+    loadLocalNews('Philippines');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      userLocation.lat=pos.coords.latitude;
+      userLocation.lon=pos.coords.longitude;
+      // Reverse geocode to get city name
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLocation.lat}&lon=${userLocation.lon}`)
+        .then(r=>r.json())
+        .then(data=>{
+          userLocation.city=data.address?.city||data.address?.town||data.address?.village||data.address?.state||'';
+          userLocation.country=data.address?.country||'';
+          const loc=userLocation.city||userLocation.country||'your area';
+          document.getElementById('news-loc').textContent=loc;
+          loadLocalNews(loc);
+        })
+        .catch(()=>{loadLocalNews('your area')});
+    },
+    ()=>{loadLocalNews('your area')},
+    {timeout:5000}
+  );
+}
+
+function loadLocalNews(location){
   const el=document.getElementById('news-list');
-  const src=NEWS_SOURCES[category]||NEWS_SOURCES.tech;
-  // Shuffle and add slight variations
-  const items=[...src.items].sort(()=>Math.random()-0.5);
-  el.innerHTML=items.map(n=>`
+  el.innerHTML='<div class="news-loading">Loading local news for '+location+'...</div>';
+  // Use RSS2JSON to fetch Google News RSS for the location
+  const query=encodeURIComponent(location+' news');
+  const rssUrl=`https://news.google.com/rss/search?q=${query}&hl=en&gl=PH&ceid=PH:en`;
+  const apiUrl=`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+  fetch(apiUrl)
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.status==='ok'&&data.items&&data.items.length>0){
+        const items=data.items.slice(0,12);
+        el.innerHTML=items.map(n=>{
+          const pubDate=new Date(n.pubDate);
+          const hours=Math.floor((Date.now()-pubDate.getTime())/3600000);
+          const timeAgo=hours<1?'Just now':hours===1?'1h ago':hours<24?hours+'h ago':Math.floor(hours/24)+'d ago';
+          return`<div class="news-item" onclick="window.open('${n.link}','_blank')" style="cursor:pointer">
+            <div class="news-title">${n.title}</div>
+            <div class="news-meta"><span class="news-cat">${n.source||'News'}</span><span>${timeAgo}</span></div>
+          </div>`;
+        }).join('');
+        addLog('ok','[NEWS]',`${items.length} local articles for ${location}.`);
+      }else{
+        el.innerHTML='<div class="news-loading">No local news found. Showing general feed.</div>';
+        loadFallbackNews(el);
+      }
+    })
+    .catch(()=>{
+      el.innerHTML='<div class="news-loading">Offline. Showing cached feed.</div>';
+      loadFallbackNews(el);
+    });
+}
+
+function loadFallbackNews(el){
+  const fallback=[
+    {t:'Breaking: Major developments in global technology sector',s:'Reuters',m:'1h ago'},
+    {t:'New economic report shows strong growth indicators',s:'Bloomberg',m:'2h ago'},
+    {t:'Climate summit reaches new agreements on emissions',s:'BBC News',m:'3h ago'},
+    {t:'Space agency announces new mission timeline',s:'NASA',m:'4h ago'},
+    {t:'Health organization releases updated guidelines',s:'WHO',m:'5h ago'},
+    {t:'Stock markets respond to latest policy changes',s:'CNBC',m:'6h ago'}
+  ];
+  el.innerHTML=fallback.map(n=>`
     <div class="news-item">
       <div class="news-title">${n.t}</div>
       <div class="news-meta"><span class="news-cat">${n.s}</span><span>${n.m}</span></div>
     </div>`).join('');
-  addLog('','[NEWS]',`${category.toUpperCase()} feed loaded. ${items.length} articles.`);
 }
+
+function loadNews(){detectLocationForNews()}
 
 // === MUSIC PLAYER ===
 const TRACKS=[
@@ -1137,6 +1144,11 @@ function openInSimpMusic(){
   const vid=TRACKS[curTrack].vid;
   window.open('simpmusic://watch?v='+vid,'_blank');
 }
+function openInSpotify(){
+  const t=TRACKS[curTrack].t;
+  const a=TRACKS[curTrack].a;
+  window.open('https://open.spotify.com/search/'+encodeURIComponent(t+' '+a),'_blank');
+}
 updateMusicUI();
 
 // === MEMORY PANEL ===
@@ -1184,17 +1196,13 @@ function doCmd(){
   }
 
   // News — open panel, respond directly (no AI needed)
-  if(/^(news|headlines)/i.test(lo)){
-    const cat=lo.replace(/^(news|headlines)\s*/i,'').trim()||'tech';
-    const validCats=['tech','world','science','business'];
-    const c=validCats.includes(cat)?cat:'tech';
-    loadNews(c);
+  if(/^(news|headlines|local)/i.test(lo)){
+    loadNews();
     togglePanel('panel-news');
-    document.querySelectorAll('.news-tab').forEach(t=>t.classList.toggle('act',t.textContent.toLowerCase()===c));
     th.classList.remove('active');
     const responses=[
-      `Here's today's ${c} feed, sir. Try not to doomscroll.`,
-      `Loading ${c} headlines. The world never stops, and neither do I.`,
+      `Here's today's local feed, sir. Try not to doomscroll.`,
+      `Loading local headlines. The world never stops, and neither do I.`,
       `${c.toUpperCase()} feed is live. I've curated the best, you're welcome.`,
       `Pulling up today's ${c} news. Shall I summarize the highlights?`
     ];
@@ -1528,7 +1536,7 @@ function updateToggleBtns(){
   let dragPanel=null,ghost=null,ox=0,oy=0;
 
   document.addEventListener('mousedown',function(e){
-    if(e.target.closest('button,input,textarea,a,.mem-btn,.news-tab,.music-btn,.weather-refresh,.note-del,.quote-btn,.forecast-day'))return;
+    if(e.target.closest('button,input,textarea,a,.mem-btn,.music-btn,.weather-refresh,.note-del,.quote-btn,.forecast-day'))return;
     const pt=e.target.closest('.pt');
     if(!pt)return;
     const p=pt.closest('.panel');
@@ -1575,7 +1583,7 @@ function updateToggleBtns(){
 
   // Touch support
   document.addEventListener('touchstart',function(e){
-    if(e.target.closest('button,input,textarea,a,.mem-btn,.news-tab,.music-btn,.weather-refresh,.note-del,.quote-btn,.forecast-day'))return;
+    if(e.target.closest('button,input,textarea,a,.mem-btn,.music-btn,.weather-refresh,.note-del,.quote-btn,.forecast-day'))return;
     const pt=e.target.closest('.pt');
     if(!pt)return;
     const p=pt.closest('.panel');
@@ -2021,7 +2029,7 @@ function startRecognition(){
 // (Moved to free drag section above)
 
 // === INIT ===
-setTimeout(()=>{fetchWeather();loadNews('tech');renderNotes()},1000);
+setTimeout(()=>{fetchWeather();loadNews();renderNotes()},1000);
 
 // Pre-fetch and play F.R.I.D.A.Y. greeting instantly — no clicks needed
 const greetingTexts=[
