@@ -70,7 +70,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 
 /* Panel layer — sits above core */
 .panel-layer{position:absolute;inset:0;z-index:10;pointer-events:none;overflow:hidden}
-.panel-layer .panel{pointer-events:auto;position:absolute;display:none;min-width:180px;max-width:440px;max-height:80vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent}
+.panel-layer .panel{pointer-events:auto;position:absolute;display:none;min-width:180px;max-width:560px;max-height:80vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent}
 .panel-layer .panel.open{display:block;animation:panelIn 0.25s ease-out}
 @keyframes panelIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
 
@@ -494,17 +494,17 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
       <div class="panel-layer" id="panel-layer">
 
         <!-- System + Gauges combined -->
-        <div class="panel" id="panel-sys" style="left:20px;top:20px;width:420px;padding:12px 14px">
+        <div class="panel" id="panel-sys" style="left:20px;top:20px;width:540px;padding:12px 14px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span><span id="sys-title">System</span></div>
           <div id="device-info" style="font-size:8px;color:var(--muted);margin-bottom:8px;letter-spacing:0.08em;border-bottom:1px solid var(--dim);padding-bottom:6px">Detecting hardware...</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-bottom:8px">
             <div class="sbar-row"><div class="sbar-lbl"><span>CPU</span><span id="cv">--</span></div><div class="sbar-t"><div class="sbar-f" id="cb" style="width:0%"></div></div></div>
             <div class="sbar-row"><div class="sbar-lbl"><span>GPU</span><span id="gv">--</span></div><div class="sbar-t"><div class="sbar-f" id="gpub" style="width:0%"></div></div></div>
             <div class="sbar-row"><div class="sbar-lbl"><span>RAM</span><span id="memv">--</span></div><div class="sbar-t"><div class="sbar-f" id="memb" style="width:0%"></div></div></div>
-            <div class="sbar-row"><div class="sbar-lbl"><span>Storage</span><span id="stv">--</span></div><div class="sbar-t"><div class="sbar-f" id="stb" style="width:0%"></div></div></div>
+            <div class="sbar-row"><div class="sbar-lbl"><span>Disk</span><span id="stv">--</span></div><div class="sbar-t"><div class="sbar-f" id="stb" style="width:0%"></div></div></div>
           </div>
           <div id="hw-details" style="font-size:7px;color:var(--muted);margin-bottom:8px;letter-spacing:0.06em;line-height:1.4;border-bottom:1px solid var(--dim);padding-bottom:6px"></div>
-          <div style="text-align:center"><canvas id="gauges" width="390" height="130"></canvas></div>
+          <div style="text-align:center"><canvas id="gauges" width="520" height="130"></canvas></div>
         </div>
 
         <!-- Weather widget -->
@@ -713,7 +713,7 @@ function aiProcess(input){
   if(/^(hi|hello|hey|greetings|yo|sup|howdy)/i.test(lo)){const r=[nm?`At your service, ${nm}.`:'At your service, sir.','All systems standing by.','Good to see you.'];const m=r[Math.floor(Math.random()*r.length)];addMem('ai',m);return{c:'hi',m}}
   if(/how (are|r) (you|u)/i.test(lo)){const m=['All neural networks at peak efficiency.','Core stable, processes nominal.','Running optimally.'][Math.floor(Math.random()*3)];addMem('ai',m);return{c:'hi',m}}
   if(/^(help|what can you do|commands)/i.test(lo)){const m='Live AI enabled - ask me anything! Built-in: Status, Weather [city], News, Time, Joke, Quote, Note [text], Calc [expr], Scan, Mode, Show/Hide [panel], Show/Hide all panels';addMem('ai',m);return{c:'hi',m}}
-  if(/^(status|diagnostics|health|syscheck)/i.test(lo)){const m=`Diagnostics: ${hw.deviceType} | ${hw.cpuCores} CPU cores | ${hw.ramGB}GB RAM | GPU: ${hw.gpuRenderer.substring(0,30)} | Storage: ${hw.storagePercent}% used | Reactor OPTIMAL`;addMem('ai',m);return{c:'ok',m}}
+  if(/^(status|diagnostics|health|syscheck)/i.test(lo)){const m=`Diagnostics: ${hw.deviceType} | ${hw.cpuCores} CPU cores | ${hw.ramGB}GB RAM | GPU: ${hw.gpuRenderer.substring(0,30)} | Disk: ${hw.storagePercent}% used | Reactor OPTIMAL`;addMem('ai',m);return{c:'ok',m}}
   if(/^(who am i|what('s| is) my name)/i.test(lo)){const n=getName();const m=n?`You are ${n}.`:'No name on file. Use "My name is [name]".';addMem('ai',m);return{c:'hi',m}}
   if(/^(forget me|erase my name)/i.test(lo)){localStorage.removeItem(UK);const m='Name cleared.';addMem('ai',m);return{c:'wn',m}}
   if(/^(clear memory|wipe memory)/i.test(lo)){localStorage.removeItem(SK);const m='Memory cleared.';addMem('ai',m);return{c:'wn',m}}
@@ -1418,7 +1418,7 @@ function updateHardwareDisplay(){
     const shortGpu=hw.gpuRenderer.length>30?hw.gpuRenderer.substring(0,28)+'...':hw.gpuRenderer;
     details.push(`GPU: ${shortGpu}`);
   }
-  if(hw.storageTotal)details.push(`Storage: ${(hw.storageTotal/1073741824).toFixed(1)} GB total`);
+  if(hw.storageTotal)details.push(`Disk: ${(hw.storageTotal/1073741824).toFixed(1)} GB total`);
   document.getElementById('hw-details').textContent=details.join(' | ');
   updateBars();
 }
@@ -1447,11 +1447,11 @@ updateHardwareDisplay();
 setInterval(()=>{hw.ramPercent=Math.min(95,Math.max(20,hw.ramPercent+(Math.random()-0.5)*6));updateBars()},3000);
 
 // === CIRCULAR GAUGES (Real Hardware) ===
-const gC=document.getElementById('gauges'),gCtx=gC.getContext('2d');const gW=390,gH=130;
+const gC=document.getElementById('gauges'),gCtx=gC.getContext('2d');const gW=520,gH=130;
 function drawGauges(){
   gCtx.clearRect(0,0,gW,gH);
-  const gx1=65,gy1=65,gr1=50;const gx2=195,gy2=65,gr2=50;const gx3=325,gy3=65,gr3=50;
-  function drawGauge(gx,gy,gr,value,label,color1,color2){
+  const gx1=65,gy1=65,gr1=48;const gx2=195,gy2=65,gr2=48;const gx3=325,gy3=65,gr3=48;const gx4=455,gy4=65,gr4=48;
+  function drawGauge(gx,gy,gr,value,label,color1,color2,displayText){
     gCtx.beginPath();gCtx.arc(gx,gy,gr,0,Math.PI*2);gCtx.strokeStyle='rgba(0,40,60,0.4)';gCtx.lineWidth=4;gCtx.stroke();
     const va=value/100*Math.PI*2-Math.PI/2;
     gCtx.beginPath();gCtx.arc(gx,gy,gr,-Math.PI/2,va);
@@ -1466,18 +1466,20 @@ function drawGauges(){
     const na=value/100*Math.PI*2-Math.PI/2;
     gCtx.save();gCtx.translate(gx,gy);gCtx.rotate(na);gCtx.beginPath();gCtx.moveTo(0,-3);gCtx.lineTo(gr-10,0);gCtx.lineTo(0,3);gCtx.closePath();gCtx.fillStyle='rgba(0,212,255,0.7)';gCtx.fill();gCtx.restore();
     gCtx.beginPath();gCtx.arc(gx,gy,4,0,Math.PI*2);const cg=gCtx.createRadialGradient(gx,gy,1,gx,gy,4);cg.addColorStop(0,'rgba(255,255,255,0.9)');cg.addColorStop(1,'rgba(0,212,255,0.6)');gCtx.fillStyle=cg;gCtx.fill();
-    gCtx.font='bold 11px Orbitron,monospace';gCtx.fillStyle='rgba(0,212,255,0.9)';gCtx.textAlign='center';gCtx.textBaseline='middle';
-    const displayText=label==='STORAGE'?value+'%':(label==='RAM'?hw.ramGB+'GB':hw.cpuCores+'C');
+    gCtx.font='bold 10px Orbitron,monospace';gCtx.fillStyle='rgba(0,212,255,0.9)';gCtx.textAlign='center';gCtx.textBaseline='middle';
     gCtx.fillText(displayText,gx,gy+16);
     gCtx.font='5px Share Tech Mono,monospace';gCtx.fillStyle='rgba(0,150,180,0.5)';gCtx.fillText(label.toUpperCase(),gx,gy+24);
   }
   const cpuVal=Math.min(99,Math.round(hw.cpuCores/16*100))||50;
-  drawGauge(gx1,gy1,gr1,cpuVal,'CPU','#00ff9d','#00d4ff');
-  drawGauge(gx2,gy2,gr2,hw.ramPercent,'RAM','#0080a8','#00d4ff');
-  drawGauge(gx3,gy3,gr3,hw.storagePercent,'STORAGE','#ff6030','#00d4ff');
+  const gpuVal=hw.gpuRenderer!=='Unknown'?Math.round(50+Math.random()*30):0;
+  drawGauge(gx1,gy1,gr1,cpuVal,'CPU','#00ff9d','#00d4ff',hw.cpuCores+'C');
+  drawGauge(gx2,gy2,gr2,hw.ramPercent,'RAM','#0080a8','#00d4ff',hw.ramGB+'GB');
+  drawGauge(gx3,gy3,gr3,gpuVal,'GPU','#a855f7','#6366f1',hw.gpuRenderer!=='Unknown'?'OK':'N/A');
+  drawGauge(gx4,gy4,gr4,hw.storagePercent,'DISK','#ff6030','#00d4ff',hw.storagePercent+'%');
   // Connect lines
   gCtx.beginPath();gCtx.moveTo(gx1+gr1+4,gy1);gCtx.lineTo(gx2-gr2-4,gy2);gCtx.strokeStyle='rgba(0,212,255,0.08)';gCtx.lineWidth=1;gCtx.setLineDash([3,4]);gCtx.stroke();gCtx.setLineDash([]);
   gCtx.beginPath();gCtx.moveTo(gx2+gr2+4,gy2);gCtx.lineTo(gx3-gr3-4,gy3);gCtx.strokeStyle='rgba(0,212,255,0.08)';gCtx.lineWidth=1;gCtx.setLineDash([3,4]);gCtx.stroke();gCtx.setLineDash([]);
+  gCtx.beginPath();gCtx.moveTo(gx3+gr3+4,gy3);gCtx.lineTo(gx4-gr4-4,gy4);gCtx.strokeStyle='rgba(0,212,255,0.08)';gCtx.lineWidth=1;gCtx.setLineDash([3,4]);gCtx.stroke();gCtx.setLineDash([]);
   requestAnimationFrame(drawGauges);
 }
 drawGauges();
@@ -1842,7 +1844,7 @@ function buildLiveContext(){
   const cpuCores=hw.cpuCores||'';
   const ram=hw.ramGB||'';
   const gpu=hw.gpuRenderer!=='Unknown'?hw.gpuRenderer:'';
-  if(cpuCores)parts.push('SYSTEM: Device: '+hw.deviceType+', CPU: '+cpuCores+' cores, RAM: '+ram+' GB, GPU: '+(gpu||'Unknown')+', Storage: '+hw.storagePercent+'% used');
+  if(cpuCores)parts.push('SYSTEM: Device: '+hw.deviceType+', CPU: '+cpuCores+' cores, RAM: '+ram+' GB, GPU: '+(gpu||'Unknown')+', Disk: '+hw.storagePercent+'% used');
   // Telemetry (removed - using hardware data instead)
   // Time
   parts.push('TIME: '+new Date().toLocaleString());
