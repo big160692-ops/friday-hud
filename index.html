@@ -1167,17 +1167,27 @@ async function spotifyFetch(url,opts){
 }
 async function loadSpotifyProfile(){
   const r=await spotifyFetch('https://api.spotify.com/v1/me');
-  if(!r||!r.ok)return;
+  if(!r){addLog('wn','[MUS]','Auth failed. Re-login needed.');return}
+  if(!r.ok){const e=await r.text();addLog('wn','[MUS]','Profile error '+r.status+': '+e.substring(0,100));return}
   spotifyUser=await r.json();
   addLog('ok','[MUS]','Logged in as: '+spotifyUser.display_name);
   document.getElementById('spotify-status').textContent=spotifyUser.display_name;
   document.getElementById('spotify-status').style.color='#1ed760';
-  updateSpotifyUI();await loadSpotifyPlaylists();
+  await loadSpotifyPlaylists();
+  renderSavedPlaylists();
 }
 async function loadSpotifyPlaylists(){
   spotifyPlaylists=[];let url='https://api.spotify.com/v1/me/playlists?limit=50';
-  while(url){const r=await spotifyFetch(url);if(!r||!r.ok)break;const d=await r.json();spotifyPlaylists.push(...d.items);url=d.next||null}
-  renderSpotifyPlaylists();addLog('ok','[MUS]',spotifyPlaylists.length+' playlists loaded.');
+  while(url){
+    const r=await spotifyFetch(url);
+    if(!r)break;
+    if(!r.ok){const e=await r.text();addLog('wn','[MUS]','Playlists error '+r.status+': '+e.substring(0,100));break}
+    const d=await r.json();
+    spotifyPlaylists.push(...(d.items||[]));
+    url=d.next||null;
+  }
+  renderSpotifyPlaylists();
+  addLog('ok','[MUS]',spotifyPlaylists.length+' playlists loaded.');
 }
 function renderSpotifyPlaylists(){
   const el=document.getElementById('spotify-playlists');
@@ -1239,7 +1249,7 @@ function renderSavedPlaylists(){
 }
 function updateSpotifyUI(){
   const loginEl=document.getElementById('spotify-login'),logEl=document.getElementById('spotify-loggedin'),statusEl=document.getElementById('spotify-status');
-  if(spotifyToken&&spotifyUser){loginEl.style.display='none';logEl.style.display='block';statusEl.textContent=spotifyUser.display_name;statusEl.style.color='#1ed760';loadSpotifyPlaylists();renderSavedPlaylists()}
+  if(spotifyToken&&spotifyUser){loginEl.style.display='none';logEl.style.display='block';statusEl.textContent=spotifyUser.display_name;statusEl.style.color='#1ed760';renderSavedPlaylists()}
   else if(spotifyToken&&!spotifyUser){loginEl.style.display='none';logEl.style.display='block';statusEl.textContent='Connecting...';statusEl.style.color='var(--muted)'}
   else{loginEl.style.display='block';logEl.style.display='none';statusEl.textContent=''}
 }
