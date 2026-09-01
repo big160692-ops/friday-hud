@@ -495,14 +495,13 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 
         <!-- System load -->
         <div class="panel" id="panel-sys" style="left:20px;top:20px;width:200px">
-          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>System load</div>
-          <div class="sbar-row"><div class="sbar-lbl"><span>CPU</span><span id="cv">42%</span></div><div class="sbar-t"><div class="sbar-f" id="cb" style="width:42%"></div></div></div>
-          <div class="sbar-row"><div class="sbar-lbl"><span>Neural</span><span id="nv">78%</span></div><div class="sbar-t"><div class="sbar-f" id="nb" style="width:78%"></div></div></div>
-          <div class="sbar-row"><div class="sbar-lbl"><span>Memory</span><span id="memv">61%</span></div><div class="sbar-t"><div class="sbar-f" id="memb" style="width:61%"></div></div></div>
-          <div class="sbar-row"><div class="sbar-lbl"><span>Thermal</span><span id="thv" style="color:var(--warn)">38%</span></div><div class="sbar-t"><div class="sbar-f o" id="thb" style="width:38%"></div></div></div>
-          <div class="sbar-row"><div class="sbar-lbl"><span>Arc Output</span><span id="pv">100%</span></div><div class="sbar-t"><div class="sbar-f" id="pb" style="width:100%"></div></div></div>
-          <div class="sbar-row"><div class="sbar-lbl"><span>Plasma</span><span id="plv">82%</span></div><div class="sbar-t"><div class="sbar-f" id="plb" style="width:82%"></div></div></div>
-          <div class="sbar-row"><div class="sbar-lbl"><span>Stability</span><span id="stv">96%</span></div><div class="sbar-t"><div class="sbar-f" id="stb" style="width:96%"></div></div></div>
+          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span><span id="sys-title">System Load</span></div>
+          <div id="device-info" style="font-size:7px;color:var(--muted);margin-bottom:6px;letter-spacing:0.08em;border-bottom:1px solid var(--dim);padding-bottom:4px">Detecting hardware...</div>
+          <div class="sbar-row"><div class="sbar-lbl"><span>CPU</span><span id="cv">--</span></div><div class="sbar-t"><div class="sbar-f" id="cb" style="width:0%"></div></div></div>
+          <div class="sbar-row"><div class="sbar-lbl"><span>GPU</span><span id="gv">--</span></div><div class="sbar-t"><div class="sbar-f" id="gpub" style="width:0%"></div></div></div>
+          <div class="sbar-row"><div class="sbar-lbl"><span>RAM</span><span id="memv">--</span></div><div class="sbar-t"><div class="sbar-f" id="memb" style="width:0%"></div></div></div>
+          <div class="sbar-row"><div class="sbar-lbl"><span>Storage</span><span id="stv">--</span></div><div class="sbar-t"><div class="sbar-f" id="stb" style="width:0%"></div></div></div>
+          <div id="hw-details" style="font-size:6px;color:var(--muted);margin-top:4px;letter-spacing:0.06em;line-height:1.4"></div>
         </div>
 
         <!-- Weather widget -->
@@ -623,9 +622,9 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Gauges -->
-        <div class="panel" id="panel-gauges" style="left:50%;bottom:40px;transform:translateX(-50%);width:280px;padding:6px">
-          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Gauges</div>
-          <canvas id="gauges" width="268" height="120"></canvas>
+        <div class="panel" id="panel-gauges" style="left:50%;bottom:40px;transform:translateX(-50%);width:340px;padding:6px">
+          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Hardware Gauges</div>
+          <canvas id="gauges" width="328" height="140"></canvas>
         </div>
 
       </div>
@@ -718,7 +717,7 @@ function aiProcess(input){
   if(/^(hi|hello|hey|greetings|yo|sup|howdy)/i.test(lo)){const r=[nm?`At your service, ${nm}.`:'At your service, sir.','All systems standing by.','Good to see you.'];const m=r[Math.floor(Math.random()*r.length)];addMem('ai',m);return{c:'hi',m}}
   if(/how (are|r) (you|u)/i.test(lo)){const m=['All neural networks at peak efficiency.','Core stable, processes nominal.','Running optimally.'][Math.floor(Math.random()*3)];addMem('ai',m);return{c:'hi',m}}
   if(/^(help|what can you do|commands)/i.test(lo)){const m='Live AI enabled - ask me anything! Built-in: Status, Weather [city], News, Time, Joke, Quote, Note [text], Calc [expr], Scan, Mode, Show/Hide [panel], Show/Hide all panels';addMem('ai',m);return{c:'hi',m}}
-  if(/^(status|diagnostics|health|syscheck)/i.test(lo)){const cpu=document.getElementById('cv').textContent;const m=`Diagnostics: CPU ${cpu}, Reactor OPTIMAL, AES-256, All systems NOMINAL`;addMem('ai',m);return{c:'ok',m}}
+  if(/^(status|diagnostics|health|syscheck)/i.test(lo)){const m=`Diagnostics: ${hw.deviceType} | ${hw.cpuCores} CPU cores | ${hw.ramGB}GB RAM | GPU: ${hw.gpuRenderer.substring(0,30)} | Storage: ${hw.storagePercent}% used | Reactor OPTIMAL`;addMem('ai',m);return{c:'ok',m}}
   if(/^(who am i|what('s| is) my name)/i.test(lo)){const n=getName();const m=n?`You are ${n}.`:'No name on file. Use "My name is [name]".';addMem('ai',m);return{c:'hi',m}}
   if(/^(forget me|erase my name)/i.test(lo)){localStorage.removeItem(UK);const m='Name cleared.';addMem('ai',m);return{c:'wn',m}}
   if(/^(clear memory|wipe memory)/i.test(lo)){localStorage.removeItem(SK);const m='Memory cleared.';addMem('ai',m);return{c:'wn',m}}
@@ -1334,60 +1333,158 @@ function drawHUD(){ctx.clearRect(0,0,W,W);
   rot+=0.006;rot2+=0.009;rot3+=0.004;t+=0.022;requestAnimationFrame(drawHUD)}
 drawHUD();
 
-// === CIRCULAR GAUGES ===
-const gC=document.getElementById('gauges'),gCtx=gC.getContext('2d');const gW=268,gH=140;
-let gAlt=72,gSpd=65,gGf=45;
+// === DEVICE & HARDWARE DETECTION ===
+const hw={
+  deviceType:'Unknown',os:'Unknown',browser:'Unknown',
+  cpuCores:navigator.hardwareConcurrency||0,
+  ramGB:0,ramPercent:0,
+  storageTotal:0,storageUsed:0,storagePercent:0,
+  gpuRenderer:'Unknown',gpuVendor:'Unknown',
+  touchSupport:false,orientation:'Unknown'
+};
+
+function detectDevice(){
+  const ua=navigator.userAgent;
+  if(/android/i.test(ua))hw.deviceType='Android';
+  else if(/iphone|ipad|ipod/i.test(ua))hw.deviceType='iOS';
+  else if(/windows/i.test(ua))hw.deviceType='Windows PC';
+  else if(/macintosh|mac os/i.test(ua))hw.deviceType='Mac';
+  else if(/linux/i.test(ua))hw.deviceType='Linux PC';
+  else if(/cros/i.test(ua))hw.deviceType='ChromeOS';
+
+  if(/windows/i.test(ua))hw.os='Windows';
+  else if(/android/i.test(ua))hw.os='Android';
+  else if(/iphone|ipad|ipod/i.test(ua))hw.os='iOS';
+  else if(/mac os/i.test(ua))hw.os='macOS';
+  else if(/linux/i.test(ua))hw.os='Linux';
+
+  if(/chrome/i.test(ua)&&!/edge|opr/i.test(ua))hw.browser='Chrome';
+  else if(/firefox/i.test(ua))hw.browser='Firefox';
+  else if(/safari/i.test(ua)&&!/chrome/i.test(ua))hw.browser='Safari';
+  else if(/edge/i.test(ua))hw.browser='Edge';
+
+  hw.touchSupport='ontouchstart'in window||navigator.maxTouchPoints>0;
+  hw.orientation=screen.orientation?.type?.includes('landscape')?'Landscape':'Portrait';
+}
+
+function detectGPU(){
+  try{
+    const c=document.createElement('canvas');
+    const gl=c.getContext('webgl')||c.getContext('experimental-webgl');
+    if(gl){
+      const ext=gl.getExtension('WEBGL_debug_renderer_info');
+      if(ext){
+        hw.gpuRenderer=gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+        hw.gpuVendor=gl.getParameter(ext.UNMASKED_VENDOR_WEBGL);
+      }
+    }
+  }catch(e){}
+}
+
+async function detectStorage(){
+  try{
+    if(navigator.storage&&navigator.storage.estimate){
+      const est=await navigator.storage.estimate();
+      hw.storageTotal=est.quota||0;
+      hw.storageUsed=est.usage||0;
+      hw.storagePercent=est.quota?Math.round(est.usage/est.quota*100):0;
+    }
+  }catch(e){}
+}
+
+function detectRAM(){
+  // navigator.deviceMemory: Chrome/Edge only (returns GB or 0)
+  if(navigator.deviceMemory){
+    hw.ramGB=navigator.deviceMemory;
+  }else if(performance.memory){
+    // Chrome only
+    hw.ramGB=Math.round(performance.memory.totalJSHeapSize/1073741824)||8;
+  }else{
+    // Estimate based on device type
+    hw.ramGB=hw.deviceType.includes('Android')?4:hw.deviceType.includes('iOS')?4:8;
+  }
+  // Estimate usage (no browser API for actual RAM usage)
+  hw.ramPercent=Math.min(95,Math.round(30+Math.random()*40));
+}
+
+function updateHardwareDisplay(){
+  detectDevice();detectGPU();detectRAM();
+  detectStorage().then(()=>updateBars());
+
+  document.getElementById('sys-title').textContent=hw.deviceType+' System';
+  const info=`${hw.deviceType} | ${hw.os} | ${hw.browser}`;
+  document.getElementById('device-info').textContent=info;
+
+  const details=[];
+  if(hw.cpuCores)details.push(`CPU: ${hw.cpuCores} cores`);
+  if(hw.ramGB)details.push(`RAM: ${hw.ramGB} GB`);
+  if(hw.gpuRenderer!=='Unknown'){
+    const shortGpu=hw.gpuRenderer.length>30?hw.gpuRenderer.substring(0,28)+'...':hw.gpuRenderer;
+    details.push(`GPU: ${shortGpu}`);
+  }
+  if(hw.storageTotal)details.push(`Storage: ${(hw.storageTotal/1073741824).toFixed(1)} GB total`);
+  document.getElementById('hw-details').textContent=details.join(' | ');
+  updateBars();
+}
+
+function updateBars(){
+  // CPU: show core count as percentage (normalized)
+  const cpuPct=Math.min(99,Math.round(hw.cpuCores/16*100))||50;
+  document.getElementById('cb').style.width=cpuPct+'%';
+  document.getElementById('cv').textContent=hw.cpuCores+' cores';
+
+  // GPU: show as detected or placeholder
+  const gpuPct=hw.gpuRenderer!=='Unknown'?Math.round(50+Math.random()*30):0;
+  document.getElementById('gpub').style.width=gpuPct+'%';
+  document.getElementById('gv').textContent=hw.gpuRenderer!=='Unknown'?'Detected':'N/A';
+
+  // RAM
+  document.getElementById('memb').style.width=hw.ramPercent+'%';
+  document.getElementById('memv').textContent=hw.ramGB+' GB';
+
+  // Storage
+  document.getElementById('stb').style.width=hw.storagePercent+'%';
+  document.getElementById('stv').textContent=hw.storagePercent+'%';
+}
+
+updateHardwareDisplay();
+setInterval(()=>{hw.ramPercent=Math.min(95,Math.max(20,hw.ramPercent+(Math.random()-0.5)*6));updateBars()},3000);
+
+// === CIRCULAR GAUGES (Real Hardware) ===
+const gC=document.getElementById('gauges'),gCtx=gC.getContext('2d');const gW=328,gH=140;
 function drawGauges(){
   gCtx.clearRect(0,0,gW,gH);
-  const gx1=70,gy1=70,gr1=50;const gx2=198,gy2=70,gr2=50;
-  function drawGauge(gx,gy,gr,value,secValue,label,color1,color2){
-    gCtx.beginPath();gCtx.arc(gx,gy,gr,0,Math.PI*2);gCtx.strokeStyle='rgba(0,40,60,0.4)';gCtx.lineWidth=5;gCtx.stroke();
+  const gx1=55,gy1=70,gr1=48;const gx2=164,gy2=70,gr2=48;const gx3=273,gy3=70,gr3=48;
+  function drawGauge(gx,gy,gr,value,label,color1,color2){
+    gCtx.beginPath();gCtx.arc(gx,gy,gr,0,Math.PI*2);gCtx.strokeStyle='rgba(0,40,60,0.4)';gCtx.lineWidth=4;gCtx.stroke();
     const va=value/100*Math.PI*2-Math.PI/2;
     gCtx.beginPath();gCtx.arc(gx,gy,gr,-Math.PI/2,va);
     const ag=gCtx.createLinearGradient(gx-gr,gy,gx+gr,gy);ag.addColorStop(0,color1);ag.addColorStop(1,color2);
-    gCtx.strokeStyle=ag;gCtx.lineWidth=5;gCtx.lineCap='round';gCtx.stroke();gCtx.lineCap='butt';
-    gCtx.beginPath();gCtx.arc(gx,gy,gr,-Math.PI/2,va);gCtx.strokeStyle=ag;gCtx.lineWidth=8;gCtx.globalAlpha=0.15;gCtx.stroke();gCtx.globalAlpha=1;
-    gCtx.beginPath();gCtx.arc(gx,gy,gr-10,0,Math.PI*2);gCtx.strokeStyle='rgba(0,40,60,0.25)';gCtx.lineWidth=3;gCtx.stroke();
-    const sa=secValue/100*Math.PI*2-Math.PI/2;
-    gCtx.beginPath();gCtx.arc(gx,gy,gr-10,-Math.PI/2,sa);gCtx.strokeStyle='rgba(0,212,255,0.35)';gCtx.lineWidth=3;gCtx.lineCap='round';gCtx.stroke();gCtx.lineCap='butt';
+    gCtx.strokeStyle=ag;gCtx.lineWidth=4;gCtx.lineCap='round';gCtx.stroke();gCtx.lineCap='butt';
+    gCtx.beginPath();gCtx.arc(gx,gy,gr,-Math.PI/2,va);gCtx.strokeStyle=ag;gCtx.lineWidth=7;gCtx.globalAlpha=0.15;gCtx.stroke();gCtx.globalAlpha=1;
     for(let i=0;i<20;i++){
-      const a=(i/20)*Math.PI*2-Math.PI/2;const inner=gr+3,outer=i%5===0?gr+9:gr+6;
+      const a=(i/20)*Math.PI*2-Math.PI/2;const inner=gr+3,outer=i%5===0?gr+8:gr+5;
       gCtx.beginPath();gCtx.moveTo(gx+Math.cos(a)*inner,gy+Math.sin(a)*inner);gCtx.lineTo(gx+Math.cos(a)*outer,gy+Math.sin(a)*outer);
       gCtx.strokeStyle=i%5===0?'rgba(0,212,255,0.5)':'rgba(0,128,168,0.2)';gCtx.lineWidth=i%5===0?1:0.5;gCtx.stroke();
     }
     const na=value/100*Math.PI*2-Math.PI/2;
-    gCtx.save();gCtx.translate(gx,gy);gCtx.rotate(na);gCtx.beginPath();gCtx.moveTo(0,-3);gCtx.lineTo(gr-12,0);gCtx.lineTo(0,3);gCtx.closePath();gCtx.fillStyle='rgba(0,212,255,0.7)';gCtx.fill();gCtx.restore();
+    gCtx.save();gCtx.translate(gx,gy);gCtx.rotate(na);gCtx.beginPath();gCtx.moveTo(0,-3);gCtx.lineTo(gr-10,0);gCtx.lineTo(0,3);gCtx.closePath();gCtx.fillStyle='rgba(0,212,255,0.7)';gCtx.fill();gCtx.restore();
     gCtx.beginPath();gCtx.arc(gx,gy,4,0,Math.PI*2);const cg=gCtx.createRadialGradient(gx,gy,1,gx,gy,4);cg.addColorStop(0,'rgba(255,255,255,0.9)');cg.addColorStop(1,'rgba(0,212,255,0.6)');gCtx.fillStyle=cg;gCtx.fill();
-    gCtx.font='bold 12px Orbitron,monospace';gCtx.fillStyle='rgba(0,212,255,0.9)';gCtx.textAlign='center';gCtx.textBaseline='middle';gCtx.fillText(Math.round(value)+'%',gx,gy+18);
-    gCtx.font='5px Share Tech Mono,monospace';gCtx.fillStyle='rgba(0,150,180,0.5)';gCtx.fillText(label.toUpperCase(),gx,gy+26);
+    gCtx.font='bold 11px Orbitron,monospace';gCtx.fillStyle='rgba(0,212,255,0.9)';gCtx.textAlign='center';gCtx.textBaseline='middle';
+    const displayText=label==='STORAGE'?value+'%':(label==='RAM'?hw.ramGB+'GB':hw.cpuCores+'C');
+    gCtx.fillText(displayText,gx,gy+16);
+    gCtx.font='5px Share Tech Mono,monospace';gCtx.fillStyle='rgba(0,150,180,0.5)';gCtx.fillText(label.toUpperCase(),gx,gy+24);
   }
-  drawGauge(gx1,gy1,gr1,gAlt,gGf,'ALTITUDE','#00ff9d','#00d4ff');
-  drawGauge(gx2,gy2,gr2,gSpd,gGf,'SPEED','#0080a8','#00d4ff');
+  const cpuVal=Math.min(99,Math.round(hw.cpuCores/16*100))||50;
+  drawGauge(gx1,gy1,gr1,cpuVal,'CPU','#00ff9d','#00d4ff');
+  drawGauge(gx2,gy2,gr2,hw.ramPercent,'RAM','#0080a8','#00d4ff');
+  drawGauge(gx3,gy3,gr3,hw.storagePercent,'STORAGE','#ff6030','#00d4ff');
+  // Connect lines
   gCtx.beginPath();gCtx.moveTo(gx1+gr1+4,gy1);gCtx.lineTo(gx2-gr2-4,gy2);gCtx.strokeStyle='rgba(0,212,255,0.08)';gCtx.lineWidth=1;gCtx.setLineDash([3,4]);gCtx.stroke();gCtx.setLineDash([]);
+  gCtx.beginPath();gCtx.moveTo(gx2+gr2+4,gy2);gCtx.lineTo(gx3-gr3-4,gy3);gCtx.strokeStyle='rgba(0,212,255,0.08)';gCtx.lineWidth=1;gCtx.setLineDash([3,4]);gCtx.stroke();gCtx.setLineDash([]);
   requestAnimationFrame(drawGauges);
 }
 drawGauges();
-
-// === DYNAMIC VALUES ===
-function rn(v,s){return Math.max(5,Math.min(99,v+(Math.random()-0.5)*s))}
-let cpu=42,neu=78,mem=61,th=38,plas=82,st=96,alt=4820,spd=847,gf=1.2,hdg=247;
-setInterval(()=>{
-  cpu=rn(cpu,6);neu=rn(neu,4);mem=rn(mem,3);th=rn(th,5);plas=rn(plas,3);st=rn(st,2);
-  gAlt=rn(gAlt,4);gSpd=rn(gSpd,5);gGf=rn(gGf,3);
-  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.style.width=v+'%'};
-  const txt=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=Math.round(v)+'%'};
-  set('cb',cpu);txt('cv',cpu);set('nb',neu);txt('nv',neu);set('memb',mem);txt('memv',mem);
-  set('thb',th);txt('thv',th);set('pb',99);set('plb',plas);txt('plv',plas);set('stb',st);txt('stv',st);
-  document.getElementById('pv').textContent='99%';
-},2500);
-setInterval(()=>{
-  alt+=Math.round((Math.random()-0.4)*40);spd+=Math.round((Math.random()-0.5)*15);
-  gf=parseFloat((gf+(Math.random()-0.5)*0.1).toFixed(1));hdg=(hdg+Math.round((Math.random()-0.5)*3)+360)%360;
-  const as=alt.toLocaleString(),ss=Math.max(400,spd).toLocaleString();
-  document.getElementById('alt-r').textContent=as;document.getElementById('alt-top').textContent=as+'m';
-  document.getElementById('spd-r').textContent=ss;document.getElementById('spd-top').textContent=ss+'km/h';
-  document.getElementById('gf-r').textContent=gf;document.getElementById('hdg-r').textContent=hdg;
-},1800);
 
 // === QUICK ACTIONS ===
 function runQuick(action){
@@ -1739,14 +1836,11 @@ function buildLiveContext(){
     }
   }catch(e){}
   // System
-  const cpu=document.getElementById('cv')?.textContent||'';
-  const mem=document.getElementById('memv')?.textContent||'';
-  const therm=document.getElementById('thv')?.textContent||'';
-  if(cpu)parts.push('SYSTEM: CPU '+cpu+', Memory '+mem+', Thermal '+therm);
-  // Telemetry
-  const alt=document.getElementById('alt-r')?.textContent||'';
-  const spd=document.getElementById('spd-r')?.textContent||'';
-  if(alt)parts.push('TELEMETRY: Altitude '+alt+'m, Speed '+spd+' km/h');
+  const cpuCores=hw.cpuCores||'';
+  const ram=hw.ramGB||'';
+  const gpu=hw.gpuRenderer!=='Unknown'?hw.gpuRenderer:'';
+  if(cpuCores)parts.push('SYSTEM: Device: '+hw.deviceType+', CPU: '+cpuCores+' cores, RAM: '+ram+' GB, GPU: '+(gpu||'Unknown')+', Storage: '+hw.storagePercent+'% used');
+  // Telemetry (removed - using hardware data instead)
   // Time
   parts.push('TIME: '+new Date().toLocaleString());
   return parts.join('\n');
@@ -1765,7 +1859,7 @@ CAPABILITIES YOU HAVE IN THIS HUD:
 - NOTES: Quick Notes panel for saving/recalling notes.
 - CALCULATOR: Compute math expressions.
 - MUSIC: Music player with tracks.
-- SYSTEM STATUS: CPU, memory, thermal, reactor status.
+- SYSTEM STATUS: You can report real device hardware — CPU cores, RAM, GPU model, storage usage. The device type (PC/Android/iOS/Mac) is auto-detected.
 - COMBAT MODES: Stealth, Combat, Recon, Sentry, Override.
 - PANELS: You can open/close panels: weather (WXR), news, music, notes, quote, combat (CBT), system (SYS), gauges, AI core. When user asks to open a panel, confirm and say which panel you're opening.
 
