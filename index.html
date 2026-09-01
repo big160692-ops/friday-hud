@@ -457,10 +457,6 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
       <button class="scatter-btn" id="btn-music" onclick="togglePanel('panel-music')" title="Music Player">&#127925; MUS</button>
       <button class="scatter-btn" id="btn-notes" onclick="togglePanel('panel-notes')" title="Quick Notes">&#128221; NOTES</button>
       <button class="scatter-btn" id="btn-quote" onclick="togglePanel('panel-quote')" title="Daily Quote">&#10077; QUOTE</button>
-      <button class="scatter-btn" id="btn-gauges" onclick="togglePanel('panel-sys')" title="Gauges">&#9883; GAUGE</button>
-      <button class="scatter-btn" onclick="promptFishKey()" title="Set Fish Audio API key">&#128273; VOICE</button>
-      <button class="scatter-btn" onclick="promptGroqKey()" title="Set OpenRouter API key for live AI">&#129504; AI</button>
-      <button class="scatter-btn" onclick="testGroq()" title="Test AI connection">&#9889; TEST</button>
 
       <!-- Clock widget in top bar -->
       <div class="clock-widget">
@@ -1524,13 +1520,6 @@ function updateToggleBtns(){
       if(p.classList.contains('open'))b.classList.add('active');
       else b.classList.remove('active');
     }
-  }
-  // Gauges button maps to same panel as SYS
-  const sysPanel=document.getElementById('panel-sys');
-  const gaugeBtn=document.getElementById('btn-gauges');
-  if(sysPanel&&gaugeBtn){
-    if(sysPanel.classList.contains('open'))gaugeBtn.classList.add('active');
-    else gaugeBtn.classList.remove('active');
   }
 }
 
