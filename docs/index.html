@@ -574,7 +574,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 
         <!-- Music player -->
         <div class="panel" id="panel-music" style="right:280px;top:20px;width:400px">
-          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Music <span id="spotify-status" style="font-size:6px;margin-left:auto;color:var(--muted)"></span></div>
+          <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Music <span id="spotify-status" style="font-size:6px;margin-left:auto;color:var(--muted)"></span><span id="spotify-logout" onclick="spotifyLogout()" style="display:none;font-size:6px;color:var(--muted);cursor:pointer;margin-left:6px" title="Logout">[LOGOUT]</span></div>
 
           <!-- Not logged in -->
           <div id="spotify-login">
@@ -1248,10 +1248,10 @@ function renderSavedPlaylists(){
   el.innerHTML='<div style="font-size:5.5px;color:var(--muted);margin-bottom:2px;letter-spacing:0.08em">OTHER USERS\' PLAYLISTS</div>'+savedPlaylists.map(p=>`<div style="display:flex;align-items:center;gap:5px;padding:3px 4px;cursor:pointer;border-radius:2px;border:1px solid transparent" onmouseover="this.style.background='rgba(30,215,96,0.05)'" onmouseout="this.style.background='transparent'"><img src="${p.image}" style="width:18px;height:18px;border-radius:2px;object-fit:cover;${p.image?'':'display:none'}"><div style="min-width:0;flex:1" onclick="loadSpotifyPlaylist('${p.id}')"><div style="font-size:6.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div><div style="font-size:5px;color:var(--muted)">${p.owner} &middot; ${p.total} tracks</div></div><span onclick="event.stopPropagation();removeSavedPlaylist('${p.id}')" style="font-size:7px;color:var(--muted);cursor:pointer;padding:2px">&times;</span></div>`).join('');
 }
 function updateSpotifyUI(){
-  const loginEl=document.getElementById('spotify-login'),logEl=document.getElementById('spotify-loggedin'),statusEl=document.getElementById('spotify-status');
-  if(spotifyToken&&spotifyUser){loginEl.style.display='none';logEl.style.display='block';statusEl.textContent=spotifyUser.display_name;statusEl.style.color='#1ed760';renderSavedPlaylists()}
-  else if(spotifyToken&&!spotifyUser){loginEl.style.display='none';logEl.style.display='block';statusEl.textContent='Connecting...';statusEl.style.color='var(--muted)'}
-  else{loginEl.style.display='block';logEl.style.display='none';statusEl.textContent=''}
+  const loginEl=document.getElementById('spotify-login'),logEl=document.getElementById('spotify-loggedin'),statusEl=document.getElementById('spotify-status'),logoutEl=document.getElementById('spotify-logout');
+  if(spotifyToken&&spotifyUser){loginEl.style.display='none';logEl.style.display='block';statusEl.textContent=spotifyUser.display_name;statusEl.style.color='#1ed760';logoutEl.style.display='inline';renderSavedPlaylists()}
+  else if(spotifyToken&&!spotifyUser){loginEl.style.display='none';logEl.style.display='block';statusEl.textContent='Connecting...';statusEl.style.color='var(--muted)';logoutEl.style.display='inline'}
+  else{loginEl.style.display='block';logEl.style.display='none';statusEl.textContent='';logoutEl.style.display='none'}
 }
 
 handleSpotifyCallback();
