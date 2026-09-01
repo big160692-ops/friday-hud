@@ -522,15 +522,15 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Music player -->
-        <div class="panel open" id="panel-music" style="right:20px;top:20px;width:280px">
+        <div class="panel open" id="panel-music" style="right:20px;top:20px;width:380px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Music</div>
           <div style="margin-bottom:6px">
             <div style="display:flex;gap:3px">
-              <input id="yt-search" placeholder="Search YouTube Music..." style="flex:1;padding:3px 6px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);color:var(--text);font-size:7px;font-family:var(--font-hud);border-radius:2px;outline:none" onkeydown="if(event.key==='Enter')searchYouTube()">
-              <button onclick="searchYouTube()" style="padding:3px 6px;background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;font-size:6px;letter-spacing:0.08em;cursor:pointer;border-radius:2px;font-family:var(--font-hud)">SEARCH</button>
+              <input id="yt-search" placeholder="Search YouTube Music..." style="flex:1;padding:4px 8px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);color:var(--text);font-size:8px;font-family:var(--font-hud);border-radius:2px;outline:none" onkeydown="if(event.key==='Enter')searchYouTube()">
+              <button onclick="searchYouTube()" style="padding:4px 8px;background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;font-size:7px;letter-spacing:0.08em;cursor:pointer;border-radius:2px;font-family:var(--font-hud)">SEARCH</button>
             </div>
           </div>
-          <div id="yt-player-wrap" style="width:100%;aspect-ratio:16/9;background:#000;border-radius:3px;overflow:hidden;margin-bottom:6px;display:none">
+          <div id="yt-player-wrap" style="width:100%;height:214px;background:#000;border-radius:3px;overflow:hidden;margin-bottom:6px;display:none">
             <div id="yt-player"></div>
           </div>
           <div id="yt-results" style="max-height:120px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-bottom:6px"></div>
