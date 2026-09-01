@@ -62,14 +62,14 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .F.R.I.D.A.Y.-title small{font-size:6px;color:var(--muted);letter-spacing:0.15em;margin-left:6px;font-weight:400}
 
 /* Middle grid */
-.mid{position:relative;flex:1;overflow:hidden;min-height:0}
+.mid{position:relative;flex:1;overflow:auto;min-height:0}
 
 /* Center core — always visible */
 .center-col{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1}
 #hud{max-width:100%;max-height:100%;object-fit:contain}
 
 /* Panel layer — sits above core */
-.panel-layer{position:absolute;inset:0;z-index:10;pointer-events:none;overflow:hidden}
+.panel-layer{position:absolute;inset:0;z-index:10;pointer-events:none;overflow:visible}
 .panel-layer .panel{pointer-events:auto;position:absolute;display:none;min-width:180px;max-width:560px;max-height:80vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent}
 .panel-layer .panel.open{display:block;animation:panelIn 0.25s ease-out}
 @keyframes panelIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
@@ -486,7 +486,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
       <div class="panel-layer" id="panel-layer">
 
         <!-- System + Gauges combined -->
-        <div class="panel open" id="panel-sys" style="left:20px;top:20px;width:320px;padding:12px 14px">
+        <div class="panel open" id="panel-sys" style="left:20px;top:20px;width:300px;padding:12px 14px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span><span id="sys-title">System</span></div>
           <div id="device-info" style="font-size:8px;color:var(--muted);margin-bottom:8px;letter-spacing:0.08em;border-bottom:1px solid var(--dim);padding-bottom:6px">Detecting hardware...</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-bottom:8px">
@@ -500,7 +500,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Weather widget -->
-        <div class="panel open" id="panel-weather" style="left:360px;top:20px;width:200px">
+        <div class="panel open" id="panel-weather" style="left:340px;top:20px;width:180px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Weather <span class="weather-refresh" onclick="fetchWeather()" title="Refresh">&#8635; REFRESH</span></div>
           <div id="weather-content">
             <div class="weather-loading">Initializing weather sensors...</div>
@@ -508,7 +508,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Combat mode -->
-        <div class="panel open" id="panel-combat" style="left:20px;top:300px;width:200px">
+        <div class="panel open" id="panel-combat" style="left:20px;top:340px;width:200px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Combat mode</div>
           <button class="mbtn act" onclick="selMode(this)">Stealth</button>
           <button class="mbtn" onclick="selMode(this)">Combat</button>
@@ -535,7 +535,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- AI Core -->
-        <div class="panel open" id="panel-ai" style="right:20px;top:20px;width:240px">
+        <div class="panel open" id="panel-ai" style="right:20px;top:320px;width:280px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>AI Core <span class="mem-btn" onclick="toggleMem()">MEMORY</span></div>
           <div id="con">
             <div class="log-line ok new"><span class="lpfx">[SYS]</span>All systems nominal.</div>
@@ -565,7 +565,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- News feed -->
-        <div class="panel open" id="panel-news" style="right:20px;top:300px;width:240px">
+        <div class="panel open" id="panel-news" style="right:20px;top:620px;width:280px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Local News <span id="news-loc" style="font-size:6px;color:var(--muted);margin-left:auto"></span></div>
           <div class="news-list" id="news-list">
             <div class="news-loading">Detecting location for local news...</div>
@@ -573,7 +573,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Music player -->
-        <div class="panel open" id="panel-music" style="right:280px;top:20px;width:300px">
+        <div class="panel open" id="panel-music" style="right:20px;top:20px;width:280px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Music</div>
           <div id="yt-embed" style="position:absolute;width:0;height:0;overflow:hidden"></div>
           <div style="margin-bottom:6px">
@@ -603,14 +603,14 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Notes -->
-        <div class="panel open" id="panel-notes" style="left:240px;top:300px;width:200px">
+        <div class="panel open" id="panel-notes" style="left:240px;top:340px;width:200px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Quick Notes</div>
           <textarea class="notes-area" id="notes-input" placeholder="Type a note... (Enter to save)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addNote()}"></textarea>
           <div class="notes-list" id="notes-list"></div>
         </div>
 
         <!-- Quote -->
-        <div class="panel open" id="panel-quote" style="left:50%;top:530px;transform:translateX(-50%);width:220px">
+        <div class="panel open" id="panel-quote" style="left:20px;top:560px;width:220px;transform:none">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Daily Quote</div>
           <div class="quote-box" id="quote-text">"The best way to predict the future is to invent it."</div>
           <div class="quote-author" id="quote-author">- Alan Kay</div>
