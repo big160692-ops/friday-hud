@@ -522,26 +522,18 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Music player -->
-        <div class="panel open" id="panel-music" style="right:20px;top:20px;width:320px">
+        <div class="panel open" id="panel-music" style="right:20px;top:20px;width:280px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Music</div>
           <div id="music-drop" style="border:1px dashed var(--dim);border-radius:3px;padding:10px;text-align:center;margin-bottom:6px;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--dim)'" onclick="document.getElementById('music-file-input').click()">
             <div style="font-size:8px;color:var(--muted);margin-bottom:2px">&#127925; Drop music here or click to browse</div>
             <div style="font-size:6px;color:rgba(26,74,90,0.5)">mp3, wav, ogg, m4a</div>
             <input type="file" id="music-file-input" accept="audio/*" multiple style="display:none" onchange="handleMusicFiles(this.files)">
           </div>
-          <div style="display:flex;gap:3px;margin-bottom:6px">
-            <input id="yt-search" placeholder="Or search YouTube..." style="flex:1;padding:3px 6px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);color:var(--text);font-size:7px;font-family:var(--font-hud);border-radius:2px;outline:none" onkeydown="if(event.key==='Enter')searchYouTube()">
-            <button onclick="searchYouTube()" style="padding:3px 6px;background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;font-size:6px;letter-spacing:0.08em;cursor:pointer;border-radius:2px;font-family:var(--font-hud)">YT</button>
-          </div>
-          <div id="yt-player-wrap" style="width:100%;height:180px;background:#000;border-radius:3px;overflow:hidden;margin-bottom:6px;display:none">
-            <div id="yt-player"></div>
-          </div>
-          <div id="yt-results" style="max-height:80px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-bottom:6px"></div>
           <div class="music-info">
             <div class="music-art" id="music-art">&#127925;</div>
             <div class="music-meta">
               <div class="music-track" id="music-track">No track loaded</div>
-              <div class="music-artist" id="music-artist">Drop files or search YouTube</div>
+              <div class="music-artist" id="music-artist">Drop audio files to play</div>
             </div>
           </div>
           <div class="music-progress" onclick="seekMusic(event)"><div class="music-progress-fill" id="music-fill" style="width:0%"></div></div>
@@ -551,7 +543,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
             <button class="music-btn play" onclick="togglePlay()" id="btn-play" title="Play">&#9654;</button>
             <button class="music-btn" onclick="nextTrack()" title="Next">&#9654;&#9654;</button>
           </div>
-          <div id="yt-tracklist" style="max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-top:4px"></div>
+          <div id="yt-tracklist" style="max-height:120px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-top:4px"></div>
         </div>
       </div>
     </div>
@@ -932,12 +924,9 @@ function loadFallbackNews(el){
 function loadNews(){detectLocationForNews()}
 
 // === MUSIC PLAYER ===
-let TRACKS=JSON.parse(localStorage.getItem('yt_custom_tracks')||'[]');
+let TRACKS=[];
 let curTrack=0,isPlaying=false;
 let audioEl=null;
-let ytPlayer=null,ytReady=false;
-
-// Local file URLs stored in memory (not localStorage - too big)
 let localFiles={};
 
 function initAudio(){
@@ -962,7 +951,6 @@ function initAudio(){
 }
 initAudio();
 
-// Drag and drop
 const dropZone=document.getElementById('music-drop');
 dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.style.borderColor='var(--primary)';dropZone.style.background='rgba(0,212,255,0.05)'});
 dropZone.addEventListener('dragleave',e=>{dropZone.style.borderColor='var(--dim)';dropZone.style.background='transparent'});
@@ -980,9 +968,8 @@ function handleMusicFiles(files){
     const name=f.name.replace(/\.[^.]+$/,'');
     const id='local_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
     localFiles[id]=url;
-    TRACKS.push({t:name,a:'Local File',vid:id,local:true});
+    TRACKS.push({t:name,a:'Local File',vid:id});
   }
-  localStorage.setItem('yt_custom_tracks',JSON.stringify(TRACKS.filter(t=>!t.local)));
   renderTrackList();
   addLog('ok','[MUS]','Added '+files.length+' file(s)');
   if(TRACKS.length&&curTrack===0&&!isPlaying)playTrack(0);
@@ -991,33 +978,17 @@ function handleMusicFiles(files){
 function formatTime(s){const m=Math.floor(s/60);const sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec}
 
 function togglePlay(){
-  if(!TRACKS.length)return;
-  const tr=TRACKS[curTrack];
-  if(tr.local){
-    if(!audioEl)initAudio();
-    if(isPlaying)audioEl.pause();
-    else{audioEl.src=localFiles[tr.vid];audioEl.play().catch(()=>{})}
-  }else if(tr.vid){
-    if(!ytReady||!ytPlayer)return;
-    if(isPlaying)ytPlayer.pauseVideo();
-    else ytPlayer.playVideo();
-  }
+  if(!TRACKS.length||!audioEl)return;
+  if(isPlaying)audioEl.pause();
+  else{audioEl.src=localFiles[TRACKS[curTrack].vid];audioEl.play().catch(()=>{})}
 }
 
 function playTrack(idx){
   curTrack=idx;
-  const tr=TRACKS[idx];
-  if(tr.local){
-    if(!audioEl)initAudio();
-    audioEl.src=localFiles[tr.vid];
-    audioEl.play().catch(()=>{});
-    isPlaying=true;
-  }else if(tr.vid){
-    if(ytReady&&ytPlayer){
-      ytPlayer.loadVideoById(tr.vid);
-      isPlaying=true;
-    }
-  }
+  if(!audioEl)initAudio();
+  audioEl.src=localFiles[TRACKS[idx].vid];
+  audioEl.play().catch(()=>{});
+  isPlaying=true;
   updateMusicMeta();
 }
 
@@ -1033,48 +1004,30 @@ function prevTrack(){
 }
 
 function seekMusic(e){
+  if(!audioEl||!audioEl.duration)return;
   const r=e.target.getBoundingClientRect();
-  const pct=(e.clientX-r.left)/r.width;
-  const tr=TRACKS[curTrack];
-  if(tr.local&&audioEl&&audioEl.duration){
-    audioEl.currentTime=audioEl.duration*pct;
-  }else if(ytReady&&ytPlayer){
-    try{ytPlayer.seekTo(ytPlayer.getDuration()*pct,true)}catch(e){}
-  }
+  audioEl.currentTime=audioEl.duration*((e.clientX-r.left)/r.width);
 }
 
 function updateMusicMeta(){
   if(!TRACKS.length){
     document.getElementById('music-track').textContent='No track loaded';
-    document.getElementById('music-artist').textContent='Drop files or search YouTube';
+    document.getElementById('music-artist').textContent='Drop audio files to play';
     document.getElementById('music-art').innerHTML='&#127925;';
     return;
   }
   const tr=TRACKS[curTrack];
   document.getElementById('music-track').textContent=tr.t;
   document.getElementById('music-artist').textContent=tr.a;
-  if(!tr.local&&tr.vid){
-    document.getElementById('music-art').innerHTML='<img src="https://img.youtube.com/vi/'+tr.vid+'/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px">';
-  }else{
-    document.getElementById('music-art').innerHTML='&#127925;';
-  }
+  document.getElementById('music-art').innerHTML='&#127925;';
   renderTrackList();
-}
-
-function addTrack(vid,title,artist){
-  if(TRACKS.find(t=>t.vid===vid))return;
-  TRACKS.push({t:title,a:artist,vid:vid});
-  localStorage.setItem('yt_custom_tracks',JSON.stringify(TRACKS.filter(t=>!t.local)));
-  renderTrackList();
-  addLog('ok','[MUS]','Added: '+title);
 }
 
 function removeTrack(i){
   const tr=TRACKS[i];
-  if(tr.local&&localFiles[tr.vid]){URL.revokeObjectURL(localFiles[tr.vid]);delete localFiles[tr.vid]}
+  if(localFiles[tr.vid]){URL.revokeObjectURL(localFiles[tr.vid]);delete localFiles[tr.vid]}
   TRACKS.splice(i,1);
   if(curTrack>=TRACKS.length)curTrack=Math.max(0,TRACKS.length-1);
-  localStorage.setItem('yt_custom_tracks',JSON.stringify(TRACKS.filter(t=>!t.local)));
   renderTrackList();
   updateMusicMeta();
 }
@@ -1082,51 +1035,8 @@ function removeTrack(i){
 function renderTrackList(){
   const el=document.getElementById('yt-tracklist');
   if(!TRACKS.length){el.innerHTML='';return}
-  el.innerHTML=TRACKS.map((tr,i)=>{
-    const icon=tr.local?'&#127925;':'<img src="https://img.youtube.com/vi/'+tr.vid+'/default.jpg" style="width:18px;height:18px;border-radius:2px;object-fit:cover">';
-    return`<div onclick="playTrack(${i})" style="display:flex;align-items:center;gap:5px;padding:2px 4px;cursor:pointer;border-radius:2px;${i===curTrack?'background:rgba(255,0,0,0.08)':''}" onmouseover="this.style.background='rgba(255,0,0,0.04)'" onmouseout="this.style.background='${i===curTrack?'rgba(255,0,0,0.08)':''}'"><div style="width:18px;height:18px;border-radius:2px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px">${icon}</div><div style="min-width:0;flex:1"><div style="font-size:6px;color:${i===curTrack?'#ff4444':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.t}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.a}</div></div><span onclick="event.stopPropagation();removeTrack(${i})" style="font-size:7px;color:var(--muted);cursor:pointer;padding:2px">&times;</span></div>`;
-  }).join('');
+  el.innerHTML=TRACKS.map((tr,i)=>`<div onclick="playTrack(${i})" style="display:flex;align-items:center;gap:5px;padding:2px 4px;cursor:pointer;border-radius:2px;${i===curTrack?'background:rgba(255,0,0,0.08)':''}" onmouseover="this.style.background='rgba(255,0,0,0.04)'" onmouseout="this.style.background='${i===curTrack?'rgba(255,0,0,0.08)':''}'"><div style="width:18px;height:18px;border-radius:2px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px">&#127925;</div><div style="min-width:0;flex:1"><div style="font-size:6px;color:${i===curTrack?'#ff4444':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.t}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.a}</div></div><span onclick="event.stopPropagation();removeTrack(${i})" style="font-size:7px;color:var(--muted);cursor:pointer;padding:2px">&times;</span></div>`).join('');
 }
-
-// === YOUTUBE SEARCH ===
-function searchYouTube(){
-  const q=document.getElementById('yt-search').value.trim();
-  if(!q)return;
-  if(!ytReady||!ytPlayer){
-    document.getElementById('yt-results').innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">Player loading...</div>';
-    return;
-  }
-  ytPlayer.loadPlaylist({listType:'search',list:q});
-  isPlaying=true;
-  document.getElementById('btn-play').innerHTML='&#10074;&#10074;';
-  document.getElementById('yt-results').innerHTML='';
-  addLog('ok','[MUS]','Searching: '+q);
-}
-
-// YouTube IFrame API
-function loadYouTubeAPI(){
-  if(window.YT&&window.YT.Player){initYTPlayer();return}
-  const tag=document.createElement('script');
-  tag.src='https://www.youtube.com/iframe_api';
-  document.head.appendChild(tag);
-  window.onYouTubeIframeAPIReady=initYTPlayer;
-}
-function initYTPlayer(){
-  document.getElementById('yt-player-wrap').style.display='block';
-  ytPlayer=new YT.Player('yt-player',{
-    width:'100%',height:'100%',
-    playerVars:{autoplay:0,controls:1,disablekb:0,modestbranding:1,rel:0,fs:0},
-    events:{
-      onReady:function(){ytReady=true;addLog('ok','[MUS]','YouTube ready')},
-      onStateChange:function(e){
-        if(e.data===YT.PlayerState.PLAYING){isPlaying=true;document.getElementById('btn-play').innerHTML='&#10074;&#10074;';updateMusicMeta()}
-        else if(e.data===YT.PlayerState.PAUSED){isPlaying=false;document.getElementById('btn-play').innerHTML='&#9654;'}
-        else if(e.data===YT.PlayerState.ENDED){isPlaying=false;document.getElementById('btn-play').innerHTML='&#9654;'}
-      }
-    }
-  });
-}
-loadYouTubeAPI();
 
 function updateMusicUI(){updateMusicMeta();renderTrackList()}
 updateMusicUI();
