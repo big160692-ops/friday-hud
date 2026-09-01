@@ -990,41 +990,36 @@ function renderTrackList(){
 function removeTrack(i){TRACKS.splice(i,1);localStorage.setItem('yt_custom_tracks',JSON.stringify(TRACKS));if(curTrack>=TRACKS.length)curTrack=Math.max(0,TRACKS.length-1);updateMusicUI()}
 
 // === YOUTUBE SEARCH ===
+const YT_KEY Storage.getItem('yt_api_key')||'';
+function setupYTKey(){const k=prompt('Enter YouTube Data API v3 key (free at console.cloud.google.com > APIs > YouTube Data API v3 > Credentials):');if(k&&k.trim()){localStorage.setItem('yt_api_key',k.trim());ytApiKey=k.trim();addLog('ok','[MUS]','YouTube API key saved.');renderTrackList()}}
 async function searchYouTube(){
   const q=document.getElementById('yt-search').value.trim();if(!q)return;
   const el=document.getElementById('yt-results');
+  if(!ytApiKey){el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">No API key. <span style="color:var(--primary);cursor:pointer" onclick="setupYTKey()">Click to set key</span></div>';return}
   el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">Searching...</div>';
 
   try{
-    const proxyUrl='https://api.allorigins.win/raw?url='+encodeURIComponent('https://www.youtube.com/results?search_query='+encodeURIComponent(q));
-    const r=await fetch(proxyUrl);
-    if(!r.ok)throw new Error('Fetch failed');
-    const html=await r.text();
-    const match=html.match(/var ytInitialData\s*=\s*(\{.*?\});\s*<\/script>/s);
-    if(!match)throw new Error('No data found');
-    const d=JSON.parse(match[1]);
-    const sections=d?.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents||[];
-    let videos=[];
-    for(const sec of sections){
-      const items=sec?.itemSectionRenderer?.contents||[];
-      for(const item of items){
-        const vr=item.videoRenderer;
-        if(vr&&vr.videoId){
-          const durParts=(vr.lengthText?.simpleText||'').split(':').map(Number);
-          const dur=durParts.length===3?durParts[0]*3600+durParts[1]*60+durParts[2]:durParts.length===2?durParts[0]*60+durParts[1]:0;
-          const viewStr=vr.viewCountText?.simpleText||'';
-          const views=parseInt(viewStr.replace(/[^0-9]/g,''))||0;
-          videos.push({vid:vr.videoId,title:vr.title?.runs?.[0]?.text||'',chan:vr.ownerText?.runs?.[0]?.text||vr.longBylineText?.runs?.[0]?.text||'',dur:dur,views:views,viewStr:viewStr});
-        }
-      }
-    }
+    const r=await fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&q='+encodeURIComponent(q)+'&type=video&maxResults=15&key='+ytApiKey);
+    if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'API error '+r.status)}
+    const d=await r.json();
+    const ids=d.items.map(i=>i.id.videoId).join(',');
+    const det=await fetch('https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id='+ids+'&key='+ytApiKey);
+    const detD=await det.json();
+    const detMap={};detD.items.forEach(v=>{detMap[v.id]={dur:v.contentDetails?.duration||'PT0S',views:v.statistics?.viewCount||'0'}});
+    const videos=d.items.map(i=>{
+      const info=detMap[i.id.videoId]||{dur:'PT0S',views:'0'};
+      const durMatch=info.dur.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      const dur=durMatch?(parseInt(durMatch[1]||0)*3600+parseInt(durMatch[2]||0)*60+parseInt(durMatch[3]||0)):0;
+      return{vid:i.id.videoId,title:i.snippet.title,chan:i.snippet.channelTitle,dur:dur,views:parseInt(info.views)||0};
+    });
     if(!videos.length){el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">No results found</div>';return}
-    el.innerHTML=videos.slice(0,15).map(v=>{
+    el.innerHTML=videos.map(v=>{
       const durStr=v.dur?Math.floor(v.dur/60)+':'+(v.dur%60<10?'0':'')+v.dur%60:'';
-      return`<div onclick="addTrack('${v.vid}','${v.title.replace(/'/g,"\\'")}','${v.chan.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:5px;padding:3px 4px;cursor:pointer;border-radius:2px;transition:background 0.2s" onmouseover="this.style.background='rgba(255,0,0,0.05)'" onmouseout="this.style.background='transparent'"><img src="https://img.youtube.com/vi/${v.vid}/mqdefault.jpg" style="width:32px;height:24px;border-radius:2px;object-fit:cover;flex-shrink:0"><div style="min-width:0;flex:1"><div style="font-size:6px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.title}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.chan}${v.viewStr?' · '+v.viewStr:''}${durStr?' · '+durStr:''}</div></div></div>`;
+      const viewStr=v.views>=1e6?(v.views/1e6).toFixed(1)+'M':v.views>=1e3?(v.views/1e3).toFixed(0)+'K':v.views;
+      return`<div onclick="addTrack('${v.vid}','${v.title.replace(/'/g,"\\'")}','${v.chan.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:5px;padding:3px 4px;cursor:pointer;border-radius:2px;transition:background 0.2s" onmouseover="this.style.background='rgba(255,0,0,0.05)'" onmouseout="this.style.background='transparent'"><img src="https://img.youtube.com/vi/${v.vid}/mqdefault.jpg" style="width:32px;height:24px;border-radius:2px;object-fit:cover;flex-shrink:0"><div style="min-width:0;flex:1"><div style="font-size:6px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.title}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.chan}${viewStr?' · '+viewStr+' views':''}${durStr?' · '+durStr:''}</div></div></div>`;
     }).join('');
   }catch(e){
-    el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">Search failed: '+e.message+'</div>';
+    el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">Search failed: '+e.message+' <span style="color:var(--primary);cursor:pointer" onclick="setupYTKey()">Reset key</span></div>';
   }
 }
 function addTrack(vid,title,artist){
