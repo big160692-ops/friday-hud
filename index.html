@@ -1013,6 +1013,10 @@ function advanceTrack(){
     playTrack(next);
   }else{
     var next2=(curTrack+1)%TRACKS.length;
+    if(next2===0&&TRACKS.length>1){
+      recTracks=[];
+      fetchRelated(TRACKS[curTrack]);
+    }
     playTrack(next2);
   }
 }
@@ -1097,6 +1101,7 @@ function playRecItem(idx){
   var existsIdx=-1;
   for(var i=0;i<TRACKS.length;i++){if(TRACKS[i].ytid===tr.vid){existsIdx=i;break;}}
   if(existsIdx>=0){playTrack(existsIdx);return;}
+  if(TRACKS.length>=6){TRACKS=TRACKS.slice(0,curTrack+1);}
   var newIdx=TRACKS.length;
   TRACKS.push({t:tr.title,a:tr.artist,ytid:tr.vid});
   playTrack(newIdx);
@@ -1142,6 +1147,7 @@ function fetchRelated(tr){
         }
       }
     }
+    recTracks=recTracks.slice(0,5);
     renderTrackList();
   }).catch(function(){fetchingRelated=false;});
 }
@@ -1237,6 +1243,7 @@ function addYTTrack(vid,title,artist){
   var existsIdx=-1;
   for(var i=0;i<TRACKS.length;i++){if(TRACKS[i].ytid===vid){existsIdx=i;break;}}
   if(existsIdx>=0){playTrack(existsIdx);return;}
+  if(TRACKS.length>=6){TRACKS=TRACKS.slice(0,curTrack+1);}
   var idx=TRACKS.length;
   TRACKS.push({t:title,a:artist,ytid:vid});
   addToPlaylist(TRACKS[TRACKS.length-1]);
