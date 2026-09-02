@@ -548,7 +548,6 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
           <div style="display:flex;gap:2px;margin:4px 0;border-bottom:1px solid var(--dim)">
             <button onclick="showTab('rec')" id="tab-rec" style="flex:1;background:none;border:none;border-bottom:2px solid var(--primary);color:var(--primary);font-size:7px;padding:4px 0;cursor:pointer;font-family:var(--font-hud)">FOR YOU</button>
             <button onclick="showTab('likes')" id="tab-likes" style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:7px;padding:4px 0;cursor:pointer;font-family:var(--font-hud)">LIKES</button>
-            <button onclick="showTab('playlist')" id="tab-playlist" style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:7px;padding:4px 0;cursor:pointer;font-family:var(--font-hud)">PLAYLIST</button>
           </div>
           <div id="yt-tracklist" style="max-height:150px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent"></div>
         </div>
@@ -936,7 +935,6 @@ var YT_PROXY='https://friday-yt-proxy.big160692.workers.dev/';
 var TRACKS=[];
 var curTrack=0,isPlaying=false,repeatOn=false,shuffleOn=false;
 var liked=JSON.parse(localStorage.getItem('friday_likes')||'[]');
-var userPlaylist=JSON.parse(localStorage.getItem('friday_playlist')||'[]');
 var activeTab='rec';
 var pendingPlay=false;
 var lastEndCheck=0;
@@ -1013,8 +1011,17 @@ function advanceTrack(){
   }else{
     var next2=(curTrack+1)%TRACKS.length;
     if(next2===0&&TRACKS.length>1){
+      var lastTr=TRACKS[curTrack];
+      TRACKS=[];
       recTracks=[];
-      fetchRelated(TRACKS[curTrack]);
+      fetchRelatedCb(lastTr,function(){
+        for(var j=0;j<recTracks.length;j++){
+          var r=recTracks[j];
+          TRACKS.push({t:r.title,a:r.artist,ytid:r.vid});
+        }
+        if(TRACKS.length>0)playTrack(0);
+      });
+      return;
     }
     playTrack(next2);
   }
@@ -1053,17 +1060,6 @@ function updateLikeBtn(){
   document.getElementById('btn-like').style.color=isLiked(tr)?'#ff4444':'var(--muted)';
 }
 
-// === PLAYLIST ===
-function addToPlaylist(tr){
-  var key=getTrackKey(tr);
-  if(userPlaylist.indexOf(key)===-1){userPlaylist.push(key);localStorage.setItem('friday_playlist',JSON.stringify(userPlaylist));}
-}
-function removeFromPlaylist(key){
-  userPlaylist=userPlaylist.filter(function(k){return k!==key;});
-  localStorage.setItem('friday_playlist',JSON.stringify(userPlaylist));
-  renderTrackList();
-}
-
 // === TABS ===
 var recTracks=[];
 function showTab(tab){
@@ -1072,15 +1068,12 @@ function showTab(tab){
   document.getElementById('tab-rec').style.color=tab==='rec'?'var(--primary)':'var(--muted)';
   document.getElementById('tab-likes').style.borderBottomColor=tab==='likes'?'var(--primary)':'transparent';
   document.getElementById('tab-likes').style.color=tab==='likes'?'var(--primary)':'var(--muted)';
-  document.getElementById('tab-playlist').style.borderBottomColor=tab==='playlist'?'var(--primary)':'transparent';
-  document.getElementById('tab-playlist').style.color=tab==='playlist'?'var(--primary)':'var(--muted)';
   renderTrackList();
 }
 
 function getDisplayTracks(){
   if(activeTab==='rec')return recTracks;
   if(activeTab==='likes')return TRACKS.filter(function(tr){return isLiked(tr);});
-  if(activeTab==='playlist')return TRACKS.filter(function(tr){return userPlaylist.indexOf(getTrackKey(tr))!==-1;});
   return recTracks;
 }
 
@@ -1097,17 +1090,12 @@ function updateMusicMeta(){
 function playRecItem(idx){
   var tr=recTracks[idx];
   if(!tr)return;
-  var clickedVid=tr.vid;
-  var clickedTitle=tr.title;
-  var clickedArtist=tr.artist;
-  TRACKS=TRACKS.slice(0,curTrack+1);
+  TRACKS=[];
   for(var j=0;j<recTracks.length;j++){
     var r=recTracks[j];
     TRACKS.push({t:r.title,a:r.artist,ytid:r.vid});
   }
-  for(var k=0;k<TRACKS.length;k++){
-    if(TRACKS[k].ytid===clickedVid){playTrack(k);return;}
-  }
+  playTrack(idx);
 }
 
 function removeTrack(i){
@@ -1153,6 +1141,44 @@ function fetchRelated(tr){
     recTracks=recTracks.slice(0,5);
     renderTrackList();
   }).catch(function(){fetchingRelated=false;});
+}
+
+function fetchRelatedCb(tr,cb){
+  if(!tr.ytid||fetchingRelated){if(cb)cb();return;}
+  fetchingRelated=true;
+  recTracks=[];
+  var query=tr.a?tr.a+' music':tr.t;
+  var body=JSON.stringify({context:{client:{hl:'en',gl:'US',clientName:'WEB_REMIX',clientVersion:'1.20240101.00.00'}},query:query});
+  fetch(YT_PROXY+'?url='+encodeURIComponent('https://music.youtube.com/youtubei/v1/search?key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30'),{
+    method:'POST',headers:{'Content-Type':'application/json','x-method':'POST'},body:body
+  }).then(function(r){return r.json();}).then(function(d){
+    fetchingRelated=false;
+    if(!d){if(cb)cb();return;}
+    var tabs=(d&&d.contents&&d.contents.tabbedSearchResultsRenderer&&d.contents.tabbedSearchResultsRenderer.tabs)||(d&&d.contents&&d.contents.twoColumnBrowseResultsRenderer&&d.contents.twoColumnBrowseResultsRenderer.tabs)||[];
+    for(var ti=0;ti<tabs.length;ti++){
+      var tab=tabs[ti];
+      var contents=tab&&tab.tabRenderer&&tab.tabRenderer.content&&tab.tabRenderer.content.sectionListRenderer&&tab.tabRenderer.content.sectionListRenderer.contents||[];
+      for(var ci=0;ci<contents.length;ci++){
+        var sec=contents[ci];
+        var items=(sec&&sec.musicShelfRenderer&&sec.musicShelfRenderer.contents)||(sec&&sec.sectionListRenderer&&sec.sectionListRenderer.contents)||(sec&&sec.itemSectionRenderer&&sec.itemSectionRenderer.contents)||[];
+        for(var ii=0;ii<items.length;ii++){
+          var mr=items[ii]&&items[ii].musicResponsiveListItemRenderer;
+          if(!mr)continue;
+          var tRuns=mr.flexColumns&&mr.flexColumns[0]&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
+          var title=tRuns.map(function(r){return r.text;}).join('');
+          var vid='';
+          var overlay=mr.overlay&&mr.overlay.musicItemThumbnailOverlayRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint;
+          if(overlay)vid=overlay.videoId||'';
+          var aRuns=mr.flexColumns&&mr.flexColumns[1]&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
+          var artist=aRuns.map(function(r){return r.text;}).join('');
+          if(vid&&title)recTracks.push({vid:vid,title:title,artist:artist});
+        }
+      }
+    }
+    recTracks=recTracks.slice(0,5);
+    renderTrackList();
+    if(cb)cb();
+  }).catch(function(){fetchingRelated=false;if(cb)cb();});
 }
 
 function renderTrackList(){
@@ -1230,7 +1256,7 @@ function addYTTrack(vid,title,artist){
     var r=recTracks[j];
     TRACKS.push({t:r.title,a:r.artist,ytid:r.vid});
   }
-  for(var k=0;k<TRACKS.length;k++){if(TRACKS[k].ytid===vid){addToPlaylist(TRACKS[k]);playTrack(k);return;}}
+  for(var k=0;k<TRACKS.length;k++){if(TRACKS[k].ytid===vid){playTrack(k);return;}}
 }
 
 // YouTube IFrame API
