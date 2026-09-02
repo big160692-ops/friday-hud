@@ -566,6 +566,8 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
   </div>
 </div>
 
+<audio id="audio-player" preload="auto"></audio>
+
 <!-- Memory overlay -->
 <div class="mem-overlay" id="mem-overlay">
   <div class="mem-panel">
@@ -926,57 +928,50 @@ function loadNews(){detectLocationForNews()}
 // === MUSIC PLAYER ===
 let TRACKS=[];
 let curTrack=0,isPlaying=false;
-let audioEl=null;
 let localFiles={};
+const audioEl=document.getElementById('audio-player');
 
-function initAudio(){
-  if(audioEl)return;
-  audioEl=new Audio();
-  audioEl.addEventListener('timeupdate',()=>{
-    if(!audioEl.duration)return;
-    document.getElementById('music-cur').textContent=formatTime(audioEl.currentTime);
-    document.getElementById('music-dur').textContent=formatTime(audioEl.duration);
-    document.getElementById('music-fill').style.width=(audioEl.currentTime/audioEl.duration*100)+'%';
-  });
-  audioEl.addEventListener('ended',()=>{nextTrack()});
-  audioEl.addEventListener('play',()=>{
-    isPlaying=true;
-    document.getElementById('btn-play').innerHTML='&#10074;&#10074;';
-    updateMusicMeta();
-  });
-  audioEl.addEventListener('pause',()=>{
-    isPlaying=false;
-    document.getElementById('btn-play').innerHTML='&#9654;';
-  });
-}
+audioEl.addEventListener('timeupdate',()=>{
+  if(!audioEl.duration)return;
+  document.getElementById('music-cur').textContent=formatTime(audioEl.currentTime);
+  document.getElementById('music-dur').textContent=formatTime(audioEl.duration);
+  document.getElementById('music-fill').style.width=(audioEl.currentTime/audioEl.duration*100)+'%';
+});
+audioEl.addEventListener('ended',()=>{nextTrack()});
+audioEl.addEventListener('play',()=>{
+  isPlaying=true;
+  document.getElementById('btn-play').innerHTML='&#10074;&#10074;';
+});
+audioEl.addEventListener('pause',()=>{
+  isPlaying=false;
+  document.getElementById('btn-play').innerHTML='&#9654;';
+});
+audioEl.addEventListener('error',e=>{
+  console.log('[MUS] Audio error:',audioEl.error);
+});
 
 // Auto-load from music/ folder
 async function loadMusicFolder(){
   try{
-    console.log('[MUS] Loading music folder...');
     const r=await fetch('music/tracks.json');
-    if(!r.ok){console.log('[MUS] tracks.json not found:',r.status);return}
+    if(!r.ok)return;
     const list=await r.json();
-    console.log('[MUS] Found',list.length,'track(s) in tracks.json');
     for(const item of list){
       try{
-        console.log('[MUS] Fetching:',item.file);
         const resp=await fetch('music/'+item.file);
-        if(!resp.ok){console.log('[MUS] Failed to fetch',item.file,resp.status);continue}
+        if(!resp.ok)continue;
         const blob=await resp.blob();
         const url=URL.createObjectURL(blob);
         const id='local_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
         localFiles[id]=url;
         TRACKS.push({t:item.name,a:'Local File',vid:id});
-        console.log('[MUS] Loaded:',item.name,'-> blob URL:',url.substring(0,50));
-      }catch(e){console.log('[MUS] Error loading file:',e)}
+      }catch(e){}
     }
     if(TRACKS.length){
       renderTrackList();
-      console.log('[MUS] Total tracks loaded:',TRACKS.length);
       updateMusicMeta();
     }
-  }catch(e){console.log('[MUS] Error loading music folder:',e)}
+  }catch(e){}
 }
 loadMusicFolder();
 
@@ -1001,33 +996,24 @@ function handleMusicFiles(files){
     TRACKS.push({t:name,a:'Local File',vid:id});
   }
   renderTrackList();
-  addLog('ok','[MUS]','Added '+files.length+' file(s)');
-  if(TRACKS.length&&curTrack===0&&!isPlaying)playTrack(0);
+  if(TRACKS.length&&!isPlaying)playTrack(TRACKS.length-files.length);
 }
 
 function formatTime(s){const m=Math.floor(s/60);const sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec}
 
 function togglePlay(){
   if(!TRACKS.length)return;
-  if(!audioEl)initAudio();
   if(isPlaying){audioEl.pause();return}
-  audioEl.src=localFiles[TRACKS[curTrack].vid];
-  audioEl.load();
-  audioEl.play().catch(e=>{addLog('err','[MUS]','Play blocked: '+e.message)});
+  if(!audioEl.src||audioEl.src===''){
+    audioEl.src=localFiles[TRACKS[curTrack].vid];
+  }
+  audioEl.play();
 }
 
 function playTrack(idx){
-  console.log('[MUS] playTrack called with index:',idx);
-  console.log('[MUS] TRACKS:',TRACKS);
-  console.log('[MUS] localFiles keys:',Object.keys(localFiles));
   curTrack=idx;
-  if(!audioEl)initAudio();
-  const tr=TRACKS[idx];
-  console.log('[MUS] Track:',tr);
-  console.log('[MUS] Blob URL:',localFiles[tr.vid]);
-  audioEl.src=localFiles[tr.vid];
-  audioEl.load();
-  audioEl.play().then(()=>{console.log('[MUS] Playing!')}).catch(e=>{console.log('[MUS] Play error:',e.message);addLog('err','[MUS]','Play error: '+e.message)});
+  audioEl.src=localFiles[TRACKS[idx].vid];
+  audioEl.play();
   isPlaying=true;
   updateMusicMeta();
 }
@@ -1044,7 +1030,7 @@ function prevTrack(){
 }
 
 function seekMusic(e){
-  if(!audioEl||!audioEl.duration)return;
+  if(!audioEl.duration)return;
   const r=e.target.getBoundingClientRect();
   audioEl.currentTime=audioEl.duration*((e.clientX-r.left)/r.width);
 }
