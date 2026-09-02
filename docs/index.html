@@ -1208,13 +1208,18 @@ function ensureRelated(){
 function renderQueue(){
   var qe=document.getElementById('music-queue');
   if(!qe)return;
-  if(TRACKS.length<2){qe.innerHTML='<div style="font-size:5px;color:var(--muted);text-align:center;padding:2px">Add tracks to see queue</div>';return;}
+  if(TRACKS.length===0){qe.innerHTML='';return;}
+  if(TRACKS.length===1){
+    var tr=TRACKS[0];
+    if(tr.ytid){qe.innerHTML='<div style="font-size:5px;color:var(--muted);text-align:center;padding:3px">Loading recommendations...</div>';}
+    else{qe.innerHTML='';}
+    return;
+  }
   var html='';
   var count=Math.min(5,TRACKS.length-1);
   for(var n=0;n<count;n++){
     var ni=(curTrack+1+n)%TRACKS.length;
     var ntr=TRACKS[ni];
-    var isRel=ntr.ytid&&curTrack<TRACKS.length&&TRACKS[curTrack]&&TRACKS[curTrack].ytid&&ni>curTrack;
     var nthumb=ntr.ytid?'<img src="https://img.youtube.com/vi/'+ntr.ytid+'/default.jpg" style="width:16px;height:16px;border-radius:2px;object-fit:cover;flex-shrink:0">':'<div style="width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;background:rgba(0,212,255,0.1);border-radius:2px">&#127925;</div>';
     html+='<div onclick="playTrack('+ni+')" style="display:flex;align-items:center;gap:4px;padding:2px 4px;cursor:pointer;border-radius:2px;transition:background 0.15s" onmouseover="this.style.background=\'rgba(255,0,0,0.05)\'" onmouseout="this.style.background=\'transparent\'">'+nthumb+'<div style="min-width:0;flex:1"><div style="font-size:5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+ntr.t+'</div><div style="font-size:4px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+ntr.a+'</div></div></div>';
   }
