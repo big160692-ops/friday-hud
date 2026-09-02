@@ -953,26 +953,30 @@ function initAudio(){
 // Auto-load from music/ folder
 async function loadMusicFolder(){
   try{
+    console.log('[MUS] Loading music folder...');
     const r=await fetch('music/tracks.json');
-    if(!r.ok)return;
+    if(!r.ok){console.log('[MUS] tracks.json not found:',r.status);return}
     const list=await r.json();
+    console.log('[MUS] Found',list.length,'track(s) in tracks.json');
     for(const item of list){
       try{
+        console.log('[MUS] Fetching:',item.file);
         const resp=await fetch('music/'+item.file);
-        if(!resp.ok)continue;
+        if(!resp.ok){console.log('[MUS] Failed to fetch',item.file,resp.status);continue}
         const blob=await resp.blob();
         const url=URL.createObjectURL(blob);
         const id='local_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
         localFiles[id]=url;
         TRACKS.push({t:item.name,a:'Local File',vid:id});
-      }catch(e){}
+        console.log('[MUS] Loaded:',item.name,'-> blob URL:',url.substring(0,50));
+      }catch(e){console.log('[MUS] Error loading file:',e)}
     }
     if(TRACKS.length){
       renderTrackList();
-      addLog('ok','[MUS]','Loaded '+TRACKS.length+' track(s) from music/');
+      console.log('[MUS] Total tracks loaded:',TRACKS.length);
       updateMusicMeta();
     }
-  }catch(e){}
+  }catch(e){console.log('[MUS] Error loading music folder:',e)}
 }
 loadMusicFolder();
 
@@ -1013,11 +1017,17 @@ function togglePlay(){
 }
 
 function playTrack(idx){
+  console.log('[MUS] playTrack called with index:',idx);
+  console.log('[MUS] TRACKS:',TRACKS);
+  console.log('[MUS] localFiles keys:',Object.keys(localFiles));
   curTrack=idx;
   if(!audioEl)initAudio();
-  audioEl.src=localFiles[TRACKS[idx].vid];
+  const tr=TRACKS[idx];
+  console.log('[MUS] Track:',tr);
+  console.log('[MUS] Blob URL:',localFiles[tr.vid]);
+  audioEl.src=localFiles[tr.vid];
   audioEl.load();
-  audioEl.play().catch(e=>{addLog('err','[MUS]','Play blocked: '+e.message)});
+  audioEl.play().then(()=>{console.log('[MUS] Playing!')}).catch(e=>{console.log('[MUS] Play error:',e.message);addLog('err','[MUS]','Play error: '+e.message)});
   isPlaying=true;
   updateMusicMeta();
 }
