@@ -1003,17 +1003,19 @@ function togglePlay(){
   if(!TRACKS.length)return;
   const tr=TRACKS[curTrack];
   if(tr.local){
-    if(isPlaying){audioEl.pause();return}
+    if(!audioEl.paused){audioEl.pause();return}
     audioEl.src=localFiles[tr.vid];
-    audioEl.play().catch(()=>{document.getElementById('music-track').textContent='Autoplay blocked - click again';});
+    audioEl.play().catch(function(){}); 
   }else if(tr.ytid){
-    if(isPlaying&&ytReady&&ytPlayer){ytPlayer.pauseVideo();return}
-    if(ytReady&&ytPlayer){
-      ytPlayer.playVideo();
-    }else{
+    if(!ytReady||!ytPlayer){
       document.getElementById('music-track').textContent='YouTube player loading...';
       pendingPlay=true;
+      return;
     }
+    var state=-1;
+    try{state=ytPlayer.getPlayerState()}catch(e){}
+    if(state===YT.PlayerState.PLAYING){ytPlayer.pauseVideo()}
+    else{ytPlayer.playVideo()}
   }
 }
 
@@ -1220,11 +1222,11 @@ async function searchYouTube(){
 }
 
 function addYTTrack(vid,title,artist){
-  if(TRACKS.find(t=>t.ytid===vid))return;
+  if(TRACKS.find(function(t){return t.ytid===vid}))return;
   TRACKS.push({t:title,a:artist,ytid:vid});
   addToPlaylist(TRACKS[TRACKS.length-1]);
   renderTrackList();
-  if(TRACKS.length===1)playTrack(0);
+  if(!isPlaying)playTrack(TRACKS.length-1);
 }
 
 // YouTube IFrame API - hidden player
