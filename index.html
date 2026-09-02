@@ -1100,10 +1100,14 @@ function playRecItem(idx){
   var existsIdx=-1;
   for(var i=0;i<TRACKS.length;i++){if(TRACKS[i].ytid===tr.vid){existsIdx=i;break;}}
   if(existsIdx>=0){playTrack(existsIdx);return;}
-  if(TRACKS.length>=6){TRACKS=TRACKS.slice(0,curTrack+1);}
-  var newIdx=TRACKS.length;
-  TRACKS.push({t:tr.title,a:tr.artist,ytid:tr.vid});
-  playTrack(newIdx);
+  TRACKS=TRACKS.slice(0,curTrack+1);
+  for(var j=0;j<recTracks.length;j++){
+    var r=recTracks[j];
+    var dup=false;
+    for(var x=0;x<TRACKS.length;x++){if(TRACKS[x].ytid===r.vid){dup=true;break;}}
+    if(!dup)TRACKS.push({t:r.title,a:r.artist,ytid:r.vid});
+  }
+  for(var k=0;k<TRACKS.length;k++){if(TRACKS[k].ytid===tr.vid){playTrack(k);return;}}
 }
 
 function removeTrack(i){
@@ -1220,11 +1224,16 @@ function addYTTrack(vid,title,artist){
   var existsIdx=-1;
   for(var i=0;i<TRACKS.length;i++){if(TRACKS[i].ytid===vid){existsIdx=i;break;}}
   if(existsIdx>=0){playTrack(existsIdx);return;}
-  if(TRACKS.length>=6){TRACKS=TRACKS.slice(0,curTrack+1);}
-  var idx=TRACKS.length;
+  TRACKS=TRACKS.slice(0,curTrack+1);
   TRACKS.push({t:title,a:artist,ytid:vid});
-  addToPlaylist(TRACKS[TRACKS.length-1]);
-  playTrack(idx);
+  for(var j=0;j<recTracks.length;j++){
+    var r=recTracks[j];
+    var dup=false;
+    for(var x=0;x<TRACKS.length;x++){if(TRACKS[x].ytid===r.vid){dup=true;break;}}
+    if(!dup)TRACKS.push({t:r.title,a:r.artist,ytid:r.vid});
+  }
+  addToPlaylist(TRACKS[TRACKS.length-recTracks.length-1]);
+  for(var k=0;k<TRACKS.length;k++){if(TRACKS[k].ytid===vid){playTrack(k);return;}}
 }
 
 // YouTube IFrame API
