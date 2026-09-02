@@ -1097,17 +1097,17 @@ function updateMusicMeta(){
 function playRecItem(idx){
   var tr=recTracks[idx];
   if(!tr)return;
-  var existsIdx=-1;
-  for(var i=0;i<TRACKS.length;i++){if(TRACKS[i].ytid===tr.vid){existsIdx=i;break;}}
-  if(existsIdx>=0){playTrack(existsIdx);return;}
+  var clickedVid=tr.vid;
+  var clickedTitle=tr.title;
+  var clickedArtist=tr.artist;
   TRACKS=TRACKS.slice(0,curTrack+1);
   for(var j=0;j<recTracks.length;j++){
     var r=recTracks[j];
-    var dup=false;
-    for(var x=0;x<TRACKS.length;x++){if(TRACKS[x].ytid===r.vid){dup=true;break;}}
-    if(!dup)TRACKS.push({t:r.title,a:r.artist,ytid:r.vid});
+    TRACKS.push({t:r.title,a:r.artist,ytid:r.vid});
   }
-  for(var k=0;k<TRACKS.length;k++){if(TRACKS[k].ytid===tr.vid){playTrack(k);return;}}
+  for(var k=0;k<TRACKS.length;k++){
+    if(TRACKS[k].ytid===clickedVid){playTrack(k);return;}
+  }
 }
 
 function removeTrack(i){
@@ -1221,19 +1221,16 @@ async function searchYouTube(){
 }
 
 function addYTTrack(vid,title,artist){
-  var existsIdx=-1;
-  for(var i=0;i<TRACKS.length;i++){if(TRACKS[i].ytid===vid){existsIdx=i;break;}}
-  if(existsIdx>=0){playTrack(existsIdx);return;}
+  var clickedIdx=-1;
+  for(var i=0;i<TRACKS.length;i++){if(TRACKS[i].ytid===vid){clickedIdx=i;break;}}
+  if(clickedIdx>=0){playTrack(clickedIdx);return;}
   TRACKS=TRACKS.slice(0,curTrack+1);
   TRACKS.push({t:title,a:artist,ytid:vid});
   for(var j=0;j<recTracks.length;j++){
     var r=recTracks[j];
-    var dup=false;
-    for(var x=0;x<TRACKS.length;x++){if(TRACKS[x].ytid===r.vid){dup=true;break;}}
-    if(!dup)TRACKS.push({t:r.title,a:r.artist,ytid:r.vid});
+    TRACKS.push({t:r.title,a:r.artist,ytid:r.vid});
   }
-  addToPlaylist(TRACKS[TRACKS.length-recTracks.length-1]);
-  for(var k=0;k<TRACKS.length;k++){if(TRACKS[k].ytid===vid){playTrack(k);return;}}
+  for(var k=0;k<TRACKS.length;k++){if(TRACKS[k].ytid===vid){addToPlaylist(TRACKS[k]);playTrack(k);return;}}
 }
 
 // YouTube IFrame API
