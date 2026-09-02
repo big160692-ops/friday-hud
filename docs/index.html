@@ -526,7 +526,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Music</div>
           <div id="music-drop" style="border:1px dashed var(--dim);border-radius:3px;padding:10px;text-align:center;margin-bottom:6px;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--dim)'" onclick="document.getElementById('music-file-input').click()">
             <div style="font-size:8px;color:var(--muted);margin-bottom:2px">&#127925; Drop music here or click to browse</div>
-            <div style="font-size:6px;color:rgba(26,74,90,0.5)">mp3, wav, ogg, m4a</div>
+            <div style="font-size:6px;color:rgba(26,74,90,0.5)">mp3, wav, ogg, m4a, flac</div>
             <input type="file" id="music-file-input" accept="audio/*" multiple style="display:none" onchange="handleMusicFiles(this.files)">
           </div>
           <div class="music-info">
@@ -950,7 +950,7 @@ audioEl.addEventListener('error',e=>{
   console.log('[MUS] Audio error:',audioEl.error);
 });
 
-// Auto-load from music/ folder
+// Auto-load from music/ folder - tries common filenames
 async function loadMusicFolder(){
   try{
     const r=await fetch('music/tracks.json');
@@ -960,11 +960,13 @@ async function loadMusicFolder(){
       try{
         const resp=await fetch('music/'+item.file);
         if(!resp.ok)continue;
+        const ct=resp.headers.get('Content-Type')||'';
+        if(!ct.includes('audio')&&!item.file.match(/\.(mp3|wav|ogg|m4a|flac)$/i))continue;
         const blob=await resp.blob();
         const url=URL.createObjectURL(blob);
-        const id='local_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
+        const id='folder_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
         localFiles[id]=url;
-        TRACKS.push({t:item.name,a:'Local File',vid:id});
+        TRACKS.push({t:item.name||item.file.replace(/\.[^.]+$/,''),a:'Music Folder',vid:id});
       }catch(e){}
     }
     if(TRACKS.length){
