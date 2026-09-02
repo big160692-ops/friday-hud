@@ -522,18 +522,25 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Music player -->
-        <div class="panel open" id="panel-music" style="right:20px;top:20px;width:280px">
+        <div class="panel open" id="panel-music" style="right:20px;top:20px;width:320px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Music</div>
-          <div id="music-drop" style="border:1px dashed var(--dim);border-radius:3px;padding:10px;text-align:center;margin-bottom:6px;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--dim)'" onclick="document.getElementById('music-file-input').click()">
-            <div style="font-size:8px;color:var(--muted);margin-bottom:2px">&#127925; Drop music here or click to browse</div>
-            <div style="font-size:6px;color:rgba(26,74,90,0.5)">mp3, wav, ogg, m4a, flac</div>
+          <div id="music-drop" style="border:1px dashed var(--dim);border-radius:3px;padding:8px;text-align:center;margin-bottom:6px;cursor:pointer;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--dim)'" onclick="document.getElementById('music-file-input').click()">
+            <div style="font-size:7px;color:var(--muted)">&#127925; Drop files or click to browse</div>
             <input type="file" id="music-file-input" accept="audio/*" multiple style="display:none" onchange="handleMusicFiles(this.files)">
           </div>
+          <div style="display:flex;gap:3px;margin-bottom:6px">
+            <input id="yt-search" placeholder="Search YouTube Music..." style="flex:1;padding:3px 6px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);color:var(--text);font-size:7px;font-family:var(--font-hud);border-radius:2px;outline:none" onkeydown="if(event.key==='Enter')searchYouTube()">
+            <button onclick="searchYouTube()" style="padding:3px 6px;background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;font-size:6px;letter-spacing:0.08em;cursor:pointer;border-radius:2px;font-family:var(--font-hud)">YT</button>
+          </div>
+          <div id="yt-player-wrap" style="width:100%;height:180px;background:#000;border-radius:3px;overflow:hidden;margin-bottom:6px;display:none">
+            <div id="yt-player"></div>
+          </div>
+          <div id="yt-results" style="max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-bottom:6px"></div>
           <div class="music-info">
             <div class="music-art" id="music-art">&#127925;</div>
             <div class="music-meta">
               <div class="music-track" id="music-track">No track loaded</div>
-              <div class="music-artist" id="music-artist">Drop audio files to play</div>
+              <div class="music-artist" id="music-artist">Drop files or search YouTube</div>
             </div>
           </div>
           <div class="music-progress" onclick="seekMusic(event)"><div class="music-progress-fill" id="music-fill" style="width:0%"></div></div>
@@ -543,7 +550,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
             <button class="music-btn play" onclick="togglePlay()" id="btn-play" title="Play">&#9654;</button>
             <button class="music-btn" onclick="nextTrack()" title="Next">&#9654;&#9654;</button>
           </div>
-          <div id="yt-tracklist" style="max-height:120px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-top:4px"></div>
+          <div id="yt-tracklist" style="max-height:80px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-top:4px"></div>
         </div>
       </div>
     </div>
@@ -926,10 +933,12 @@ function loadFallbackNews(el){
 function loadNews(){detectLocationForNews()}
 
 // === MUSIC PLAYER ===
+const YT_PROXY='https://friday-yt-proxy.big160692.workers.dev/';
 let TRACKS=[];
 let curTrack=0,isPlaying=false;
 let localFiles={};
 const audioEl=document.getElementById('audio-player');
+let ytPlayer=null,ytReady=false;
 
 audioEl.addEventListener('timeupdate',()=>{
   if(!audioEl.duration)return;
@@ -938,55 +947,14 @@ audioEl.addEventListener('timeupdate',()=>{
   document.getElementById('music-fill').style.width=(audioEl.currentTime/audioEl.duration*100)+'%';
 });
 audioEl.addEventListener('ended',()=>{nextTrack()});
-audioEl.addEventListener('play',()=>{
-  isPlaying=true;
-  document.getElementById('btn-play').innerHTML='&#10074;&#10074;';
-});
-audioEl.addEventListener('pause',()=>{
-  isPlaying=false;
-  document.getElementById('btn-play').innerHTML='&#9654;';
-});
-audioEl.addEventListener('error',e=>{
-  console.log('[MUS] Audio error:',audioEl.error);
-});
-
-// Auto-load from music/ folder - tries common filenames
-async function loadMusicFolder(){
-  try{
-    const r=await fetch('music/tracks.json');
-    if(!r.ok)return;
-    const list=await r.json();
-    for(const item of list){
-      try{
-        const resp=await fetch('music/'+item.file);
-        if(!resp.ok)continue;
-        const ct=resp.headers.get('Content-Type')||'';
-        if(!ct.includes('audio')&&!item.file.match(/\.(mp3|wav|ogg|m4a|flac)$/i))continue;
-        const blob=await resp.blob();
-        const url=URL.createObjectURL(blob);
-        const id='folder_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
-        localFiles[id]=url;
-        TRACKS.push({t:item.name||item.file.replace(/\.[^.]+$/,''),a:'Music Folder',vid:id});
-      }catch(e){}
-    }
-    if(TRACKS.length){
-      renderTrackList();
-      updateMusicMeta();
-    }
-  }catch(e){}
-}
-loadMusicFolder();
+audioEl.addEventListener('play',()=>{isPlaying=true;document.getElementById('btn-play').innerHTML='&#10074;&#10074;';});
+audioEl.addEventListener('pause',()=>{isPlaying=false;document.getElementById('btn-play').innerHTML='&#9654;';});
 
 // Drag and drop
 const dropZone=document.getElementById('music-drop');
 dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.style.borderColor='var(--primary)';dropZone.style.background='rgba(0,212,255,0.05)'});
 dropZone.addEventListener('dragleave',e=>{dropZone.style.borderColor='var(--dim)';dropZone.style.background='transparent'});
-dropZone.addEventListener('drop',e=>{
-  e.preventDefault();
-  dropZone.style.borderColor='var(--dim)';
-  dropZone.style.background='transparent';
-  handleMusicFiles(e.dataTransfer.files);
-});
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.style.borderColor='var(--dim)';dropZone.style.background='transparent';handleMusicFiles(e.dataTransfer.files);});
 
 function handleMusicFiles(files){
   for(const f of files){
@@ -995,7 +963,7 @@ function handleMusicFiles(files){
     const name=f.name.replace(/\.[^.]+$/,'');
     const id='local_'+Date.now()+'_'+Math.random().toString(36).substr(2,5);
     localFiles[id]=url;
-    TRACKS.push({t:name,a:'Local File',vid:id});
+    TRACKS.push({t:name,a:'Local File',vid:id,local:true});
   }
   renderTrackList();
   if(TRACKS.length&&!isPlaying)playTrack(TRACKS.length-files.length);
@@ -1006,65 +974,119 @@ function formatTime(s){const m=Math.floor(s/60);const sec=Math.floor(s%60);retur
 function togglePlay(){
   if(!TRACKS.length)return;
   if(isPlaying){audioEl.pause();return}
-  if(!audioEl.src||audioEl.src===''){
-    audioEl.src=localFiles[TRACKS[curTrack].vid];
+  const tr=TRACKS[curTrack];
+  if(tr.local){
+    audioEl.src=localFiles[tr.vid];
+    audioEl.play();
+  }else if(tr.ytid&&ytReady&&ytPlayer){
+    ytPlayer.playVideo();
   }
-  audioEl.play();
 }
 
 function playTrack(idx){
   curTrack=idx;
-  audioEl.src=localFiles[TRACKS[idx].vid];
-  audioEl.play();
-  isPlaying=true;
+  const tr=TRACKS[idx];
+  if(tr.local){
+    audioEl.src=localFiles[tr.vid];
+    audioEl.play();
+    isPlaying=true;
+  }else if(tr.ytid){
+    if(ytReady&&ytPlayer){
+      ytPlayer.loadVideoById(tr.ytid);
+      isPlaying=true;
+    }
+  }
   updateMusicMeta();
 }
 
-function nextTrack(){
-  if(!TRACKS.length)return;
-  curTrack=(curTrack+1)%TRACKS.length;
-  playTrack(curTrack);
-}
-function prevTrack(){
-  if(!TRACKS.length)return;
-  curTrack=(curTrack-1+TRACKS.length)%TRACKS.length;
-  playTrack(curTrack);
-}
-
-function seekMusic(e){
-  if(!audioEl.duration)return;
-  const r=e.target.getBoundingClientRect();
-  audioEl.currentTime=audioEl.duration*((e.clientX-r.left)/r.width);
-}
+function nextTrack(){if(!TRACKS.length)return;curTrack=(curTrack+1)%TRACKS.length;playTrack(curTrack);}
+function prevTrack(){if(!TRACKS.length)return;curTrack=(curTrack-1+TRACKS.length)%TRACKS.length;playTrack(curTrack);}
+function seekMusic(e){if(tr.local&&audioEl.duration){const r=e.target.getBoundingClientRect();audioEl.currentTime=audioEl.duration*((e.clientX-r.left)/r.width);}}
 
 function updateMusicMeta(){
-  if(!TRACKS.length){
-    document.getElementById('music-track').textContent='No track loaded';
-    document.getElementById('music-artist').textContent='Drop audio files to play';
-    document.getElementById('music-art').innerHTML='&#127925;';
-    return;
-  }
+  if(!TRACKS.length){document.getElementById('music-track').textContent='No track loaded';document.getElementById('music-artist').textContent='Drop files or search YouTube';document.getElementById('music-art').innerHTML='&#127925;';return}
   const tr=TRACKS[curTrack];
   document.getElementById('music-track').textContent=tr.t;
   document.getElementById('music-artist').textContent=tr.a;
-  document.getElementById('music-art').innerHTML='&#127925;';
+  if(tr.ytid){document.getElementById('music-art').innerHTML='<img src="https://img.youtube.com/vi/'+tr.ytid+'/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px">';}
+  else{document.getElementById('music-art').innerHTML='&#127925;';}
   renderTrackList();
 }
 
-function removeTrack(i){
-  const tr=TRACKS[i];
-  if(localFiles[tr.vid]){URL.revokeObjectURL(localFiles[tr.vid]);delete localFiles[tr.vid]}
-  TRACKS.splice(i,1);
-  if(curTrack>=TRACKS.length)curTrack=Math.max(0,TRACKS.length-1);
-  renderTrackList();
-  updateMusicMeta();
-}
+function removeTrack(i){const tr=TRACKS[i];if(tr.local&&localFiles[tr.vid]){URL.revokeObjectURL(localFiles[tr.vid]);delete localFiles[tr.vid]}TRACKS.splice(i,1);if(curTrack>=TRACKS.length)curTrack=Math.max(0,TRACKS.length-1);renderTrackList();updateMusicMeta();}
 
 function renderTrackList(){
   const el=document.getElementById('yt-tracklist');
   if(!TRACKS.length){el.innerHTML='';return}
-  el.innerHTML=TRACKS.map((tr,i)=>`<div onclick="playTrack(${i})" style="display:flex;align-items:center;gap:5px;padding:2px 4px;cursor:pointer;border-radius:2px;${i===curTrack?'background:rgba(255,0,0,0.08)':''}" onmouseover="this.style.background='rgba(255,0,0,0.04)'" onmouseout="this.style.background='${i===curTrack?'rgba(255,0,0,0.08)':''}'"><div style="width:18px;height:18px;border-radius:2px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px">&#127925;</div><div style="min-width:0;flex:1"><div style="font-size:6px;color:${i===curTrack?'#ff4444':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.t}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.a}</div></div><span onclick="event.stopPropagation();removeTrack(${i})" style="font-size:7px;color:var(--muted);cursor:pointer;padding:2px">&times;</span></div>`).join('');
+  el.innerHTML=TRACKS.map((tr,i)=>{
+    const icon=tr.ytid?'<img src="https://img.youtube.com/vi/'+tr.ytid+'/default.jpg" style="width:18px;height:18px;border-radius:2px;object-fit:cover">':'<div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px">&#127925;</div>';
+    return`<div onclick="playTrack(${i})" style="display:flex;align-items:center;gap:5px;padding:2px 4px;cursor:pointer;border-radius:2px;${i===curTrack?'background:rgba(255,0,0,0.08)':''}" onmouseover="this.style.background='rgba(255,0,0,0.04)'" onmouseout="this.style.background='${i===curTrack?'rgba(255,0,0,0.08)':''}'">${icon}<div style="min-width:0;flex:1"><div style="font-size:6px;color:${i===curTrack?'#ff4444':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.t}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.a}</div></div><span onclick="event.stopPropagation();removeTrack(${i})" style="font-size:7px;color:var(--muted);cursor:pointer;padding:2px">&times;</span></div>`;
+  }).join('');
 }
+
+// === YOUTUBE MUSIC SEARCH ===
+async function searchYouTube(){
+  const q=document.getElementById('yt-search').value.trim();
+  if(!q)return;
+  const el=document.getElementById('yt-results');
+  el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">Searching...</div>';
+  try{
+    const body=JSON.stringify({context:{client:{hl:'en',gl:'US',clientName:'WEB_REMIX',clientVersion:'1.20240101.00.00'}},query:q});
+    const r=await fetch(YT_PROXY+'?url='+encodeURIComponent('https://music.youtube.com/youtubei/v1/search?key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30'),{
+      method:'POST',headers:{'Content-Type':'application/json','x-method':'POST'},body:body
+    });
+    if(!r.ok)throw new Error('Proxy error '+r.status);
+    const d=await r.json();
+    let videos=[];
+    const sections=d?.contents?.twoColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents||[];
+    for(const sec of sections){
+      const items=sec?.musicShelfRenderer?.contents||sec?.sectionListRenderer?.contents||sec?.itemSectionRenderer?.contents||[];
+      for(const item of items){
+        const mr=item?.musicResponsiveListItemRenderer;
+        if(mr){
+          const title=mr.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text||'';
+          const vid=mr.overlay?.musicItemThumbnailOverlayRenderer?.content?.musicPlayButtonRenderer?.playNavigationEndpoint?.watchEndpoint?.videoId||'';
+          const artistRuns=mr.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs||[];
+          const artist=artistRuns.map(r=>r.text).join('');
+          if(vid&&title)videos.push({vid,title,artist});
+        }
+      }
+    }
+    if(!videos.length){el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">No results</div>';return}
+    el.innerHTML=videos.slice(0,10).map(v=>`<div onclick="addYTTrack('${v.vid}','${v.title.replace(/'/g,"\\'")}','${v.artist.replace(/'/g,"\\'")}')" style="display:flex;align-items:center;gap:5px;padding:3px 4px;cursor:pointer;border-radius:2px;transition:background 0.2s" onmouseover="this.style.background='rgba(255,0,0,0.05)'" onmouseout="this.style.background='transparent'"><img src="https://img.youtube.com/vi/${v.vid}/mqdefault.jpg" style="width:32px;height:24px;border-radius:2px;object-fit:cover;flex-shrink:0"><div style="min-width:0;flex:1"><div style="font-size:6px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.title}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.artist}</div></div></div>`).join('');
+  }catch(e){
+    el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:4px">Search failed: '+e.message+'</div>';
+  }
+}
+
+function addYTTrack(vid,title,artist){
+  if(TRACKS.find(t=>t.ytid===vid))return;
+  TRACKS.push({t:title,a:artist,ytid:vid});
+  renderTrackList();
+  if(TRACKS.length===1)playTrack(0);
+}
+
+// YouTube IFrame API
+function loadYouTubeAPI(){
+  if(window.YT&&window.YT.Player){initYTPlayer();return}
+  const tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';document.head.appendChild(tag);
+  window.onYouTubeIframeAPIReady=initYTPlayer;
+}
+function initYTPlayer(){
+  document.getElementById('yt-player-wrap').style.display='block';
+  ytPlayer=new YT.Player('yt-player',{
+    width:'100%',height:'100%',playerVars:{autoplay:0,controls:1,disablekb:0,modestbranding:1,rel:0},
+    events:{
+      onReady:function(){ytReady=true},
+      onStateChange:function(e){
+        if(e.data===YT.PlayerState.PLAYING){isPlaying=true;document.getElementById('btn-play').innerHTML='&#10074;&#10074;';updateMusicMeta();}
+        else if(e.data===YT.PlayerState.PAUSED){isPlaying=false;document.getElementById('btn-play').innerHTML='&#9654;';}
+        else if(e.data===YT.PlayerState.ENDED){nextTrack();}
+      }
+    }
+  });
+}
+loadYouTubeAPI();
 
 function updateMusicUI(){updateMusicMeta();renderTrackList()}
 updateMusicUI();
