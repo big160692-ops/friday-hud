@@ -532,13 +532,14 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
             <input id="yt-search" placeholder="Search YouTube Music..." style="flex:1;padding:3px 6px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);color:var(--text);font-size:7px;font-family:var(--font-hud);border-radius:2px;outline:none" onkeydown="if(event.key==='Enter')searchYouTube()">
             <button onclick="searchYouTube()" style="padding:3px 6px;background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);color:#ff4444;font-size:6px;letter-spacing:0.08em;cursor:pointer;border-radius:2px;font-family:var(--font-hud)">YT</button>
           </div>
-          <div id="yt-results" style="max-height:150px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-bottom:6px"></div>
+          <div id="yt-results" style="max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-bottom:6px"></div>
           <div class="music-info">
             <div class="music-art" id="music-art">&#127925;</div>
             <div class="music-meta">
               <div class="music-track" id="music-track">No track loaded</div>
               <div class="music-artist" id="music-artist">Drop files or search YouTube</div>
             </div>
+            <button onclick="toggleLike()" id="btn-like" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:4px" title="Like">&#9825;</button>
           </div>
           <div class="music-progress" onclick="seekMusic(event)"><div class="music-progress-fill" id="music-fill" style="width:0%"></div></div>
           <div class="music-time"><span id="music-cur">0:00</span><span id="music-dur">0:00</span></div>
@@ -546,8 +547,14 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
             <button class="music-btn" onclick="prevTrack()" title="Previous">&#9664;&#9664;</button>
             <button class="music-btn play" onclick="togglePlay()" id="btn-play" title="Play">&#9654;</button>
             <button class="music-btn" onclick="nextTrack()" title="Next">&#9654;&#9654;</button>
+            <button class="music-btn" onclick="toggleRepeat()" id="btn-repeat" title="Repeat">&#8634;</button>
           </div>
-          <div id="yt-tracklist" style="max-height:80px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin-top:4px"></div>
+          <div style="display:flex;gap:2px;margin:4px 0;border-bottom:1px solid var(--dim)">
+            <button onclick="showTab('all')" id="tab-all" style="flex:1;background:none;border:none;border-bottom:2px solid var(--primary);color:var(--primary);font-size:6px;padding:3px 0;cursor:pointer;font-family:var(--font-hud)">ALL</button>
+            <button onclick="showTab('likes')" id="tab-likes" style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:6px;padding:3px 0;cursor:pointer;font-family:var(--font-hud)">LIKES</button>
+            <button onclick="showTab('playlist')" id="tab-playlist" style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:6px;padding:3px 0;cursor:pointer;font-family:var(--font-hud)">PLAYLIST</button>
+          </div>
+          <div id="yt-tracklist" style="max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent"></div>
         </div>
       </div>
     </div>
@@ -932,8 +939,11 @@ function loadNews(){detectLocationForNews()}
 // === MUSIC PLAYER ===
 const YT_PROXY='https://friday-yt-proxy.big160692.workers.dev/';
 let TRACKS=[];
-let curTrack=0,isPlaying=false;
+let curTrack=0,isPlaying=false,repeatOn=false,shuffleOn=false;
 let localFiles={};
+let liked=JSON.parse(localStorage.getItem('friday_likes')||'[]');
+let userPlaylist=JSON.parse(localStorage.getItem('friday_playlist')||'[]');
+let activeTab='all';
 const audioEl=document.getElementById('audio-player');
 let ytPlayer=null,ytReady=false;
 
@@ -943,11 +953,14 @@ audioEl.addEventListener('timeupdate',()=>{
   document.getElementById('music-dur').textContent=formatTime(audioEl.duration);
   document.getElementById('music-fill').style.width=(audioEl.currentTime/audioEl.duration*100)+'%';
 });
-audioEl.addEventListener('ended',()=>{nextTrack()});
+audioEl.addEventListener('ended',()=>{
+  if(repeatOn){audioEl.currentTime=0;audioEl.play();return}
+  nextTrack();
+});
 audioEl.addEventListener('play',()=>{isPlaying=true;document.getElementById('btn-play').innerHTML='&#10074;&#10074;';});
 audioEl.addEventListener('pause',()=>{isPlaying=false;document.getElementById('btn-play').innerHTML='&#9654;';});
 
-// Sync YouTube player time with HUD progress bar
+// Sync YouTube player time
 setInterval(()=>{
   if(ytReady&&ytPlayer&&isPlaying){
     try{
@@ -1010,38 +1023,104 @@ function playTrack(idx){
   updateMusicMeta();
 }
 
-function nextTrack(){if(!TRACKS.length)return;curTrack=(curTrack+1)%TRACKS.length;playTrack(curTrack);}
-function prevTrack(){if(!TRACKS.length)return;curTrack=(curTrack-1+TRACKS.length)%TRACKS.length;playTrack(curTrack);}
+function nextTrack(){
+  if(!TRACKS.length)return;
+  if(shuffleOn){curTrack=Math.floor(Math.random()*TRACKS.length)}
+  else{curTrack=(curTrack+1)%TRACKS.length}
+  playTrack(curTrack);
+}
+function prevTrack(){
+  if(!TRACKS.length)return;
+  curTrack=(curTrack-1+TRACKS.length)%TRACKS.length;
+  playTrack(curTrack);
+}
 
 function seekMusic(e){
   const r=e.target.getBoundingClientRect();
   const pct=(e.clientX-r.left)/r.width;
   const tr=TRACKS[curTrack];
-  if(tr.local&&audioEl.duration){
-    audioEl.currentTime=audioEl.duration*pct;
-  }else if(ytReady&&ytPlayer){
-    try{ytPlayer.seekTo(ytPlayer.getDuration()*pct,true)}catch(e){}
-  }
+  if(tr.local&&audioEl.duration){audioEl.currentTime=audioEl.duration*pct;}
+  else if(ytReady&&ytPlayer){try{ytPlayer.seekTo(ytPlayer.getDuration()*pct,true)}catch(e){}}
+}
+
+function toggleRepeat(){repeatOn=!repeatOn;document.getElementById('btn-repeat').style.color=repeatOn?'var(--primary)':'var(--muted)';}
+
+// === LIKES ===
+function getTrackKey(tr){return tr.ytid||tr.vid||tr.t;}
+function isLiked(tr){return liked.includes(getTrackKey(tr));}
+function toggleLike(){
+  if(!TRACKS.length)return;
+  const tr=TRACKS[curTrack];
+  const key=getTrackKey(tr);
+  if(isLiked(tr)){liked=liked.filter(k=>k!==key)}else{liked.push(key)}
+  localStorage.setItem('friday_likes',JSON.stringify(liked));
+  updateLikeBtn();
+}
+function updateLikeBtn(){
+  if(!TRACKS.length){document.getElementById('btn-like').innerHTML='&#9825;';document.getElementById('btn-like').style.color='var(--muted)';return}
+  const tr=TRACKS[curTrack];
+  document.getElementById('btn-like').innerHTML=isLiked(tr)?'&#9829;':'&#9825;';
+  document.getElementById('btn-like').style.color=isLiked(tr)?'#ff4444':'var(--muted)';
+}
+
+// === PLAYLIST ===
+function addToPlaylist(tr){
+  const key=getTrackKey(tr);
+  if(!userPlaylist.includes(key)){userPlaylist.push(key);localStorage.setItem('friday_playlist',JSON.stringify(userPlaylist))}
+}
+function removeFromPlaylist(key){
+  userPlaylist=userPlaylist.filter(k=>k!==key);
+  localStorage.setItem('friday_playlist',JSON.stringify(userPlaylist));
+  renderTrackList();
+}
+
+// === TABS ===
+function showTab(tab){
+  activeTab=tab;
+  document.getElementById('tab-all').style.borderBottomColor=tab==='all'?'var(--primary)':'transparent';
+  document.getElementById('tab-all').style.color=tab==='all'?'var(--primary)':'var(--muted)';
+  document.getElementById('tab-likes').style.borderBottomColor=tab==='likes'?'var(--primary)':'transparent';
+  document.getElementById('tab-likes').style.color=tab==='likes'?'var(--primary)':'var(--muted)';
+  document.getElementById('tab-playlist').style.borderBottomColor=tab==='playlist'?'var(--primary)':'transparent';
+  document.getElementById('tab-playlist').style.color=tab==='playlist'?'var(--primary)':'var(--muted)';
+  renderTrackList();
+}
+
+function getDisplayTracks(){
+  if(activeTab==='likes')return TRACKS.filter(tr=>isLiked(tr));
+  if(activeTab==='playlist')return TRACKS.filter(tr=>userPlaylist.includes(getTrackKey(tr)));
+  return TRACKS;
 }
 
 function updateMusicMeta(){
-  if(!TRACKS.length){document.getElementById('music-track').textContent='No track loaded';document.getElementById('music-artist').textContent='Drop files or search YouTube';document.getElementById('music-art').innerHTML='&#127925;';return}
+  if(!TRACKS.length){document.getElementById('music-track').textContent='No track loaded';document.getElementById('music-artist').textContent='Drop files or search YouTube';document.getElementById('music-art').innerHTML='&#127925;';updateLikeBtn();return}
   const tr=TRACKS[curTrack];
   document.getElementById('music-track').textContent=tr.t;
   document.getElementById('music-artist').textContent=tr.a;
   if(tr.ytid){document.getElementById('music-art').innerHTML='<img src="https://img.youtube.com/vi/'+tr.ytid+'/mqdefault.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:4px">';}
   else{document.getElementById('music-art').innerHTML='&#127925;';}
+  updateLikeBtn();
   renderTrackList();
 }
 
-function removeTrack(i){const tr=TRACKS[i];if(tr.local&&localFiles[tr.vid]){URL.revokeObjectURL(localFiles[tr.vid]);delete localFiles[tr.vid]}TRACKS.splice(i,1);if(curTrack>=TRACKS.length)curTrack=Math.max(0,TRACKS.length-1);renderTrackList();updateMusicMeta();}
+function removeTrack(i){
+  const tr=TRACKS[i];
+  if(tr.local&&localFiles[tr.vid]){URL.revokeObjectURL(localFiles[tr.vid]);delete localFiles[tr.vid]}
+  TRACKS.splice(i,1);
+  if(curTrack>=TRACKS.length)curTrack=Math.max(0,TRACKS.length-1);
+  renderTrackList();updateMusicMeta();
+}
 
 function renderTrackList(){
   const el=document.getElementById('yt-tracklist');
-  if(!TRACKS.length){el.innerHTML='';return}
-  el.innerHTML=TRACKS.map((tr,i)=>{
+  const display=getDisplayTracks();
+  if(!display.length){el.innerHTML='<div style="font-size:6px;color:var(--muted);text-align:center;padding:8px">'+(activeTab==='all'?'No tracks':'No tracks in this tab')+'</div>';return}
+  el.innerHTML=display.map((tr,i)=>{
+    const realIdx=TRACKS.indexOf(tr);
     const thumb=tr.ytid?`<img src="https://img.youtube.com/vi/${tr.ytid}/default.jpg" style="width:18px;height:18px;border-radius:2px;object-fit:cover">`:'<div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px">&#127925;</div>';
-    return`<div onclick="playTrack(${i})" style="display:flex;align-items:center;gap:5px;padding:2px 4px;cursor:pointer;border-radius:2px;${i===curTrack?'background:rgba(255,0,0,0.08)':''}" onmouseover="this.style.background='rgba(255,0,0,0.04)'" onmouseout="this.style.background='${i===curTrack?'rgba(255,0,0,0.08)':''}'">${thumb}<div style="min-width:0;flex:1"><div style="font-size:6px;color:${i===curTrack?'#ff4444':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.t}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.a}</div></div><span onclick="event.stopPropagation();removeTrack(${i})" style="font-size:7px;color:var(--muted);cursor:pointer;padding:2px">&times;</span></div>`;
+    const isCur=realIdx===curTrack;
+    const likedIcon=isLiked(tr)?'<span style="color:#ff4444;font-size:6px;margin-left:2px">&#9829;</span>':'';
+    return`<div onclick="playTrack(${realIdx})" style="display:flex;align-items:center;gap:5px;padding:2px 4px;cursor:pointer;border-radius:2px;${isCur?'background:rgba(255,0,0,0.08)':''}" onmouseover="this.style.background='rgba(255,0,0,0.04)'" onmouseout="this.style.background='${isCur?'rgba(255,0,0,0.08)':''}'">${thumb}<div style="min-width:0;flex:1"><div style="font-size:6px;color:${isCur?'#ff4444':'var(--text)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.t}${likedIcon}</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tr.a}</div></div><span onclick="event.stopPropagation();removeTrack(${realIdx})" style="font-size:7px;color:var(--muted);cursor:pointer;padding:2px">&times;</span></div>`;
   }).join('');
 }
 
@@ -1086,6 +1165,7 @@ async function searchYouTube(){
 function addYTTrack(vid,title,artist){
   if(TRACKS.find(t=>t.ytid===vid))return;
   TRACKS.push({t:title,a:artist,ytid:vid});
+  addToPlaylist(TRACKS[TRACKS.length-1]);
   renderTrackList();
   if(TRACKS.length===1)playTrack(0);
 }
@@ -1097,7 +1177,6 @@ function loadYouTubeAPI(){
   window.onYouTubeIframeAPIReady=initYTPlayer;
 }
 function initYTPlayer(){
-  // Create hidden iframe for YouTube playback
   const iframe=document.createElement('iframe');
   iframe.id='yt-player';
   iframe.style.cssText='position:absolute;width:0;height:0;overflow:hidden;border:0';
@@ -1109,7 +1188,7 @@ function initYTPlayer(){
       onStateChange:function(e){
         if(e.data===YT.PlayerState.PLAYING){isPlaying=true;document.getElementById('btn-play').innerHTML='&#10074;&#10074;';updateMusicMeta();}
         else if(e.data===YT.PlayerState.PAUSED){isPlaying=false;document.getElementById('btn-play').innerHTML='&#9654;';}
-        else if(e.data===YT.PlayerState.ENDED){nextTrack();}
+        else if(e.data===YT.PlayerState.ENDED){if(repeatOn){ytPlayer.seekTo(0);ytPlayer.playVideo()}else nextTrack();}
       }
     }
   });
