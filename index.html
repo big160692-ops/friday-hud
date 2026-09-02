@@ -462,7 +462,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
       <div class="panel-layer" id="panel-layer">
 
         <!-- System + Gauges combined -->
-        <div class="panel open" id="panel-sys" style="left:20px;top:20px;width:300px;padding:12px 14px">
+        <div class="panel" id="panel-sys" style="left:20px;top:20px;width:300px;padding:12px 14px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span><span id="sys-title">System</span></div>
           <div id="device-info" style="font-size:8px;color:var(--muted);margin-bottom:8px;letter-spacing:0.08em;border-bottom:1px solid var(--dim);padding-bottom:6px">Detecting hardware...</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-bottom:8px">
@@ -476,7 +476,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Weather widget -->
-        <div class="panel open" id="panel-weather" style="left:340px;top:20px;width:180px">
+        <div class="panel" id="panel-weather" style="left:340px;top:20px;width:180px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Weather <span class="weather-refresh" onclick="fetchWeather()" title="Refresh">&#8635; REFRESH</span></div>
           <div id="weather-content">
             <div class="weather-loading">Initializing weather sensors...</div>
@@ -514,7 +514,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- News feed -->
-        <div class="panel open" id="panel-news" style="right:20px;top:620px;width:280px">
+        <div class="panel" id="panel-news" style="right:20px;top:620px;width:280px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Local News <span id="news-loc" style="font-size:6px;color:var(--muted);margin-left:auto"></span></div>
           <div class="news-list" id="news-list">
             <div class="news-loading">Detecting location for local news...</div>
@@ -522,7 +522,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
         </div>
 
         <!-- Music player -->
-        <div class="panel open" id="panel-music" style="right:20px;top:20px;width:380px">
+        <div class="panel" id="panel-music" style="right:20px;top:20px;width:380px">
           <div class="pt"><span class="drag-handle" title="Drag to move"><span class="drag-grip"><i></i><i></i><i></i></span></span>Music</div>
           <div style="display:flex;gap:4px;margin-bottom:6px">
             <input id="yt-search" placeholder="Search YouTube Music..." style="flex:1;padding:6px 10px;background:rgba(2,8,18,0.6);border:1px solid var(--dim);color:var(--text);font-size:9px;font-family:var(--font-hud);border-radius:2px;outline:none" onkeydown="if(event.key==='Enter')searchYouTube()">
@@ -545,13 +545,12 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
             <button class="music-btn" onclick="nextTrack()" title="Next">&#9654;&#9654;</button>
             <button class="music-btn" onclick="toggleRepeat()" id="btn-repeat" title="Repeat">&#8634;</button>
           </div>
-          <div id="music-queue" style="max-height:90px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;margin:4px 0"></div>
           <div style="display:flex;gap:2px;margin:4px 0;border-bottom:1px solid var(--dim)">
             <button onclick="showTab('rec')" id="tab-rec" style="flex:1;background:none;border:none;border-bottom:2px solid var(--primary);color:var(--primary);font-size:7px;padding:4px 0;cursor:pointer;font-family:var(--font-hud)">FOR YOU</button>
             <button onclick="showTab('likes')" id="tab-likes" style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:7px;padding:4px 0;cursor:pointer;font-family:var(--font-hud)">LIKES</button>
             <button onclick="showTab('playlist')" id="tab-playlist" style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:7px;padding:4px 0;cursor:pointer;font-family:var(--font-hud)">PLAYLIST</button>
           </div>
-          <div id="yt-tracklist" style="max-height:120px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent"></div>
+          <div id="yt-tracklist" style="max-height:150px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent"></div>
         </div>
       </div>
     </div>
@@ -1152,31 +1151,9 @@ function fetchRelated(tr){
   }).catch(function(){fetchingRelated=false;});
 }
 
-function renderQueue(){
-  var qe=document.getElementById('music-queue');
-  if(!qe)return;
-  if(TRACKS.length===0){qe.innerHTML='';return;}
-  if(TRACKS.length===1){
-    var tr=TRACKS[0];
-    if(tr.ytid){qe.innerHTML='<div style="font-size:5px;color:var(--muted);text-align:center;padding:3px">Loading recommendations...</div>';}
-    else{qe.innerHTML='';}
-    return;
-  }
-  var html='';
-  var count=Math.min(5,TRACKS.length-1);
-  for(var n=0;n<count;n++){
-    var ni=(curTrack+1+n)%TRACKS.length;
-    var ntr=TRACKS[ni];
-    var nthumb=ntr.ytid?'<img src="https://img.youtube.com/vi/'+ntr.ytid+'/default.jpg" style="width:16px;height:16px;border-radius:2px;object-fit:cover;flex-shrink:0">':'<div style="width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;background:rgba(0,212,255,0.1);border-radius:2px">&#127925;</div>';
-    html+='<div onclick="playTrack('+ni+')" style="display:flex;align-items:center;gap:4px;padding:2px 4px;cursor:pointer;border-radius:2px;transition:background 0.15s" onmouseover="this.style.background=\'rgba(255,0,0,0.05)\'" onmouseout="this.style.background=\'transparent\'">'+nthumb+'<div style="min-width:0;flex:1"><div style="font-size:5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+ntr.t+'</div><div style="font-size:4px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+ntr.a+'</div></div></div>';
-  }
-  qe.innerHTML=html;
-}
-
 function renderTrackList(){
   var el=document.getElementById('yt-tracklist');
   var display=getDisplayTracks();
-  renderQueue();
   var isRec=activeTab==='rec';
   if(!display.length){
     var msg=isRec?(fetchingRelated?'Loading recommendations...':'Play a track to see recommendations'):'No tracks in this tab';
