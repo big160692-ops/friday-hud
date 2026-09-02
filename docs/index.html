@@ -1038,17 +1038,21 @@ async function searchYouTube(){
     if(!r.ok)throw new Error('Proxy error '+r.status);
     const d=await r.json();
     let videos=[];
-    const sections=d?.contents?.twoColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents||[];
-    for(const sec of sections){
-      const items=sec?.musicShelfRenderer?.contents||sec?.sectionListRenderer?.contents||sec?.itemSectionRenderer?.contents||[];
-      for(const item of items){
-        const mr=item?.musicResponsiveListItemRenderer;
-        if(mr){
-          const title=mr.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text||'';
-          const vid=mr.overlay?.musicItemThumbnailOverlayRenderer?.content?.musicPlayButtonRenderer?.playNavigationEndpoint?.watchEndpoint?.videoId||'';
-          const artistRuns=mr.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs||[];
-          const artist=artistRuns.map(r=>r.text).join('');
-          if(vid&&title)videos.push({vid,title,artist});
+    // Try tabbedSearchResultsRenderer (new structure)
+    const tabs=d?.contents?.tabbedSearchResultsRenderer?.tabs||d?.contents?.twoColumnBrowseResultsRenderer?.tabs||[];
+    for(const tab of tabs){
+      const contents=tab?.tabRenderer?.content?.sectionListRenderer?.contents||[];
+      for(const sec of contents){
+        const items=sec?.musicShelfRenderer?.contents||sec?.sectionListRenderer?.contents||sec?.itemSectionRenderer?.contents||[];
+        for(const item of items){
+          const mr=item?.musicResponsiveListItemRenderer;
+          if(mr){
+            const title=mr.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text||'';
+            const vid=mr.overlay?.musicItemThumbnailOverlayRenderer?.content?.musicPlayButtonRenderer?.playNavigationEndpoint?.watchEndpoint?.videoId||'';
+            const artistRuns=mr.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs||[];
+            const artist=artistRuns.map(r=>r.text).join('');
+            if(vid&&title)videos.push({vid,title,artist});
+          }
         }
       }
     }
