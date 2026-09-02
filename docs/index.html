@@ -944,6 +944,7 @@ let localFiles={};
 let liked=JSON.parse(localStorage.getItem('friday_likes')||'[]');
 let userPlaylist=JSON.parse(localStorage.getItem('friday_playlist')||'[]');
 let activeTab='all';
+let relatedQueue=[];
 const audioEl=document.getElementById('audio-player');
 let ytPlayer=null,ytReady=false;
 
@@ -1002,7 +1003,7 @@ function togglePlay(){
   if(tr.local){
     if(isPlaying){audioEl.pause();return}
     audioEl.src=localFiles[tr.vid];
-    audioEl.play();
+    audioEl.play().catch(()=>{});
   }else if(tr.ytid&&ytReady&&ytPlayer){
     if(isPlaying){ytPlayer.pauseVideo();return}
     ytPlayer.playVideo();
@@ -1014,19 +1015,60 @@ function playTrack(idx){
   const tr=TRACKS[idx];
   if(tr.local){
     audioEl.src=localFiles[tr.vid];
-    audioEl.play();
+    audioEl.play().catch(()=>{});
     isPlaying=true;
   }else if(tr.ytid&&ytReady&&ytPlayer){
     ytPlayer.loadVideoById(tr.ytid);
     isPlaying=true;
   }
   updateMusicMeta();
+  fetchRelated(tr);
+}
+
+// === RELATED MUSIC ===
+async function fetchRelated(tr){
+  if(!tr.ytid)return;
+  relatedQueue=[];
+  try{
+    const body=JSON.stringify({context:{client:{hl:'en',gl:'US',clientName:'WEB_REMIX',clientVersion:'1.20240101.00.00'}},videoId:tr.ytid});
+    const r=await fetch(YT_PROXY+'?url='+encodeURIComponent('https://music.youtube.com/youtubei/v1/next?key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30'),{
+      method:'POST',headers:{'Content-Type':'application/json','x-method':'POST'},body:body
+    });
+    if(!r.ok)return;
+    const d=await r.json();
+    const results=d?.contents?.singleColumnMusicWatchNextResultsRenderer?.results?.contents||[];
+    for(const item of results){
+      const secondary=item?.musicSecondaryShelfRenderer;
+      if(secondary){
+        const items=secondary.contents||[];
+        for(const i of items){
+          const mr=i?.musicResponsiveListItemRenderer;
+          if(mr){
+            const title=mr.flexColumns?.[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text||'';
+            const vid=mr.overlay?.musicItemThumbnailOverlayRenderer?.content?.musicPlayButtonRenderer?.playNavigationEndpoint?.watchEndpoint?.videoId||'';
+            const artistRuns=mr.flexColumns?.[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs||[];
+            const artist=artistRuns.map(r=>r.text).join('');
+            if(vid&&title&&vid!==tr.ytid)relatedQueue.push({vid,title,artist});
+          }
+        }
+      }
+    }
+  }catch(e){}
 }
 
 function nextTrack(){
   if(!TRACKS.length)return;
   if(shuffleOn){curTrack=Math.floor(Math.random()*TRACKS.length)}
-  else{curTrack=(curTrack+1)%TRACKS.length}
+  else{
+    curTrack=(curTrack+1)%TRACKS.length;
+    if(curTrack===0&&relatedQueue.length){
+      const rel=relatedQueue.shift();
+      if(!TRACKS.find(t=>t.ytid===rel.vid)){
+        TRACKS.push({t:rel.title,a:rel.artist,ytid:rel.vid});
+        curTrack=TRACKS.length-1;
+      }
+    }
+  }
   playTrack(curTrack);
 }
 function prevTrack(){
