@@ -1107,52 +1107,33 @@ function fetchRelated(tr){
   if(!tr.ytid||fetchingRelated)return;
   fetchingRelated=true;
   relatedQueue=[];
-  var body=JSON.stringify({context:{client:{hl:'en',gl:'US',clientName:'WEB_REMIX',clientVersion:'1.20240101.00.00'}},videoId:tr.ytid});
-  fetch(YT_PROXY+'?url='+encodeURIComponent('https://music.youtube.com/youtubei/v1/next?key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30'),{
+  var query=tr.a?tr.a+' music':tr.t;
+  var body=JSON.stringify({context:{client:{hl:'en',gl:'US',clientName:'WEB_REMIX',clientVersion:'1.20240101.00.00'}},query:query});
+  fetch(YT_PROXY+'?url='+encodeURIComponent('https://music.youtube.com/youtubei/v1/search?key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30'),{
     method:'POST',headers:{'Content-Type':'application/json','x-method':'POST'},body:body
   }).then(function(r){return r.json();}).then(function(d){
     fetchingRelated=false;
     if(!d)return;
-    var found=[];
-    function walk(obj){
-      if(!obj||typeof obj!=='object')return;
-      if(obj.compactVideoRenderer){
-        var cv=obj.compactVideoRenderer;
-        var vid=cv.videoId||'';
-        var title=cv.title&&cv.title.simpleText||'';
-        var artist=cv.shortBylineText&&cv.shortBylineText.runs&&cv.shortBylineText.runs[0]&&cv.shortBylineText.runs[0].text||'';
-        if(vid&&title)found.push({vid:vid,title:title,artist:artist});
+    var tabs=(d&&d.contents&&d.contents.tabbedSearchResultsRenderer&&d.contents.tabbedSearchResultsRenderer.tabs)||(d&&d.contents&&d.contents.twoColumnBrowseResultsRenderer&&d.contents.twoColumnBrowseResultsRenderer.tabs)||[];
+    for(var ti=0;ti<tabs.length;ti++){
+      var tab=tabs[ti];
+      var contents=tab&&tab.tabRenderer&&tab.tabRenderer.content&&tab.tabRenderer.content.sectionListRenderer&&tab.tabRenderer.content.sectionListRenderer.contents||[];
+      for(var ci=0;ci<contents.length;ci++){
+        var sec=contents[ci];
+        var items=(sec&&sec.musicShelfRenderer&&sec.musicShelfRenderer.contents)||(sec&&sec.sectionListRenderer&&sec.sectionListRenderer.contents)||(sec&&sec.itemSectionRenderer&&sec.itemSectionRenderer.contents)||[];
+        for(var ii=0;ii<items.length;ii++){
+          var mr=items[ii]&&items[ii].musicResponsiveListItemRenderer;
+          if(!mr)continue;
+          var tRuns=mr.flexColumns&&mr.flexColumns[0]&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
+          var title=tRuns.map(function(r){return r.text;}).join('');
+          var vid='';
+          var overlay=mr.overlay&&mr.overlay.musicItemThumbnailOverlayRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint;
+          if(overlay)vid=overlay.videoId||'';
+          var aRuns=mr.flexColumns&&mr.flexColumns[1]&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
+          var artist=aRuns.map(function(r){return r.text;}).join('');
+          if(vid&&title&&vid!==tr.ytid)relatedQueue.push({vid:vid,title:title,artist:artist});
+        }
       }
-      if(obj.compactMusicResponsiveListItemRenderer){
-        var cm=obj.compactMusicResponsiveListItemRenderer;
-        var vid2=cm.playlistItemData&&cm.playlistItemData.videoId||'';
-        var runs=cm.flexColumns&&cm.flexColumns[0]&&cm.flexColumns[0].compactMusicResponsiveListItemFlexColumnRenderer&&cm.flexColumns[0].compactMusicResponsiveListItemFlexColumnRenderer.text&&cm.flexColumns[0].compactMusicResponsiveListItemFlexColumnRenderer.text.runs||[];
-        var title2=runs.map(function(r){return r.text;}).join('');
-        var artist2=cm.flexColumns&&cm.flexColumns[1]&&cm.flexColumns[1].compactMusicResponsiveListItemFlexColumnRenderer&&cm.flexColumns[1].compactMusicResponsiveListItemFlexColumnRenderer.text&&cm.flexColumns[1].compactMusicResponsiveListItemFlexColumnRenderer.text.runs||[];
-        var art=artist2.map(function(r){return r.text;}).join('');
-        if(vid2&&title2)found.push({vid:vid2,title:title2,artist:art});
-      }
-      if(obj.musicResponsiveListItemRenderer){
-        var mr=obj.musicResponsiveListItemRenderer;
-        var vid3='';
-        var overlay=mr.overlay&&mr.overlay.musicItemThumbnailOverlayRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint;
-        if(overlay)vid3=overlay.videoId||'';
-        var tRuns=mr.flexColumns&&mr.flexColumns[0]&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
-        var title3=tRuns.map(function(r){return r.text;}).join('');
-        var aRuns2=mr.flexColumns&&mr.flexColumns[1]&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
-        var art2=aRuns2.map(function(r){return r.text;}).join('');
-        if(vid3&&title3)found.push({vid:vid3,title:title3,artist:art2});
-      }
-      var keys=Object.keys(obj);
-      for(var k=0;k<keys.length;k++){
-        var val=obj[keys[k]];
-        if(Array.isArray(val)){for(var i=0;i<val.length;i++)walk(val[i]);}
-        else if(typeof val==='object')walk(val);
-      }
-    }
-    walk(d);
-    for(var i=0;i<found.length;i++){
-      if(found[i].vid!==tr.ytid)relatedQueue.push(found[i]);
     }
     injectRelated();
   }).catch(function(){fetchingRelated=false;});
