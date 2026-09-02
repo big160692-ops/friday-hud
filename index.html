@@ -1071,6 +1071,7 @@ function advanceTrack(){
     }
     playTrack(next2);
   }
+  ensureRelated();
 }
 
 function nextTrack(){advanceTrack();}
@@ -1156,13 +1157,16 @@ function removeTrack(i){
 }
 
 // === RELATED MUSIC ===
+var fetchingRelated=false;
 function fetchRelated(tr){
-  if(!tr.ytid)return;
+  if(!tr.ytid||fetchingRelated)return;
+  fetchingRelated=true;
   relatedQueue=[];
   var body=JSON.stringify({context:{client:{hl:'en',gl:'US',clientName:'WEB_REMIX',clientVersion:'1.20240101.00.00'}},videoId:tr.ytid});
   fetch(YT_PROXY+'?url='+encodeURIComponent('https://music.youtube.com/youtubei/v1/next?key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30'),{
     method:'POST',headers:{'Content-Type':'application/json','x-method':'POST'},body:body
   }).then(function(r){return r.json();}).then(function(d){
+    fetchingRelated=false;
     var shelfs=d&&d.contents&&d.contents.singleColumnMusicWatchNextResultsRenderer&&d.contents.singleColumnMusicWatchNextResultsRenderer.results&&d.contents.singleColumnMusicWatchNextResultsRenderer.results.contents||[];
     for(var si=0;si<shelfs.length;si++){
       var sec=shelfs[si]&&shelfs[si].musicSecondaryShelfRenderer;
@@ -1179,7 +1183,7 @@ function fetchRelated(tr){
       }
     }
     injectRelated();
-  }).catch(function(){});
+  }).catch(function(){fetchingRelated=false;});
 }
 
 function injectRelated(){
@@ -1192,6 +1196,13 @@ function injectRelated(){
     if(!dup){TRACKS.splice(at,0,{t:rel.title,a:rel.artist,ytid:rel.vid});at++;inserted++;}
   }
   renderTrackList();
+}
+
+function ensureRelated(){
+  var ahead=TRACKS.length-curTrack-1;
+  if(ahead<3&&TRACKS.length>0&&TRACKS[curTrack]&&TRACKS[curTrack].ytid&&!fetchingRelated){
+    fetchRelated(TRACKS[curTrack]);
+  }
 }
 
 function renderQueue(){
@@ -1268,12 +1279,13 @@ async function searchYouTube(){
 }
 
 function addYTTrack(vid,title,artist){
-  if(TRACKS.find(function(t){return t.ytid===vid;}))return;
-  var wasEmpty=TRACKS.length===0;
+  var existsIdx=-1;
+  for(var i=0;i<TRACKS.length;i++){if(TRACKS[i].ytid===vid){existsIdx=i;break;}}
+  if(existsIdx>=0){playTrack(existsIdx);return;}
+  var idx=TRACKS.length;
   TRACKS.push({t:title,a:artist,ytid:vid});
   addToPlaylist(TRACKS[TRACKS.length-1]);
-  renderTrackList();
-  if(wasEmpty||!isPlaying)playTrack(TRACKS.length-1);
+  playTrack(idx);
 }
 
 // YouTube IFrame API
