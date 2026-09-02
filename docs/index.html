@@ -1230,35 +1230,29 @@ function addYTTrack(vid,title,artist){
 }
 
 // YouTube IFrame API - hidden player
-function loadYouTubeAPI(){
-  if(window.YT&&window.YT.Player){initYTPlayer();return}
-  const tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';document.head.appendChild(tag);
-  window.onYouTubeIframeAPIReady=initYTPlayer;
-}
-function initYTPlayer(){
-  const iframe=document.createElement('iframe');
-  iframe.id='yt-player';
-  iframe.style.cssText='position:absolute;width:0;height:0;overflow:hidden;border:0';
-  document.body.appendChild(iframe);
-  ytPlayer=new YT.Player('yt-player',{
-    width:'1',height:'1',playerVars:{autoplay:0,controls:0,disablekb:1},
-    events:{
-      onReady:function(){
-        ytReady=true;
-        if(pendingPlay&&TRACKS.length){
-          pendingPlay=false;
-          playTrack(curTrack);
+(function(){
+  var tag=document.createElement('script');tag.src='https://www.youtube.com/iframe_api';document.head.appendChild(tag);
+  window.onYouTubeIframeAPIReady=function(){
+    var div=document.createElement('div');
+    div.id='yt-player';
+    div.style.cssText='position:fixed;bottom:-9999px;left:-9999px;width:200px;height:200px;z-index:-1;opacity:0;pointer-events:none';
+    document.body.appendChild(div);
+    ytPlayer=new YT.Player('yt-player',{
+      width:'200',height:'200',playerVars:{autoplay:0,controls:0,disablekb:1,rel:0,modestbranding:1},
+      events:{
+        onReady:function(){
+          ytReady=true;
+          if(pendingPlay&&TRACKS.length){pendingPlay=false;playTrack(curTrack);}
+        },
+        onStateChange:function(e){
+          if(e.data===YT.PlayerState.PLAYING){isPlaying=true;setPlayIcon(true);updateMusicMeta();}
+          else if(e.data===YT.PlayerState.PAUSED){isPlaying=false;setPlayIcon(false);}
+          else if(e.data===YT.PlayerState.ENDED){if(repeatOn){ytPlayer.seekTo(0);ytPlayer.playVideo()}else nextTrack();}
         }
-      },
-      onStateChange:function(e){
-        if(e.data===YT.PlayerState.PLAYING){isPlaying=true;setPlayIcon(true);updateMusicMeta();}
-        else if(e.data===YT.PlayerState.PAUSED){isPlaying=false;setPlayIcon(false);}
-        else if(e.data===YT.PlayerState.ENDED){if(repeatOn){ytPlayer.seekTo(0);ytPlayer.playVideo()}else nextTrack();}
       }
-    }
-  });
-}
-loadYouTubeAPI();
+    });
+  };
+})();
 
 function updateMusicUI(){updateMusicMeta();renderTrackList()}
 updateMusicUI();
