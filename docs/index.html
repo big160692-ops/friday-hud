@@ -246,9 +246,17 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .lyrics-line.past{color:rgba(255,255,255,0.1);opacity:0.3}
 
 /* Search browse — artist/album navigation */
-.search-tabs{display:flex;gap:0;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0}
-.search-tabs button{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.35);font-size:7px;padding:5px 0;cursor:pointer;font-family:var(--font-hud);letter-spacing:0.1em;transition:color 0.2s,border-color 0.2s}
-.search-tabs button.s-tab-active{color:#fff;border-bottom-color:#fff}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeSlideOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(8px)}}
+@keyframes profileReveal{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)}}
+@keyframes staggerIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tabSlide{from{width:0}to{width:100%}}
+.search-tabs{display:flex;gap:0;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;position:relative}
+.search-tabs button{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.35);font-size:8px;padding:6px 0;cursor:pointer;font-family:var(--font-hud);letter-spacing:0.12em;transition:color 0.25s,border-color 0.25s;position:relative;font-weight:600}
+.search-tabs button.s-tab-active{color:var(--primary);border-bottom-color:var(--primary)}
+.search-tabs button.s-tab-active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--primary);box-shadow:0 0 8px rgba(0,212,255,0.4);animation:tabSlide 0.3s ease}
+.yt-results-anim{animation:fadeSlideIn 0.3s ease}
+.yt-browse-anim{animation:profileReveal 0.35s ease}
 .sub-nav{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-shrink:0}
 .sub-nav-back{background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:14px;padding:2px 4px;display:flex;align-items:center;transition:color 0.2s}
 .sub-nav-back:hover{color:#fff}
@@ -256,26 +264,32 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .sub-nav-playall{margin-left:auto;background:none;border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:7px;padding:3px 8px;cursor:pointer;border-radius:12px;font-family:var(--font-hud);transition:background 0.2s;flex-shrink:0}
 .sub-nav-playall:hover{background:rgba(255,255,255,0.1)}
 
-.artist-profile-header{display:flex;flex-direction:column;align-items:center;padding:8px 6px;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)}
-.artist-profile-img{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.06);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:4px}
+/* Artist profile — large card layout */
+.artist-profile-header{display:flex;gap:10px;padding:10px 8px;margin-bottom:8px;animation:profileReveal 0.4s ease}
+.artist-profile-img{width:80px;height:80px;border-radius:6px;background:rgba(255,255,255,0.06);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 4px 16px rgba(0,0,0,0.3)}
 .artist-profile-img img{width:100%;height:100%;object-fit:cover}
-.artist-profile-name{font-size:10px;color:#fff;font-weight:600;margin-bottom:2px}
-.artist-profile-meta{font-size:7px;color:rgba(255,255,255,0.35);margin-bottom:6px}
+.artist-profile-text{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.artist-profile-name{font-size:12px;color:#fff;font-weight:700;margin-bottom:2px;line-height:1.2}
+.artist-profile-meta{font-size:7px;color:rgba(255,255,255,0.4);margin-bottom:6px}
+.artist-profile-desc{font-size:7px;color:rgba(255,255,255,0.3);line-height:1.4;max-height:32px;overflow:hidden}
 .artist-profile-playall{background:var(--green);color:#fff;border:none;font-size:8px;padding:5px 16px;border-radius:14px;cursor:pointer;font-family:var(--font-hud);font-weight:600;letter-spacing:0.05em;transition:background 0.2s,transform 0.2s}
 .artist-profile-playall:hover{background:#1ed760;transform:scale(1.04)}
 
-/* Artist cards */
-.artist-card{display:flex;align-items:center;gap:8px;padding:5px 6px;cursor:pointer;border-radius:4px;transition:background 0.15s}
-.artist-card:hover{background:rgba(255,255,255,0.08)}
+/* Section headers in browse */
+.browse-section-hdr{font-size:7px;color:rgba(255,255,255,0.3);letter-spacing:0.1em;margin:8px 0 4px;padding-left:4px}
+
+/* Artist cards in search results */
+.artist-card{display:flex;align-items:center;gap:8px;padding:5px 6px;cursor:pointer;border-radius:4px;transition:background 0.15s,transform 0.15s}
+.artist-card:hover{background:rgba(255,255,255,0.08);transform:translateX(2px)}
 .artist-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px}
 .artist-avatar img{width:100%;height:100%;object-fit:cover}
 .artist-info{flex:1;min-width:0}
 .artist-name{font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .artist-meta{font-size:7px;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 
-/* Album cards */
-.album-card{display:flex;align-items:center;gap:8px;padding:5px 6px;cursor:pointer;border-radius:4px;transition:background 0.15s}
-.album-card:hover{background:rgba(255,255,255,0.08)}
+/* Album cards in browse */
+.album-card{display:flex;align-items:center;gap:8px;padding:5px 6px;cursor:pointer;border-radius:4px;transition:background 0.15s,transform 0.15s}
+.album-card:hover{background:rgba(255,255,255,0.08);transform:translateX(2px)}
 .album-art{width:32px;height:32px;border-radius:3px;background:rgba(255,255,255,0.06);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px}
 .album-art img{width:100%;height:100%;object-fit:cover}
 .album-info{flex:1;min-width:0}
@@ -645,14 +659,13 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
             </div>
             <!-- Search tabs -->
             <div id="search-tabs" class="search-tabs" style="display:none">
-              <button onclick="showSearchTab('tracks')" id="stab-tracks" class="s-tab-active">TRACKS</button>
-              <button onclick="showSearchTab('artists')" id="stab-artists">ARTISTS</button>
-              <button onclick="showSearchTab('albums')" id="stab-albums">ALBUMS</button>
+              <button onclick="showSearchTab('tracks')" id="stab-tracks" class="s-tab-active">TRACK</button>
+              <button onclick="showSearchTab('artists')" id="stab-artists">ARTIST</button>
             </div>
             <!-- Search results -->
-            <div id="yt-results"></div>
-            <!-- Browse results (artist albums / album tracks) -->
-            <div id="yt-browse" style="display:none"></div>
+            <div id="yt-results" class="yt-results-anim"></div>
+            <!-- Browse results (artist profile) -->
+            <div id="yt-browse" class="yt-browse-anim" style="display:none"></div>
             <!-- Tabs -->
             <div class="music-tabs">
               <button onclick="showTab('rec')" id="tab-rec" class="tab-active">FOR YOU</button>
@@ -1724,13 +1737,12 @@ async function searchYouTube(){
     var d=await r.json();
     var parsed=parseYTMusicResponse(d);
     searchState.tracks=parsed.tracks;
-    searchState.artists=parsed.artists;
-    searchState.albums=parsed.albums;
+    searchState.artists=parsed.artists.concat(parsed.albums.map(function(a){return{name:a.title,thumb:a.thumb,browseId:a.browseId,sub:a.artist||'Album'};}));
+    searchState.albums=[];
     searchState.tab='tracks';
     document.getElementById('stab-tracks').className='s-tab-active';
     document.getElementById('stab-artists').className='';
-    document.getElementById('stab-albums').className='';
-    var total=parsed.tracks.length+parsed.artists.length+parsed.albums.length;
+    var total=searchState.tracks.length+searchState.artists.length;
     if(!total){el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">No results</div>';return;}
     document.getElementById('search-tabs').style.display='flex';
     renderSearchTab('tracks');
@@ -1742,29 +1754,22 @@ function showSearchTab(tab){
   searchState.tab=tab;
   document.getElementById('stab-tracks').className=tab==='tracks'?'s-tab-active':'';
   document.getElementById('stab-artists').className=tab==='artists'?'s-tab-active':'';
-  document.getElementById('stab-albums').className=tab==='albums'?'s-tab-active':'';
   renderSearchTab(tab);
 }
 function renderSearchTab(tab){
   var el=document.getElementById('yt-results');
-  var items=tab==='tracks'?searchState.tracks:tab==='artists'?searchState.artists:searchState.albums;
+  var items=tab==='tracks'?searchState.tracks:searchState.artists;
   if(!items.length){el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">No '+tab+' found</div>';return;}
   if(tab==='tracks'){
-    el.innerHTML=items.slice(0,10).map(function(v){
+    el.innerHTML=items.slice(0,10).map(function(v,i){
       var safeT=v.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
-      var safeA=v.artist.replace(/'/g,"\\'").replace(/"/g,"&quot;");
-      return'<div class="tl-item" onclick="addYTTrack(\''+v.vid+'\',\''+safeT+'\',\''+safeA+'\')"><div class="tl-art"><img src="https://img.youtube.com/vi/'+v.vid+'/mqdefault.jpg"></div><div class="tl-info"><div class="tl-title">'+v.title+'</div><div class="tl-artist">'+v.artist+'</div></div></div>';
-    }).join('');
-  }else if(tab==='artists'){
-    el.innerHTML=items.slice(0,10).map(function(a){
-      var thumbHtml=a.thumb?'<img src="'+a.thumb+'">':'&#9733;';
-      return'<div class="artist-card" onclick="browseArtist(\''+a.browseId+'\',\''+a.name.replace(/'/g,"\\'").replace(/"/g,"&quot;")+'\',\''+(a.thumb||'').replace(/'/g,"\\'").replace(/"/g,"&quot;")+'\')"><div class="artist-avatar">'+thumbHtml+'</div><div class="artist-info"><div class="artist-name">'+a.name+'</div><div class="artist-meta">'+a.sub+'</div></div></div>';
+      var safeA=(v.artist||'').replace(/'/g,"\\'").replace(/"/g,"&quot;");
+      return'<div class="tl-item" style="animation:staggerIn 0.25s ease '+(i*0.04)+'s both" onclick="addYTTrack(\''+v.vid+'\',\''+safeT+'\',\''+safeA+'\')"><div class="tl-art"><img src="https://img.youtube.com/vi/'+v.vid+'/mqdefault.jpg"></div><div class="tl-info"><div class="tl-title">'+v.title+'</div><div class="tl-artist">'+(v.artist||'')+'</div></div></div>';
     }).join('');
   }else{
-    el.innerHTML=items.slice(0,10).map(function(a){
-      var thumbHtml=a.thumb?'<img src="'+a.thumb+'">':'&#9835;';
-      var safeT=a.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
-      return'<div class="album-card" onclick="browseAlbum(\''+a.browseId+'\',\''+safeT+'\',\''+a.artist.replace(/'/g,"\\'").replace(/"/g,"&quot;")+'\')"><div class="album-art">'+thumbHtml+'</div><div class="album-info"><div class="album-title">'+a.title+'</div><div class="album-meta">'+a.artist+'</div></div></div>';
+    el.innerHTML=items.slice(0,10).map(function(a,i){
+      var thumbHtml=a.thumb?'<img src="'+a.thumb+'">':'&#9733;';
+      return'<div class="artist-card" style="animation:staggerIn 0.25s ease '+(i*0.04)+'s both" onclick="browseArtist(\''+a.browseId+'\',\''+a.name.replace(/'/g,"\\'").replace(/"/g,"&quot;")+'\',\''+(a.thumb||'').replace(/'/g,"\\'").replace(/"/g,"&quot;")+'\')"><div class="artist-avatar">'+thumbHtml+'</div><div class="artist-info"><div class="artist-name">'+a.name+'</div><div class="artist-meta">'+a.sub+'</div></div></div>';
     }).join('');
   }
 }
@@ -1843,23 +1848,24 @@ async function browseArtist(channelId,artistName,artistThumb){
     }
     searchState.browseTracks=tracks;
     var profileImg=artistThumb?'<img src="'+artistThumb+'">':'&#9733;';
-    var html='<div style="margin-bottom:4px"><button onclick="goBackSearch()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:12px;padding:2px 4px;transition:color 0.2s" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'rgba(255,255,255,0.5)\'">&#8592; Back</button></div><div class="artist-profile-header"><div class="artist-profile-img">'+profileImg+'</div><div class="artist-profile-name">'+artistName+'</div><div class="artist-profile-meta">'+tracks.length+' tracks &middot; '+(albums.length+singles.length)+' releases</div><button class="artist-profile-playall" onclick="playAllBrowse()">&#9654; PLAY ALL</button></div>';
-    if(albums.length||singles.length){
-      html+='<div style="font-size:8px;color:rgba(255,255,255,0.3);margin:6px 0 4px;letter-spacing:0.1em">ALBUMS & SINGLES</div>';
-      var allReleases=albums.concat(singles);
-      html+=allReleases.slice(0,8).map(function(a){
+    var allReleases=albums.concat(singles);
+    var html='<div style="margin-bottom:4px"><button onclick="goBackSearch()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:12px;padding:2px 4px;transition:color 0.2s" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'rgba(255,255,255,0.5)\'">&#8592; Back</button></div>';
+    html+='<div class="artist-profile-header"><div class="artist-profile-img">'+profileImg+'</div><div class="artist-profile-text"><div class="artist-profile-name">'+artistName+'</div><div class="artist-profile-meta">'+tracks.length+' tracks &middot; '+allReleases.length+' releases</div><div class="artist-profile-desc">Artist on YouTube Music</div><button class="artist-profile-playall" style="margin-top:6px" onclick="playAllBrowse()">&#9654; PLAY ALL</button></div></div>';
+    if(allReleases.length){
+      html+='<div class="browse-section-hdr">ALBUMS & SINGLES</div>';
+      html+=allReleases.slice(0,6).map(function(a,i){
         var thumbHtml=a.thumb?'<img src="'+a.thumb+'">':'&#9835;';
         var safeT=a.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
         var safeN=artistName.replace(/'/g,"\\'").replace(/"/g,"&quot;");
-        return'<div class="album-card" onclick="browseAlbum(\''+a.browseId+'\',\''+safeT+'\',\''+safeN+'\')"><div class="album-art">'+thumbHtml+'</div><div class="album-info"><div class="album-title">'+a.title+'</div></div></div>';
+        return'<div class="album-card" style="animation:staggerIn 0.25s ease '+(i*0.04)+'s both" onclick="browseAlbum(\''+a.browseId+'\',\''+safeT+'\',\''+safeN+'\')"><div class="album-art">'+thumbHtml+'</div><div class="album-info"><div class="album-title">'+a.title+'</div></div></div>';
       }).join('');
     }
     if(tracks.length){
-      html+='<div style="font-size:8px;color:rgba(255,255,255,0.3);margin:8px 0 4px;letter-spacing:0.1em">TOP TRACKS</div>';
-      html+=tracks.slice(0,6).map(function(t){
+      html+='<div class="browse-section-hdr">TOP TRACKS</div>';
+      html+=tracks.slice(0,6).map(function(t,i){
         var safeT=t.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
         var safeA=t.artist.replace(/'/g,"\\'").replace(/"/g,"&quot;");
-        return'<div class="tl-item" onclick="addYTTrack(\''+t.vid+'\',\''+safeT+'\',\''+safeA+'\')"><div class="tl-art"><img src="https://img.youtube.com/vi/'+t.vid+'/mqdefault.jpg"></div><div class="tl-info"><div class="tl-title">'+t.title+'</div><div class="tl-artist">'+t.artist+'</div></div></div>';
+        return'<div class="tl-item" style="animation:staggerIn 0.25s ease '+(i*0.04)+'s both" onclick="addYTTrack(\''+t.vid+'\',\''+safeT+'\',\''+safeA+'\')"><div class="tl-art"><img src="https://img.youtube.com/vi/'+t.vid+'/mqdefault.jpg"></div><div class="tl-info"><div class="tl-title">'+t.title+'</div><div class="tl-artist">'+t.artist+'</div></div></div>';
       }).join('');
     }
     if(!html)html='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">No content found</div>';
@@ -1929,15 +1935,14 @@ async function browseAlbum(playlistId,albumTitle,albumArtist){
       searchState.browseTracks=tracks;
     }
     var html='<div style="margin-bottom:4px"><button onclick="goBackSearch()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:12px;padding:2px 4px;transition:color 0.2s" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'rgba(255,255,255,0.5)\'">&#8592; Back</button></div>';
-    html+='<div style="font-size:10px;color:#fff;font-weight:600;margin-bottom:2px">'+albumTitle+'</div>';
-    html+='<div style="font-size:7px;color:rgba(255,255,255,0.35);margin-bottom:6px">'+albumArtist+'</div>';
+    html+='<div class="artist-profile-header" style="padding:6px 8px"><div class="artist-profile-img" style="width:56px;height:56px">&#9835;</div><div class="artist-profile-text"><div class="artist-profile-name">'+albumTitle+'</div><div class="artist-profile-meta">'+albumArtist+'</div></div></div>';
     if(tracks.length){
       html+='<button onclick="playAllBrowse()" style="background:var(--green);color:#fff;border:none;font-size:8px;padding:5px 16px;border-radius:14px;cursor:pointer;font-family:var(--font-hud);font-weight:600;letter-spacing:0.05em;margin-bottom:8px;transition:background 0.2s" onmouseover="this.style.background=\'#1ed760\'" onmouseout="this.style.background=\'var(--green)\'">&#9654; PLAY ALL</button>';
-      html+='<div style="font-size:8px;color:rgba(255,255,255,0.3);margin-bottom:4px;letter-spacing:0.1em">'+tracks.length+' TRACKS</div>';
+      html+='<div class="browse-section-hdr">'+tracks.length+' TRACKS</div>';
       html+=tracks.map(function(t,idx){
         var safeT=t.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
         var safeA=t.artist.replace(/'/g,"\\'").replace(/"/g,"&quot;");
-        return'<div class="tl-item" onclick="addYTTrack(\''+t.vid+'\',\''+safeT+'\',\''+safeA+'\')"><div class="tl-art"><img src="https://img.youtube.com/vi/'+t.vid+'/mqdefault.jpg"></div><div class="tl-info"><div class="tl-title">'+t.title+'</div><div class="tl-artist">'+t.artist+'</div></div></div>';
+        return'<div class="tl-item" style="animation:staggerIn 0.25s ease '+(idx*0.04)+'s both" onclick="addYTTrack(\''+t.vid+'\',\''+safeT+'\',\''+safeA+'\')"><div class="tl-art"><img src="https://img.youtube.com/vi/'+t.vid+'/mqdefault.jpg"></div><div class="tl-info"><div class="tl-title">'+t.title+'</div><div class="tl-artist">'+t.artist+'</div></div></div>';
       }).join('');
     }else{
       html='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">No tracks found</div>';
