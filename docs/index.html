@@ -1670,6 +1670,7 @@ async function searchYouTube(){
   document.getElementById('yt-browse').innerHTML='';
   document.getElementById('sub-nav').style.display='none';
   searchState.browseMode=false;
+  searchState.artistsLoaded=false;
   document.getElementById('search-tabs').style.display='none';
   try{
     var body=JSON.stringify({context:{client:{hl:'en',gl:'US',clientName:'WEB_REMIX',clientVersion:'1.20240101.00.00'}},query:q});
@@ -1697,7 +1698,31 @@ function showSearchTab(tab){
   searchState.tab=tab;
   document.getElementById('stab-tracks').className=tab==='tracks'?'s-tab-active':'';
   document.getElementById('stab-artists').className=tab==='artists'?'s-tab-active':'';
-  renderSearchTab(tab);
+  if(tab==='artists'&&!searchState.artistsLoaded){
+    searchState.artistsLoaded=true;
+    fetchArtists();
+  }else{
+    renderSearchTab(tab);
+  }
+}
+async function fetchArtists(){
+  var q=document.getElementById('yt-search').value.trim();
+  if(!q)return;
+  var el=document.getElementById('yt-results');
+  el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">Loading artists...</div>';
+  try{
+    var body=JSON.stringify({context:{client:{hl:'en',gl:'US',clientName:'WEB_REMIX',clientVersion:'1.20240101.00.00'}},query:q,params:'EgWKAQIgAWoMEA4QChADEAQQCRAF'});
+    var r=await fetch(YT_PROXY+'?url='+encodeURIComponent('https://music.youtube.com/youtubei/v1/search?key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30'),{
+      method:'POST',headers:{'Content-Type':'application/json','x-method':'POST'},body:body
+    });
+    if(!r.ok)throw new Error('Proxy error '+r.status);
+    var d=await r.json();
+    var parsed=parseYTMusicResponse(d);
+    searchState.artists=parsed.artists.length?parsed.artists:parsed.albums.map(function(a){return{name:a.title,thumb:a.thumb,browseId:a.browseId,sub:a.artist||'Artist'};});
+    renderSearchTab('artists');
+  }catch(e){
+    el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">Failed to load artists: '+e.message+'</div>';
+  }
 }
 function renderSearchTab(tab){
   var el=document.getElementById('yt-results');
