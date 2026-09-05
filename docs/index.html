@@ -1610,13 +1610,16 @@ function parseYTMusicResponse(d){
         videos.push({vid:vid,title:title,artist:col2,thumb:thumb});
       }else if(col2l.indexOf('artist')!==-1){
         var aBrowseId='';
-        for(var ri2=0;ri2<flex.length;ri2++){
-          var runs=flex[ri2]&&flex[ri2].musicResponsiveListItemFlexColumnRenderer&&flex[ri2].musicResponsiveListItemFlexColumnRenderer.text&&flex[ri2].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
-          for(var ri3=0;ri3<runs.length;ri3++){
-            var bep=runs[ri3].navigationEndpoint&&runs[ri3].navigationEndpoint.browseEndpoint;
-            if(bep&&bep.browseId){aBrowseId=bep.browseId;break;}
+        if(mr.navigationEndpoint&&mr.navigationEndpoint.browseEndpoint&&mr.navigationEndpoint.browseEndpoint.browseId)aBrowseId=mr.navigationEndpoint.browseEndpoint.browseId;
+        if(!aBrowseId){
+          for(var ri2=0;ri2<flex.length;ri2++){
+            var runs=flex[ri2]&&flex[ri2].musicResponsiveListItemFlexColumnRenderer&&flex[ri2].musicResponsiveListItemFlexColumnRenderer.text&&flex[ri2].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
+            for(var ri3=0;ri3<runs.length;ri3++){
+              var bep=runs[ri3].navigationEndpoint&&runs[ri3].navigationEndpoint.browseEndpoint;
+              if(bep&&bep.browseId){aBrowseId=bep.browseId;break;}
+            }
+            if(aBrowseId)break;
           }
-          if(aBrowseId)break;
         }
         artists.push({name:title,thumb:thumb,browseId:aBrowseId,sub:col2});
       }else if(col2l.indexOf('album')!==-1||col2l.indexOf('ep')!==-1||col2l.indexOf('single')!==-1){
@@ -1738,13 +1741,20 @@ async function browseArtist(channelId,artistName,artistThumb){
     var singles=[];
     var tracks=[];
     var artistDesc='';
-    var tc=d&&d.contents&&d.contents.twoColumnBrowseResultsRenderer&&d.contents.twoColumnBrowseResultsRenderer.tabs||[];
-    for(var ti=0;ti<tc.length;ti++){
-      var tab=tc[ti];
-      if(!tab||!tab.tabRenderer)continue;
-      var content=tab.tabRenderer.content&&tab.tabRenderer.content.sectionListRenderer&&tab.tabRenderer.content.sectionListRenderer.contents||[];
-      for(var ci=0;ci<content.length;ci++){
-        var sec=content[ci];
+    var sections=[];
+    if(d&&d.contents&&d.contents.twoColumnBrowseResultsRenderer&&d.contents.twoColumnBrowseResultsRenderer.tabs){
+      var tc=d.contents.twoColumnBrowseResultsRenderer.tabs;
+      for(var ti=0;ti<tc.length;ti++){
+        var tab=tc[ti];
+        if(!tab||!tab.tabRenderer)continue;
+        var content=tab.tabRenderer.content&&tab.tabRenderer.content.sectionListRenderer&&tab.tabRenderer.content.sectionListRenderer.contents||[];
+        sections=sections.concat(content);
+      }
+    }else if(d&&d.contents&&d.contents.singleColumnBrowseResultsRenderer&&d.contents.singleColumnBrowseResultsRenderer.results&&d.contents.singleColumnBrowseResultsRenderer.results.results){
+      sections=d.contents.singleColumnBrowseResultsRenderer.results.results.contents||[];
+    }
+    for(var ci=0;ci<sections.length;ci++){
+      var sec=sections[ci];
         if(!sec)continue;
         if(sec.musicResponsiveHeaderRenderer){
           var hdrDesc=sec.musicResponsiveHeaderRenderer.description;
@@ -1839,7 +1849,6 @@ async function browseArtist(channelId,artistName,artistThumb){
               else if(cl.indexOf('album')!==-1){albums.push({title:cTitle,thumb:cThumb,browseId:cBrowseId});}
               else{albums.push({title:cTitle,thumb:cThumb,browseId:cBrowseId});}
             }
-          }
         }
       }
     }
