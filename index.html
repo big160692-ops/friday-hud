@@ -1766,6 +1766,10 @@ async function browseArtist(channelId,artistName,artistThumb){
     var singles=[];
     var tracks=[];
     var artistDesc='';
+    if(d.header&&d.header.musicImmersiveHeaderRenderer){
+      var hDesc=d.header.musicImmersiveHeaderRenderer.description;
+      if(hDesc&&hDesc.runs)artistDesc=gR(hDesc.runs);
+    }
     var sections=[];
     if(d&&d.contents&&d.contents.twoColumnBrowseResultsRenderer&&d.contents.twoColumnBrowseResultsRenderer.tabs){
       var tc=d.contents.twoColumnBrowseResultsRenderer.tabs;
@@ -1775,8 +1779,14 @@ async function browseArtist(channelId,artistName,artistThumb){
         var content=tab.tabRenderer.content&&tab.tabRenderer.content.sectionListRenderer&&tab.tabRenderer.content.sectionListRenderer.contents||[];
         sections=sections.concat(content);
       }
-    }else if(d&&d.contents&&d.contents.singleColumnBrowseResultsRenderer&&d.contents.singleColumnBrowseResultsRenderer.results&&d.contents.singleColumnBrowseResultsRenderer.results.results){
-      sections=d.contents.singleColumnBrowseResultsRenderer.results.results.contents||[];
+    }else if(d&&d.contents&&d.contents.singleColumnBrowseResultsRenderer){
+      var scTabs=d.contents.singleColumnBrowseResultsRenderer.tabs||[];
+      for(var sti=0;sti<scTabs.length;sti++){
+        var scTab=scTabs[sti];
+        if(!scTab||!scTab.tabRenderer)continue;
+        var scContent=scTab.tabRenderer.content&&scTab.tabRenderer.content.sectionListRenderer&&scTab.tabRenderer.content.sectionListRenderer.contents||[];
+        sections=sections.concat(scContent);
+      }
     }
     for(var ci=0;ci<sections.length;ci++){
       var sec=sections[ci];
@@ -1791,6 +1801,10 @@ async function browseArtist(channelId,artistName,artistThumb){
               artistDesc=subText;
             }
           }
+        }
+        if(!artistDesc&&sec.musicDescriptionShelfRenderer){
+          var dDesc=sec.musicDescriptionShelfRenderer.description;
+          if(dDesc&&dDesc.runs)artistDesc=gR(dDesc.runs);
         }
         if(sec.musicShelfRenderer){
           var shelfTitle=sec.musicShelfRenderer.title&&sec.musicShelfRenderer.title.runs?gR(sec.musicShelfRenderer.title.runs):'';
