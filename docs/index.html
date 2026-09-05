@@ -256,6 +256,14 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .sub-nav-playall{margin-left:auto;background:none;border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:7px;padding:3px 8px;cursor:pointer;border-radius:12px;font-family:var(--font-hud);transition:background 0.2s;flex-shrink:0}
 .sub-nav-playall:hover{background:rgba(255,255,255,0.1)}
 
+.artist-profile-header{display:flex;flex-direction:column;align-items:center;padding:8px 6px;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.artist-profile-img{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.06);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:4px}
+.artist-profile-img img{width:100%;height:100%;object-fit:cover}
+.artist-profile-name{font-size:10px;color:#fff;font-weight:600;margin-bottom:2px}
+.artist-profile-meta{font-size:7px;color:rgba(255,255,255,0.35);margin-bottom:6px}
+.artist-profile-playall{background:var(--green);color:#fff;border:none;font-size:8px;padding:5px 16px;border-radius:14px;cursor:pointer;font-family:var(--font-hud);font-weight:600;letter-spacing:0.05em;transition:background 0.2s,transform 0.2s}
+.artist-profile-playall:hover{background:#1ed760;transform:scale(1.04)}
+
 /* Artist cards */
 .artist-card{display:flex;align-items:center;gap:8px;padding:5px 6px;cursor:pointer;border-radius:4px;transition:background 0.15s}
 .artist-card:hover{background:rgba(255,255,255,0.08)}
@@ -1659,7 +1667,7 @@ function renderSearchTab(tab){
   }else if(tab==='artists'){
     el.innerHTML=items.slice(0,10).map(function(a){
       var thumbHtml=a.thumb?'<img src="'+a.thumb+'">':'&#9733;';
-      return'<div class="artist-card" onclick="browseArtist(\''+a.browseId+'\',\''+a.name.replace(/'/g,"\\'").replace(/"/g,"&quot;")+'\')"><div class="artist-avatar">'+thumbHtml+'</div><div class="artist-info"><div class="artist-name">'+a.name+'</div><div class="artist-meta">'+a.sub+'</div></div></div>';
+      return'<div class="artist-card" onclick="browseArtist(\''+a.browseId+'\',\''+a.name.replace(/'/g,"\\'").replace(/"/g,"&quot;")+'\',\''+(a.thumb||'').replace(/'/g,"\\'").replace(/"/g,"&quot;")+'\')"><div class="artist-avatar">'+thumbHtml+'</div><div class="artist-info"><div class="artist-name">'+a.name+'</div><div class="artist-meta">'+a.sub+'</div></div></div>';
     }).join('');
   }else{
     el.innerHTML=items.slice(0,10).map(function(a){
@@ -1669,14 +1677,17 @@ function renderSearchTab(tab){
     }).join('');
   }
 }
-async function browseArtist(channelId,artistName){
+async function browseArtist(channelId,artistName,artistThumb){
   var el=document.getElementById('yt-browse');
   var results=document.getElementById('yt-results');
+  var musicTabs=document.querySelector('.music-tabs');
+  var tracklist=document.getElementById('yt-tracklist');
   results.style.display='none';
+  musicTabs.style.display='none';
+  tracklist.style.display='none';
   el.style.display='block';
   el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">Loading '+artistName+'...</div>';
-  document.getElementById('sub-nav').style.display='flex';
-  document.getElementById('sub-nav-title').textContent=artistName;
+  document.getElementById('sub-nav').style.display='none';
   document.getElementById('search-tabs').style.display='none';
   searchState.browseMode=true;
   searchState.browseTitle=artistName;
@@ -1740,9 +1751,10 @@ async function browseArtist(channelId,artistName){
       }
     }
     searchState.browseTracks=tracks;
-    var html='';
+    var profileImg=artistThumb?'<img src="'+artistThumb+'">':'&#9733;';
+    var html='<div style="margin-bottom:4px"><button onclick="goBackSearch()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:12px;padding:2px 4px;transition:color 0.2s" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'rgba(255,255,255,0.5)\'">&#8592; Back</button></div><div class="artist-profile-header"><div class="artist-profile-img">'+profileImg+'</div><div class="artist-profile-name">'+artistName+'</div><div class="artist-profile-meta">'+tracks.length+' tracks &middot; '+(albums.length+singles.length)+' releases</div><button class="artist-profile-playall" onclick="playAllBrowse()">&#9654; PLAY ALL</button></div>';
     if(albums.length||singles.length){
-      html+='<div style="font-size:8px;color:rgba(255,255,255,0.3);margin-bottom:4px;letter-spacing:0.1em">ALBUMS & SINGLES</div>';
+      html+='<div style="font-size:8px;color:rgba(255,255,255,0.3);margin:6px 0 4px;letter-spacing:0.1em">ALBUMS & SINGLES</div>';
       var allReleases=albums.concat(singles);
       html+=allReleases.slice(0,8).map(function(a){
         var thumbHtml=a.thumb?'<img src="'+a.thumb+'">':'&#9835;';
@@ -1768,11 +1780,14 @@ async function browseArtist(channelId,artistName){
 async function browseAlbum(playlistId,albumTitle,albumArtist){
   var el=document.getElementById('yt-browse');
   var results=document.getElementById('yt-results');
+  var musicTabs=document.querySelector('.music-tabs');
+  var tracklist=document.getElementById('yt-tracklist');
   results.style.display='none';
+  musicTabs.style.display='none';
+  tracklist.style.display='none';
   el.style.display='block';
   el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">Loading '+albumTitle+'...</div>';
-  document.getElementById('sub-nav').style.display='flex';
-  document.getElementById('sub-nav-title').textContent=albumTitle;
+  document.getElementById('sub-nav').style.display='none';
   document.getElementById('search-tabs').style.display='none';
   searchState.browseMode=true;
   searchState.browseTitle=albumTitle;
@@ -1822,8 +1837,11 @@ async function browseAlbum(playlistId,albumTitle,albumArtist){
       }
       searchState.browseTracks=tracks;
     }
-    var html='';
+    var html='<div style="margin-bottom:4px"><button onclick="goBackSearch()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:12px;padding:2px 4px;transition:color 0.2s" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'rgba(255,255,255,0.5)\'">&#8592; Back</button></div>';
+    html+='<div style="font-size:10px;color:#fff;font-weight:600;margin-bottom:2px">'+albumTitle+'</div>';
+    html+='<div style="font-size:7px;color:rgba(255,255,255,0.35);margin-bottom:6px">'+albumArtist+'</div>';
     if(tracks.length){
+      html+='<button onclick="playAllBrowse()" style="background:var(--green);color:#fff;border:none;font-size:8px;padding:5px 16px;border-radius:14px;cursor:pointer;font-family:var(--font-hud);font-weight:600;letter-spacing:0.05em;margin-bottom:8px;transition:background 0.2s" onmouseover="this.style.background=\'#1ed760\'" onmouseout="this.style.background=\'var(--green)\'">&#9654; PLAY ALL</button>';
       html+='<div style="font-size:8px;color:rgba(255,255,255,0.3);margin-bottom:4px;letter-spacing:0.1em">'+tracks.length+' TRACKS</div>';
       html+=tracks.map(function(t,idx){
         var safeT=t.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
@@ -1843,6 +1861,8 @@ function goBackSearch(){
   document.getElementById('yt-browse').innerHTML='';
   document.getElementById('yt-results').style.display='';
   document.getElementById('sub-nav').style.display='none';
+  document.querySelector('.music-tabs').style.display='';
+  document.getElementById('yt-tracklist').style.display='';
   searchState.browseMode=false;
   searchState.browseTracks=[];
   document.getElementById('search-tabs').style.display='flex';
