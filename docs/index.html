@@ -874,8 +874,8 @@ function detectLocationForNews(){
       fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLocation.lat}&lon=${userLocation.lon}`)
         .then(r=>r.json())
         .then(data=>{
-          userLocation.city=(data.address&&data.address.city)||data.address&&data.address.town||data.address&&data.address.village||data.address&&data.address.state||'';
-          userLocation.country=data.address&&data.address.country||'';
+          userLocation.city=(data.address&&(data.address.city||data.address.town||data.address.village||data.address.state))||'';
+          userLocation.country=(data.address&&data.address.country)||'';
           const loc=userLocation.city||userLocation.country||'your area';
           document.getElementById('news-loc').textContent=loc;
           loadLocalNews(loc);
