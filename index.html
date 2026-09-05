@@ -874,8 +874,8 @@ function detectLocationForNews(){
       fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLocation.lat}&lon=${userLocation.lon}`)
         .then(r=>r.json())
         .then(data=>{
-          userLocation.city=data.address?.city||data.address?.town||data.address?.village||data.address?.state||'';
-          userLocation.country=data.address?.country||'';
+          userLocation.city=(data.address&&data.address.city)||data.address&&data.address.town||data.address&&data.address.village||data.address&&data.address.state||'';
+          userLocation.country=data.address&&data.address.country||'';
           const loc=userLocation.city||userLocation.country||'your area';
           document.getElementById('news-loc').textContent=loc;
           loadLocalNews(loc);
@@ -1222,7 +1222,7 @@ var lyricsLines=[];
 var lyricsTimings=[];
 var lyricsReady=false;
 
-function cleanLyricQuery(s){return s.replace(/[\(\[].*?[\)\]]/g,'').replace(/[-–—:,.!?'"']/g,' ').replace(/\s+/g,' ').trim();}
+function cleanLyricQuery(s){return s.replace(/[\(\[].*?[\)\]]/g,'').replace(/[^a-zA-Z0-9\s]/g,' ').replace(/\s+/g,' ').trim();}
 
 function fetchLyrics(tr){
   var box=document.getElementById('lyrics-box');
@@ -1667,7 +1667,7 @@ function detectDevice(){
   else if(/edge/i.test(ua))hw.browser='Edge';
 
   hw.touchSupport='ontouchstart'in window||navigator.maxTouchPoints>0;
-  hw.orientation=screen.orientation?.type?.includes('landscape')?'Landscape':'Portrait';
+  hw.orientation=(screen.orientation&&screen.orientation.type&&screen.orientation.type.indexOf('landscape')>-1)?'Landscape':'Portrait';
 }
 
 function detectGPU(){
@@ -2129,7 +2129,7 @@ async function testGroq(){
     const data=await res.json();
     addLog('hi','[TEST]','Status: '+res.status);
     if(res.ok){
-      addLog('ok','[TEST]','SUCCESS: '+data.choices?.[0]?.message?.content);
+      addLog('ok','[TEST]','SUCCESS: '+(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content));
     }else{
       addLog('wn','[TEST]','ERROR: '+JSON.stringify(data).substring(0,200));
     }
@@ -2229,7 +2229,7 @@ async function liveAI(input){
       if(!res.ok)continue;
 
       const data=await res.json();
-      const reply=data.choices?.[0]?.message?.content||null;
+      const reply=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content||null;
       if(reply){
         aiHistory.push({role:'assistant',content:reply});
         saveAIHistory();
