@@ -183,9 +183,12 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .music-search-bar input::placeholder{color:rgba(255,255,255,0.3)}
 .music-search-bar button{padding:7px 14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:8px;letter-spacing:0.08em;cursor:pointer;border-radius:4px;font-family:var(--font-hud);font-weight:600;transition:all 0.2s}
 .music-search-bar button:hover{background:rgba(255,255,255,0.12);color:#fff}
-#yt-results{max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent;margin-bottom:6px;flex-shrink:0}
+#yt-results{max-height:180px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent;margin-bottom:6px;flex-shrink:0}
 #yt-results::-webkit-scrollbar{width:3px}
 #yt-results::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
+#yt-browse{max-height:180px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent;margin-bottom:6px;flex-shrink:0}
+#yt-browse::-webkit-scrollbar{width:3px}
+#yt-browse::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
 .music-tabs{display:flex;gap:0;margin-bottom:4px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0}
 .music-tabs button{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.35);font-size:7px;padding:5px 0;cursor:pointer;font-family:var(--font-hud);letter-spacing:0.1em;transition:color 0.2s,border-color 0.2s}
 .music-tabs button.tab-active{color:#fff;border-bottom-color:#fff}
@@ -241,6 +244,35 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .lyrics-line{font-size:13px;color:rgba(255,255,255,0.25);line-height:2.2;transition:color 0.5s,font-size 0.4s,transform 0.4s,opacity 0.4s;padding:2px 0;opacity:0.4}
 .lyrics-line.active{color:#fff;font-size:18px;font-weight:bold;transform:scale(1.08);opacity:1;text-shadow:0 0 12px rgba(255,255,255,0.15)}
 .lyrics-line.past{color:rgba(255,255,255,0.1);opacity:0.3}
+
+/* Search browse — artist/album navigation */
+.search-tabs{display:flex;gap:0;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0}
+.search-tabs button{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:rgba(255,255,255,0.35);font-size:7px;padding:5px 0;cursor:pointer;font-family:var(--font-hud);letter-spacing:0.1em;transition:color 0.2s,border-color 0.2s}
+.search-tabs button.s-tab-active{color:#fff;border-bottom-color:#fff}
+.sub-nav{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-shrink:0}
+.sub-nav-back{background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:14px;padding:2px 4px;display:flex;align-items:center;transition:color 0.2s}
+.sub-nav-back:hover{color:#fff}
+.sub-nav-title{font-size:8px;color:rgba(255,255,255,0.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.sub-nav-playall{margin-left:auto;background:none;border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:7px;padding:3px 8px;cursor:pointer;border-radius:12px;font-family:var(--font-hud);transition:background 0.2s;flex-shrink:0}
+.sub-nav-playall:hover{background:rgba(255,255,255,0.1)}
+
+/* Artist cards */
+.artist-card{display:flex;align-items:center;gap:8px;padding:5px 6px;cursor:pointer;border-radius:4px;transition:background 0.15s}
+.artist-card:hover{background:rgba(255,255,255,0.08)}
+.artist-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px}
+.artist-avatar img{width:100%;height:100%;object-fit:cover}
+.artist-info{flex:1;min-width:0}
+.artist-name{font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.artist-meta{font-size:7px;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+
+/* Album cards */
+.album-card{display:flex;align-items:center;gap:8px;padding:5px 6px;cursor:pointer;border-radius:4px;transition:background 0.15s}
+.album-card:hover{background:rgba(255,255,255,0.08)}
+.album-art{width:32px;height:32px;border-radius:3px;background:rgba(255,255,255,0.06);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px}
+.album-art img{width:100%;height:100%;object-fit:cover}
+.album-info{flex:1;min-width:0}
+.album-title{font-size:9px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.album-meta{font-size:7px;color:rgba(255,255,255,0.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 
 /* Track list items — Spotify style */
 .tl-item{display:flex;align-items:center;gap:8px;padding:4px 6px;cursor:pointer;border-radius:4px;transition:background 0.15s}
@@ -597,8 +629,22 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
               <input id="yt-search" placeholder="Search YouTube Music..." onkeydown="if(event.key==='Enter')searchYouTube()">
               <button onclick="searchYouTube()">SEARCH</button>
             </div>
+            <!-- Sub navigation (artist/album browse) -->
+            <div id="sub-nav" class="sub-nav" style="display:none">
+              <button class="sub-nav-back" onclick="goBackSearch()">&#8592;</button>
+              <span id="sub-nav-title" class="sub-nav-title"></span>
+              <button class="sub-nav-playall" onclick="playAllBrowse()">PLAY ALL</button>
+            </div>
+            <!-- Search tabs -->
+            <div id="search-tabs" class="search-tabs" style="display:none">
+              <button onclick="showSearchTab('tracks')" id="stab-tracks" class="s-tab-active">TRACKS</button>
+              <button onclick="showSearchTab('artists')" id="stab-artists">ARTISTS</button>
+              <button onclick="showSearchTab('albums')" id="stab-albums">ALBUMS</button>
+            </div>
             <!-- Search results -->
             <div id="yt-results"></div>
+            <!-- Browse results (artist albums / album tracks) -->
+            <div id="yt-browse" style="display:none"></div>
             <!-- Tabs -->
             <div class="music-tabs">
               <button onclick="showTab('rec')" id="tab-rec" class="tab-active">FOR YOU</button>
@@ -1497,11 +1543,76 @@ function renderTrackList(){
 }
 
 // === YOUTUBE MUSIC SEARCH ===
+var searchState={tracks:[],artists:[],albums:[],tab:'tracks',browseMode:false,browseTitle:'',browseTracks:[]};
+function parseYTMusicResponse(d){
+  var videos=[];
+  var artists=[];
+  var albums=[];
+  var tabs=(d&&d.contents&&d.contents.tabbedSearchResultsRenderer&&d.contents.tabbedSearchResultsRenderer.tabs)||(d&&d.contents&&d.contents.twoColumnBrowseResultsRenderer&&d.contents.twoColumnBrowseResultsRenderer.tabs)||[];
+  for(var ti=0;ti<tabs.length;ti++){
+    var tab=tabs[ti];
+    var contents=tab&&tab.tabRenderer&&tab.tabRenderer.content&&tab.tabRenderer.content.sectionListRenderer&&tab.tabRenderer.content.sectionListRenderer.contents||[];
+    for(var ci=0;ci<contents.length;ci++){
+      var sec=contents[ci];
+      var items=(sec&&sec.musicShelfRenderer&&sec.musicShelfRenderer.contents)||(sec&&sec.sectionListRenderer&&sec.sectionListRenderer.contents)||(sec&&sec.itemSectionRenderer&&sec.itemSectionRenderer.contents)||[];
+      for(var ii=0;ii<items.length;ii++){
+        var item=items[ii];
+        var mr=item&&item.musicResponsiveListItemRenderer;
+        if(!mr)continue;
+        var title=mr.flexColumns&&mr.flexColumns[0]&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0]&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0].text||'';
+        var thumbUrl='';
+        var thumb=mr.thumbnail&&mr.thumbnail.musicThumbnailRenderer&&mr.thumbnail.musicThumbnailRenderer.thumbnail&&mr.thumbnail.musicThumbnailRenderer.thumbnail.thumbnails;
+        if(thumb&&thumb.length)thumbUrl=thumb[thumb.length-1].url||'';
+        var navEndpoint=mr.flexColumns&&mr.flexColumns[0]&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0]&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0].navigationEndpoint;
+        var vid='';
+        var watchEp=navEndpoint&&navEndpoint.watchEndpoint;
+        if(watchEp&&watchEp.videoId)vid=watchEp.videoId;
+        var overlayVid=mr.overlay&&mr.overlay.musicItemThumbnailOverlayRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint.videoId;
+        if(overlayVid)vid=overlayVid;
+        var artistRuns=mr.flexColumns&&mr.flexColumns[1]&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
+        var artistText=artistRuns.map(function(r){return r.text;}).join('');
+        var flexCount=mr.flexColumns?mr.flexColumns.length:0;
+        var isArtist=false;
+        var isAlbum=false;
+        var browseId='';
+        var artistEp=navEndpoint&&navEndpoint.browseEndpoint;
+        if(artistEp&&artistEp.browseId){
+          browseId=artistEp.browseId;
+          isArtist=true;
+        }
+        var overlayBrowse=mr.overlay&&mr.overlay.musicItemThumbnailOverlayRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint;
+        if(!vid&&flexCount>=2&&artistText){
+          var thirdCol=mr.flexColumns[2]&&mr.flexColumns[2].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[2].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[2].musicResponsiveListItemFlexColumnRenderer.text.runs;
+          if(thirdCol&&thirdCol.length){
+            var typeText=thirdCol.map(function(r){return r.text;}).join('').toLowerCase();
+            if(typeText.indexOf('album')!==-1||typeText.indexOf('ep')!==-1||typeText.indexOf('single')!==-1){
+              isAlbum=true;
+              if(browseId==='')browseId=(navEndpoint&&navEndpoint.browseEndpoint&&navEndpoint.browseEndpoint.browseId)||'';
+            }
+          }
+        }
+        if(isAlbum&&title&&browseId){
+          albums.push({title:title,artist:artistText,thumb:thumbUrl,browseId:browseId});
+        }else if(isArtist&&title&&browseId){
+          artists.push({name:title,thumb:thumbUrl,browseId:browseId,sub:artistText||'Artist'});
+        }else if(vid&&title){
+          videos.push({vid:vid,title:title,artist:artistText,thumb:thumbUrl});
+        }
+      }
+    }
+  }
+  return{tracks:videos,artists:artists,albums:albums};
+}
 async function searchYouTube(){
   var q=document.getElementById('yt-search').value.trim();
   if(!q)return;
   var el=document.getElementById('yt-results');
   el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">Searching...</div>';
+  document.getElementById('yt-browse').style.display='none';
+  document.getElementById('yt-browse').innerHTML='';
+  document.getElementById('sub-nav').style.display='none';
+  searchState.browseMode=false;
+  document.getElementById('search-tabs').style.display='none';
   try{
     var body=JSON.stringify({context:{client:{hl:'en',gl:'US',clientName:'WEB_REMIX',clientVersion:'1.20240101.00.00'}},query:q});
     var r=await fetch(YT_PROXY+'?url='+encodeURIComponent('https://music.youtube.com/youtubei/v1/search?key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30'),{
@@ -1509,34 +1620,242 @@ async function searchYouTube(){
     });
     if(!r.ok)throw new Error('Proxy error '+r.status);
     var d=await r.json();
-    var videos=[];
-    var tabs=(d&&d.contents&&d.contents.tabbedSearchResultsRenderer&&d.contents.tabbedSearchResultsRenderer.tabs)||(d&&d.contents&&d.contents.twoColumnBrowseResultsRenderer&&d.contents.twoColumnBrowseResultsRenderer.tabs)||[];
-    for(var ti=0;ti<tabs.length;ti++){
-      var tab=tabs[ti];
-      var contents=tab&&tab.tabRenderer&&tab.tabRenderer.content&&tab.tabRenderer.content.sectionListRenderer&&tab.tabRenderer.content.sectionListRenderer.contents||[];
-      for(var ci=0;ci<contents.length;ci++){
-        var sec=contents[ci];
-        var items=(sec&&sec.musicShelfRenderer&&sec.musicShelfRenderer.contents)||(sec&&sec.sectionListRenderer&&sec.sectionListRenderer.contents)||(sec&&sec.itemSectionRenderer&&sec.itemSectionRenderer.contents)||[];
-        for(var ii=0;ii<items.length;ii++){
-          var item=items[ii];
-          var mr=item&&item.musicResponsiveListItemRenderer;
-          if(mr){
-            var title=mr.flexColumns&&mr.flexColumns[0]&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0]&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0].text||'';
-            var vid=mr.overlay&&mr.overlay.musicItemThumbnailOverlayRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint.videoId||'';
-            var artistRuns=mr.flexColumns&&mr.flexColumns[1]&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
-            var artist=artistRuns.map(function(r){return r.text;}).join('');
-            if(vid&&title)videos.push({vid:vid,title:title,artist:artist});
-          }
-        }
-      }
-    }
-    if(!videos.length){el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">No results</div>';return;}
-    el.innerHTML=videos.slice(0,10).map(function(v){return'<div class="tl-item" onclick="addYTTrack(\''+v.vid+'\',\''+v.title.replace(/'/g,"\\'")+'\',\''+v.artist.replace(/'/g,"\\'")+'\')"><div class="tl-art"><img src="https://img.youtube.com/vi/'+v.vid+'/mqdefault.jpg"></div><div class="tl-info"><div class="tl-title">'+v.title+'</div><div class="tl-artist">'+v.artist+'</div></div></div>';}).join('');
+    var parsed=parseYTMusicResponse(d);
+    searchState.tracks=parsed.tracks;
+    searchState.artists=parsed.artists;
+    searchState.albums=parsed.albums;
+    searchState.tab='tracks';
+    document.getElementById('stab-tracks').className='s-tab-active';
+    document.getElementById('stab-artists').className='';
+    document.getElementById('stab-albums').className='';
+    var total=parsed.tracks.length+parsed.artists.length+parsed.albums.length;
+    if(!total){el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">No results</div>';return;}
+    document.getElementById('search-tabs').style.display='flex';
+    renderSearchTab('tracks');
   }catch(e){
     el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">Search failed: '+e.message+'</div>';
   }
 }
-
+function showSearchTab(tab){
+  searchState.tab=tab;
+  document.getElementById('stab-tracks').className=tab==='tracks'?'s-tab-active':'';
+  document.getElementById('stab-artists').className=tab==='artists'?'s-tab-active':'';
+  document.getElementById('stab-albums').className=tab==='albums'?'s-tab-active':'';
+  renderSearchTab(tab);
+}
+function renderSearchTab(tab){
+  var el=document.getElementById('yt-results');
+  var items=tab==='tracks'?searchState.tracks:tab==='artists'?searchState.artists:searchState.albums;
+  if(!items.length){el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">No '+tab+' found</div>';return;}
+  if(tab==='tracks'){
+    el.innerHTML=items.slice(0,10).map(function(v){
+      var safeT=v.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+      var safeA=v.artist.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+      return'<div class="tl-item" onclick="addYTTrack(\''+v.vid+'\',\''+safeT+'\',\''+safeA+'\')"><div class="tl-art"><img src="https://img.youtube.com/vi/'+v.vid+'/mqdefault.jpg"></div><div class="tl-info"><div class="tl-title">'+v.title+'</div><div class="tl-artist">'+v.artist+'</div></div></div>';
+    }).join('');
+  }else if(tab==='artists'){
+    el.innerHTML=items.slice(0,10).map(function(a){
+      var thumbHtml=a.thumb?'<img src="'+a.thumb+'">':'&#9733;';
+      return'<div class="artist-card" onclick="browseArtist(\''+a.browseId+'\',\''+a.name.replace(/'/g,"\\'").replace(/"/g,"&quot;")+'\')"><div class="artist-avatar">'+thumbHtml+'</div><div class="artist-info"><div class="artist-name">'+a.name+'</div><div class="artist-meta">'+a.sub+'</div></div></div>';
+    }).join('');
+  }else{
+    el.innerHTML=items.slice(0,10).map(function(a){
+      var thumbHtml=a.thumb?'<img src="'+a.thumb+'">':'&#9835;';
+      var safeT=a.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+      return'<div class="album-card" onclick="browseAlbum(\''+a.browseId+'\',\''+safeT+'\',\''+a.artist.replace(/'/g,"\\'").replace(/"/g,"&quot;")+'\')"><div class="album-art">'+thumbHtml+'</div><div class="album-info"><div class="album-title">'+a.title+'</div><div class="album-meta">'+a.artist+'</div></div></div>';
+    }).join('');
+  }
+}
+async function browseArtist(channelId,artistName){
+  var el=document.getElementById('yt-browse');
+  var results=document.getElementById('yt-results');
+  results.style.display='none';
+  el.style.display='block';
+  el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">Loading '+artistName+'...</div>';
+  document.getElementById('sub-nav').style.display='flex';
+  document.getElementById('sub-nav-title').textContent=artistName;
+  document.getElementById('search-tabs').style.display='none';
+  searchState.browseMode=true;
+  searchState.browseTitle=artistName;
+  try{
+    var body=JSON.stringify({context:{client:{hl:'en',gl:'US',clientName:'WEB_REMIX',clientVersion:'1.20240101.00.00'}},browseId:channelId});
+    var r=await fetch(YT_PROXY+'?url='+encodeURIComponent('https://music.youtube.com/youtubei/v1/browse?key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30'),{
+      method:'POST',headers:{'Content-Type':'application/json','x-method':'POST'},body:body
+    });
+    if(!r.ok)throw new Error('Proxy error '+r.status);
+    var d=await r.json();
+    var albums=[];
+    var singles=[];
+    var tracks=[];
+    var tabs=d&&d.contents&&d.contents.twoColumnBrowseResultsRenderer&&d.contents.twoColumnBrowseResultsRenderer.tabs||[];
+    for(var ti=0;ti<tabs.length;ti++){
+      var tabContent=tabs[ti]&&tabs[ti].tabRenderer&&tabs[ti].tabRenderer.content&&tabs[ti].tabRenderer.content.sectionListRenderer&&tabs[ti].tabRenderer.content.sectionListRenderer.contents||[];
+      for(var ci=0;ci<tabContent.length;ci++){
+        var shelf=tabContent[ci];
+        var shelfItems=[];
+        if(shelf&&shelf.musicShelfRenderer){shelfItems=shelf.musicShelfRenderer.contents||[];}
+        else if(shelf&&shelf.gridRenderer){shelfItems=shelf.gridRenderer.items||[];}
+        else if(shelf&&shelf.sectionListRenderer){shelfItems=shelf.sectionListRenderer.contents||[];}
+        var shelfTitle='';
+        if(shelf&&shelf.musicShelfRenderer&&shelf.musicShelfRenderer.title&&shelf.musicShelfRenderer.title.runs){
+          shelfTitle=shelf.musicShelfRenderer.title.runs.map(function(r){return r.text;}).join('');
+        }else if(shelf&&shelf.gridRenderer&&shelf.gridRenderer.header&&shelf.gridRenderer.header.gridHeaderRenderer&&shelf.gridRenderer.header.gridHeaderRenderer.title&&shelf.gridRenderer.header.gridHeaderRenderer.title.runs){
+          shelfTitle=shelf.gridRenderer.header.gridHeaderRenderer.title.runs.map(function(r){return r.text;}).join('');
+        }
+        for(var si=0;si<shelfItems.length;si++){
+          var sItem=shelfItems[si];
+          var musicTwo=sItem&&sItem.musicTwoRowItemRenderer;
+          var musicResp=sItem&&sItem.musicResponsiveListItemRenderer;
+          if(musicTwo){
+            var aTitle=musicTwo.title&&musicTwo.title.runs&&musicTwo.title.runs[0]&&musicTwo.title.runs[0].text||'';
+            var aThumb='';
+            var th=musicTwo.thumbnail&&musicTwo.thumbnail.thumbnails;
+            if(th&&th.length)aThumb=th[0].url||'';
+            var aBrowseId='';
+            var mEp=musicTwo.navigationEndpoint&&musicTwo.navigationEndpoint.browseEndpoint;
+            if(mEp&&mEp.browseId)aBrowseId=mEp.browseId;
+            var wEp=musicTwo.overlay&&musicTwo.overlay.musicItemThumbnailOverlayRenderer&&musicTwo.overlay.musicItemThumbnailOverlayRenderer.content&&musicTwo.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer&&musicTwo.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint&&musicTwo.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint;
+            var aVid=wEp&&wEp.videoId?wEp.videoId:'';
+            if(aTitle){
+              if(aBrowseId){
+                var lower=shelfTitle.toLowerCase();
+                if(lower.indexOf('single')!==-1||lower.indexOf('ep')!==-1){singles.push({title:aTitle,thumb:aThumb,browseId:aBrowseId});}
+                else{albums.push({title:aTitle,thumb:aThumb,browseId:aBrowseId});}
+              }else if(aVid){
+                tracks.push({title:aTitle,vid:aVid,artist:artistName});
+              }
+            }
+          }
+          if(musicResp){
+            var rTitle=musicResp.flexColumns&&musicResp.flexColumns[0]&&musicResp.flexColumns[0].musicResponsiveListItemFlexColumnRenderer&&musicResp.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text&&musicResp.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs&&musicResp.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0]&&musicResp.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0].text||'';
+            var rVid='';
+            var rOverlay=musicResp.overlay&&musicResp.overlay.musicItemThumbnailOverlayRenderer&&musicResp.overlay.musicItemThumbnailOverlayRenderer.content&&musicResp.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer&&musicResp.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint&&musicResp.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint;
+            if(rOverlay&&rOverlay.videoId)rVid=rOverlay.videoId;
+            if(rTitle&&rVid)tracks.push({title:rTitle,vid:rVid,artist:artistName});
+          }
+        }
+      }
+    }
+    searchState.browseTracks=tracks;
+    var html='';
+    if(albums.length||singles.length){
+      html+='<div style="font-size:8px;color:rgba(255,255,255,0.3);margin-bottom:4px;letter-spacing:0.1em">ALBUMS & SINGLES</div>';
+      var allReleases=albums.concat(singles);
+      html+=allReleases.slice(0,8).map(function(a){
+        var thumbHtml=a.thumb?'<img src="'+a.thumb+'">':'&#9835;';
+        var safeT=a.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+        var safeN=artistName.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+        return'<div class="album-card" onclick="browseAlbum(\''+a.browseId+'\',\''+safeT+'\',\''+safeN+'\')"><div class="album-art">'+thumbHtml+'</div><div class="album-info"><div class="album-title">'+a.title+'</div></div></div>';
+      }).join('');
+    }
+    if(tracks.length){
+      html+='<div style="font-size:8px;color:rgba(255,255,255,0.3);margin:8px 0 4px;letter-spacing:0.1em">TOP TRACKS</div>';
+      html+=tracks.slice(0,6).map(function(t){
+        var safeT=t.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+        var safeA=t.artist.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+        return'<div class="tl-item" onclick="addYTTrack(\''+t.vid+'\',\''+safeT+'\',\''+safeA+'\')"><div class="tl-art"><img src="https://img.youtube.com/vi/'+t.vid+'/mqdefault.jpg"></div><div class="tl-info"><div class="tl-title">'+t.title+'</div><div class="tl-artist">'+t.artist+'</div></div></div>';
+      }).join('');
+    }
+    if(!html)html='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">No content found</div>';
+    el.innerHTML=html;
+  }catch(e){
+    el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">Failed to load artist: '+e.message+'</div>';
+  }
+}
+async function browseAlbum(playlistId,albumTitle,albumArtist){
+  var el=document.getElementById('yt-browse');
+  var results=document.getElementById('yt-results');
+  results.style.display='none';
+  el.style.display='block';
+  el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">Loading '+albumTitle+'...</div>';
+  document.getElementById('sub-nav').style.display='flex';
+  document.getElementById('sub-nav-title').textContent=albumTitle;
+  document.getElementById('search-tabs').style.display='none';
+  searchState.browseMode=true;
+  searchState.browseTitle=albumTitle;
+  try{
+    var body=JSON.stringify({context:{client:{hl:'en',gl:'US',clientName:'WEB_REMIX',clientVersion:'1.20240101.00.00'}},browseId:playlistId});
+    var r=await fetch(YT_PROXY+'?url='+encodeURIComponent('https://music.youtube.com/youtubei/v1/browse?key=AIzaSyC9XL3ZjWddXya6X74dJoCTL-WEYFDNX30'),{
+      method:'POST',headers:{'Content-Type':'application/json','x-method':'POST'},body:body
+    });
+    if(!r.ok)throw new Error('Proxy error '+r.status);
+    var d=await r.json();
+    var tracks=[];
+    var contents=d&&d.contents&&d.contents.twoColumnBrowseResultsRenderer&&d.contents.twoColumnBrowseResultsRenderer.secondaryContents&&d.contents.twoColumnBrowseResultsRenderer.secondaryContents.contents||[];
+    for(var ci=0;ci<contents.length;ci++){
+      var sec=contents[ci];
+      var items=(sec&&sec.musicShelfRenderer&&sec.musicShelfRenderer.contents)||(sec&&sec.sectionListRenderer&&sec.sectionListRenderer.contents)||[];
+      for(var ii=0;ii<items.length;ii++){
+        var item=items[ii];
+        var mr=item&&item.musicResponsiveListItemRenderer;
+        if(!mr)continue;
+        var tTitle=mr.flexColumns&&mr.flexColumns[0]&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0]&&mr.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0].text||'';
+        var tVid='';
+        var tOverlay=mr.overlay&&mr.overlay.musicItemThumbnailOverlayRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint&&mr.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint;
+        if(tOverlay&&tOverlay.videoId)tVid=tOverlay.videoId;
+        var tArtistRuns=mr.flexColumns&&mr.flexColumns[1]&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text&&mr.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
+        var tArtist=tArtistRuns.map(function(r){return r.text;}).join('')||albumArtist;
+        if(tTitle&&tVid)tracks.push({title:tTitle,vid:tVid,artist:tArtist});
+      }
+    }
+    searchState.browseTracks=tracks;
+    if(!tracks.length){
+      var contents2=d&&d.contents&&d.contents.twoColumnBrowseResultsRenderer&&d.contents.twoColumnBrowseResultsRenderer.results&&d.contents.twoColumnBrowseResultsRenderer.results.results&&d.contents.twoColumnBrowseResultsRenderer.results.results.contents||[];
+      for(var ci2=0;ci2<contents2.length;ci2++){
+        var sec2=contents2[ci2];
+        var items2=(sec2&&sec2.musicShelfRenderer&&sec2.musicShelfRenderer.contents)||(sec2&&sec2.sectionListRenderer&&sec2.sectionListRenderer.contents)||[];
+        for(var ii2=0;ii2<items2.length;ii2++){
+          var item2=items2[ii2];
+          var mr2=item2&&item2.musicResponsiveListItemRenderer;
+          if(!mr2)continue;
+          var tTitle2=mr2.flexColumns&&mr2.flexColumns[0]&&mr2.flexColumns[0].musicResponsiveListItemFlexColumnRenderer&&mr2.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text&&mr2.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs&&mr2.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0]&&mr2.flexColumns[0].musicResponsiveListItemFlexColumnRenderer.text.runs[0].text||'';
+          var tVid2='';
+          var tOverlay2=mr2.overlay&&mr2.overlay.musicItemThumbnailOverlayRenderer&&mr2.overlay.musicItemThumbnailOverlayRenderer.content&&mr2.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer&&mr2.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint&&mr2.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint;
+          if(tOverlay2&&tOverlay2.videoId)tVid2=tOverlay2.videoId;
+          var tArtistRuns2=mr2.flexColumns&&mr2.flexColumns[1]&&mr2.flexColumns[1].musicResponsiveListItemFlexColumnRenderer&&mr2.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text&&mr2.flexColumns[1].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
+          var tArtist2=tArtistRuns2.map(function(r){return r.text;}).join('')||albumArtist;
+          if(tTitle2&&tVid2)tracks.push({title:tTitle2,vid:tVid2,artist:tArtist2});
+        }
+      }
+      searchState.browseTracks=tracks;
+    }
+    var html='';
+    if(tracks.length){
+      html+='<div style="font-size:8px;color:rgba(255,255,255,0.3);margin-bottom:4px;letter-spacing:0.1em">'+tracks.length+' TRACKS</div>';
+      html+=tracks.map(function(t,idx){
+        var safeT=t.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+        var safeA=t.artist.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+        return'<div class="tl-item" onclick="addYTTrack(\''+t.vid+'\',\''+safeT+'\',\''+safeA+'\')"><div class="tl-art"><img src="https://img.youtube.com/vi/'+t.vid+'/mqdefault.jpg"></div><div class="tl-info"><div class="tl-title">'+t.title+'</div><div class="tl-artist">'+t.artist+'</div></div></div>';
+      }).join('');
+    }else{
+      html='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">No tracks found</div>';
+    }
+    el.innerHTML=html;
+  }catch(e){
+    el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">Failed to load album: '+e.message+'</div>';
+  }
+}
+function goBackSearch(){
+  document.getElementById('yt-browse').style.display='none';
+  document.getElementById('yt-browse').innerHTML='';
+  document.getElementById('yt-results').style.display='';
+  document.getElementById('sub-nav').style.display='none';
+  searchState.browseMode=false;
+  searchState.browseTracks=[];
+  document.getElementById('search-tabs').style.display='flex';
+}
+function playAllBrowse(){
+  var tracks=searchState.browseTracks;
+  if(!tracks.length)return;
+  for(var i=0;i<tracks.length;i++){
+    var t=tracks[i];
+    var dup=false;
+    for(var k=0;k<TRACKS.length;k++){if(TRACKS[k].ytid===t.vid){dup=true;break;}}
+    if(!dup)TRACKS.push({t:t.title,a:t.artist,ytid:t.vid});
+  }
+  var startIdx=TRACKS.length-tracks.length;
+  if(startIdx>=0)playTrack(startIdx);
+}
 function addYTTrack(vid,title,artist){
   for(var i=0;i<TRACKS.length;i++){if(TRACKS[i].ytid===vid){playTrack(i);return;}}
   TRACKS.splice(curTrack+1,0,{t:title,a:artist,ytid:vid});
