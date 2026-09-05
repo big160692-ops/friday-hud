@@ -1997,6 +1997,39 @@ async function browseAlbum(playlistId,albumTitle,albumArtist){
         }
       }
     }
+    if(!tracks.length){
+      var secContents=d&&d.contents&&d.contents.twoColumnBrowseResultsRenderer&&d.contents.twoColumnBrowseResultsRenderer.secondaryContents&&d.contents.twoColumnBrowseResultsRenderer.secondaryContents.sectionListRenderer&&d.contents.twoColumnBrowseResultsRenderer.secondaryContents.sectionListRenderer.contents||[];
+      for(var sci=0;sci<secContents.length;sci++){
+        var sSec=secContents[sci];
+        if(!sSec||!sSec.musicShelfRenderer)continue;
+        var sItems=sSec.musicShelfRenderer.contents||[];
+        for(var ssi=0;ssi<sItems.length;ssi++){
+          var siItem=sItems[ssi];
+          var smr=siItem&&siItem.musicResponsiveListItemRenderer;
+          if(!smr)continue;
+          var sflex=smr.flexColumns||[];
+          var stTitle=gC2(sflex[0]);
+          var stVid='';
+          if(smr.playlistItemData&&smr.playlistItemData.videoId)stVid=smr.playlistItemData.videoId;
+          if(!stVid&&smr.overlay){
+            var sov=smr.overlay.musicItemThumbnailOverlayRenderer;
+            if(sov&&sov.content&&sov.content.musicPlayButtonRenderer){
+              var sope=sov.content.musicPlayButtonRenderer.playNavigationEndpoint;
+              if(sope&&sope.watchEndpoint&&sope.watchEndpoint.videoId)stVid=sope.watchEndpoint.videoId;
+            }
+          }
+          if(!stVid){
+            var stRuns=sflex[0]&&sflex[0].musicResponsiveListItemFlexColumnRenderer&&sflex[0].musicResponsiveListItemFlexColumnRenderer.text&&sflex[0].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
+            for(var sri=0;sri<stRuns.length;sri++){
+              var swe=stRuns[sri].navigationEndpoint&&stRuns[sri].navigationEndpoint.watchEndpoint;
+              if(swe&&swe.videoId){stVid=swe.videoId;break;}
+            }
+          }
+          var stArtist=gC2(sflex[1])||resolvedArtist;
+          if(stTitle&&stVid){trackCount++;tracks.push({title:stTitle,vid:stVid,artist:stArtist});}
+        }
+      }
+    }
     if(!albumArt&&tracks.length)albumArt='https://img.youtube.com/vi/'+tracks[0].vid+'/mqdefault.jpg';
     var metaParts=[];
     if(year)metaParts.push(year);
