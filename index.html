@@ -1121,7 +1121,10 @@ setInterval(function(){
         }
         if(dur>2&&dur-cur<0.5){
           var now=Date.now();
-          if(now-lastEndCheck>2000){lastEndCheck=now;advanceTrack();}
+          if(now-lastEndCheck>2000){lastEndCheck=now;
+            if(repeatMode===2){ytPlayer.seekTo(0);ytPlayer.playVideo();}
+            else{advanceTrack();}
+          }
         }
       }else if(state===YT.PlayerState.PAUSED){
         if(isLoading){isLoading=false;}
