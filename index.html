@@ -192,6 +192,10 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .music-btn.play{width:28px;height:28px;font-size:12px;border-color:var(--primary);color:var(--primary)}
 .music-btn.play:hover{background:rgba(0,212,255,0.1);box-shadow:0 0 12px rgba(0,212,255,0.3)}
 .music-btn.active{color:var(--primary);border-color:var(--primary)}
+.music-btn.loading{pointer-events:none;position:relative}
+.music-btn.loading::after{content:'';position:absolute;width:14px;height:14px;border:2px solid var(--dim);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lyrics-box{max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent;font-size:6px;color:var(--muted);line-height:1.6;padding:4px 6px;white-space:pre-wrap;text-align:center;font-style:italic}
 
 /* Console */
 #con{max-height:100px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent}
@@ -550,6 +554,7 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
             <button onclick="showTab('likes')" id="tab-likes" style="flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:7px;padding:4px 0;cursor:pointer;font-family:var(--font-hud)">LIKES</button>
           </div>
           <div id="yt-tracklist" style="max-height:150px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--dim) transparent"></div>
+          <div id="lyrics-box" class="lyrics-box" style="display:none"></div>
         </div>
       </div>
     </div>
@@ -933,15 +938,20 @@ function loadNews(){detectLocationForNews()}
 // === MUSIC PLAYER ===
 var YT_PROXY='https://friday-yt-proxy.big160692.workers.dev/';
 var TRACKS=[];
-var curTrack=0,isPlaying=false,repeatOn=false,shuffleOn=false;
+var curTrack=0,isPlaying=false,repeatMode=0,shuffleOn=false;
 var liked=JSON.parse(localStorage.getItem('friday_likes')||'[]');
 var activeTab='rec';
 var pendingPlay=false;
 var lastEndCheck=0;
 var ytPlayer=null,ytReady=false;
+var isLoading=false;
 var playBtn=document.getElementById('btn-play');
 
-function setPlayIcon(playing){playBtn.innerHTML=playing?'&#10074;&#10074;':'&#9654;';}
+function setPlayIcon(playing){
+  playBtn.classList.remove('loading');
+  if(isLoading){playBtn.innerHTML='';playBtn.classList.add('loading');}
+  else{playBtn.innerHTML=playing?'&#10074;&#10074;':'&#9654;';}
+}
 
 setInterval(function(){
   if(ytReady&&ytPlayer){
@@ -950,6 +960,7 @@ setInterval(function(){
       var cur=ytPlayer.getCurrentTime()||0;
       var dur=ytPlayer.getDuration()||0;
       if(state===YT.PlayerState.PLAYING){
+        if(isLoading){isLoading=false;setPlayIcon(true);}
         isPlaying=true;setPlayIcon(true);
         if(dur>0){
           document.getElementById('music-cur').textContent=formatTime(cur);
@@ -961,10 +972,19 @@ setInterval(function(){
           if(now-lastEndCheck>2000){lastEndCheck=now;advanceTrack();}
         }
       }else if(state===YT.PlayerState.PAUSED){
+        if(isLoading){isLoading=false;}
         isPlaying=false;setPlayIcon(false);
       }else if(state===YT.PlayerState.ENDED){
         var now2=Date.now();
-        if(now2-lastEndCheck>2000){lastEndCheck=now2;if(repeatOn){ytPlayer.seekTo(0);ytPlayer.playVideo();}else{advanceTrack();}}
+        if(now2-lastEndCheck>2000){lastEndCheck=now2;
+          if(repeatMode===2){ytPlayer.seekTo(0);ytPlayer.playVideo();}
+          else if(repeatMode===1){advanceTrack();}
+          else{advanceTrack();}
+        }
+      }else if(state===YT.PlayerState.BUFFERING){
+        if(!isLoading){isLoading=true;setPlayIcon(false);}
+      }else if(state===YT.PlayerState.CUED||state===YT.PlayerState.UNSTARTED){
+        if(isLoading){isLoading=false;setPlayIcon(false);}
       }
     }catch(e){}
   }
@@ -983,13 +1003,14 @@ function togglePlay(){
   var state=-1;
   try{state=ytPlayer.getPlayerState();}catch(e){}
   if(state===YT.PlayerState.PLAYING){ytPlayer.pauseVideo();}
-  else{ytPlayer.playVideo();}
+  else{isLoading=true;setPlayIcon(false);ytPlayer.playVideo();}
 }
 
 function playTrack(idx){
   if(idx<0||idx>=TRACKS.length)return;
   curTrack=idx;
   var tr=TRACKS[idx];
+  isLoading=true;setPlayIcon(false);
   if(ytReady&&ytPlayer){
     ytPlayer.loadVideoById(tr.ytid);
     isPlaying=true;
@@ -1000,6 +1021,7 @@ function playTrack(idx){
   updateMusicMeta();
   renderTrackList();
   fetchRelated(tr);
+  fetchLyrics(tr);
 }
 
 function advanceTrack(){
@@ -1040,7 +1062,13 @@ function seekMusic(e){
   if(ytReady&&ytPlayer){try{ytPlayer.seekTo(ytPlayer.getDuration()*pct,true);}catch(e){}}
 }
 
-function toggleRepeat(){repeatOn=!repeatOn;document.getElementById('btn-repeat').style.color=repeatOn?'var(--primary)':'var(--muted)';}
+function toggleRepeat(){
+  repeatMode=(repeatMode+1)%3;
+  var btn=document.getElementById('btn-repeat');
+  if(repeatMode===0){btn.innerHTML='&#8634;';btn.style.color='var(--muted)';btn.title='Repeat: Off';}
+  else if(repeatMode===1){btn.innerHTML='&#8634;';btn.style.color='var(--primary)';btn.title='Repeat: All';}
+  else{btn.innerHTML='<span style="position:relative;display:inline-block">&#8634;<span style="position:absolute;font-size:5px;bottom:-1px;right:-4px;color:var(--primary)">1</span></span>';btn.style.color='var(--primary)';btn.title='Repeat: One';}
+}
 
 // === LIKES ===
 function getTrackKey(tr){return tr.ytid||tr.vid||tr.t;}
@@ -1181,6 +1209,29 @@ function fetchRelatedCb(tr,cb){
   }).catch(function(){fetchingRelated=false;if(cb)cb();});
 }
 
+function fetchLyrics(tr){
+  var box=document.getElementById('lyrics-box');
+  if(!tr||!tr.t){box.style.display='none';return;}
+  box.style.display='block';
+  box.innerHTML='<div style="text-align:center;padding:4px;color:var(--muted)">Loading lyrics...</div>';
+  var q=tr.a?tr.t+' '+tr.a:tr.t;
+  fetch('https://api.lyrics.ovh/v1/'+encodeURIComponent(tr.a||'')+'/'+encodeURIComponent(tr.t))
+    .then(function(r){if(!r.ok)throw new Error();return r.json();})
+    .then(function(d){
+      if(d&&d.lyrics){box.textContent=d.lyrics;box.style.display='block';}
+      else{box.innerHTML='<div style="text-align:center;padding:4px;color:var(--muted)">No lyrics found</div>';}
+    })
+    .catch(function(){
+      fetch('https://lrclib.net/api/search?artist_name='+encodeURIComponent(tr.a||'')+'&track_name='+encodeURIComponent(tr.t))
+        .then(function(r){if(!r.ok)throw new Error();return r.json();})
+        .then(function(d){
+          if(d&&d.length>0&&d[0].plainLyrics){box.textContent=d[0].plainLyrics;box.style.display='block';}
+          else{box.innerHTML='<div style="text-align:center;padding:4px;color:var(--muted)">No lyrics found</div>';}
+        })
+        .catch(function(){box.innerHTML='<div style="text-align:center;padding:4px;color:var(--muted)">No lyrics found</div>';});
+    });
+}
+
 function renderTrackList(){
   var el=document.getElementById('yt-tracklist');
   var display=getDisplayTracks();
@@ -1197,8 +1248,10 @@ function renderTrackList(){
     var artist=isRec?tr.artist:tr.a;
     var thumb=vid?'<img src="https://img.youtube.com/vi/'+vid+'/default.jpg" style="width:18px;height:18px;border-radius:2px;object-fit:cover">':'<div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px">&#127925;</div>';
     var isCur=!isRec&&realIdx===curTrack;
+    var nextIdx=(curTrack+1)%TRACKS.length;
+    var isNext=isRec&&idx===0&&TRACKS.length>0&&vid&&vid!==TRACKS[curTrack].ytid;
     var likedIcon=isLiked(isRec?{ytid:vid}:tr)?'<span style="color:#ff4444;font-size:6px;margin-left:2px">&#9829;</span>':'';
-    var badge=isCur?'<span style="font-size:4px;color:#ff4444;letter-spacing:0.1em;vertical-align:middle;margin-left:3px">NOW</span>':'';
+    var badge=isCur?'<span style="font-size:4px;color:#ff4444;letter-spacing:0.1em;vertical-align:middle;margin-left:3px">NOW</span>':(isNext?'<span style="font-size:4px;color:var(--primary);letter-spacing:0.1em;vertical-align:middle;margin-left:3px">PLAYING NEXT</span>':'');
     var clickFn=isRec?"playRecItem("+idx+")":"playTrack("+realIdx+")";
     return'<div onclick="'+clickFn+'" style="display:flex;align-items:center;gap:5px;padding:2px 4px;cursor:pointer;border-radius:2px;'+(isCur?'background:rgba(255,0,0,0.08)':'')+'" onmouseover="this.style.background=\'rgba(255,0,0,0.04)\'" onmouseout="this.style.background=\''+(isCur?'rgba(255,0,0,0.08)':'')+'\'">'+thumb+'<div style="min-width:0;flex:1"><div style="font-size:6px;color:'+(isCur?'#ff4444':'var(--text)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+title+likedIcon+badge+'</div><div style="font-size:5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+artist+'</div></div></div>';
   }).join('');
