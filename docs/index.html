@@ -265,13 +265,14 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .sub-nav-playall:hover{background:rgba(255,255,255,0.1)}
 
 /* Artist profile — large card layout */
-.artist-profile-header{display:flex;gap:10px;padding:10px 8px;margin-bottom:8px;animation:profileReveal 0.4s ease}
-.artist-profile-img{width:80px;height:80px;border-radius:6px;background:rgba(255,255,255,0.06);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+.artist-profile-header{display:flex;gap:8px;padding:8px;margin-bottom:6px;animation:profileReveal 0.4s ease}
+.artist-profile-img{width:100px;height:100px;border-radius:4px;background:rgba(255,255,255,0.06);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 4px 16px rgba(0,0,0,0.3)}
 .artist-profile-img img{width:100%;height:100%;object-fit:cover}
-.artist-profile-text{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.artist-profile-text{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-start;padding-top:2px}
+.artist-profile-label{font-size:7px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:2px;font-weight:600}
 .artist-profile-name{font-size:12px;color:#fff;font-weight:700;margin-bottom:2px;line-height:1.2}
 .artist-profile-meta{font-size:7px;color:rgba(255,255,255,0.4);margin-bottom:6px}
-.artist-profile-desc{font-size:7px;color:rgba(255,255,255,0.3);line-height:1.4;max-height:32px;overflow:hidden}
+.artist-profile-desc{font-size:7px;color:rgba(255,255,255,0.3);line-height:1.4;max-height:40px;overflow:hidden}
 .artist-profile-playall{background:var(--green);color:#fff;border:none;font-size:8px;padding:5px 16px;border-radius:14px;cursor:pointer;font-family:var(--font-hud);font-weight:600;letter-spacing:0.05em;transition:background 0.2s,transform 0.2s}
 .artist-profile-playall:hover{background:#1ed760;transform:scale(1.04)}
 
@@ -1846,29 +1847,27 @@ async function browseArtist(channelId,artistName,artistThumb){
       }
     }
     searchState.browseTracks=tracks;
-    if(!artistDesc)artistDesc='Artist on YouTube Music';
+    if(!artistDesc)artistDesc='';
     var profileImg=artistThumb?'<img src="'+artistThumb+'">':'&#9733;';
     var allReleases=albums.concat(singles);
     var html='<div style="margin-bottom:4px"><button onclick="goBackSearch()" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:12px;padding:2px 4px;transition:color 0.2s" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'rgba(255,255,255,0.5)\'">&#8592; Back</button></div>';
-    html+='<div class="artist-profile-header"><div class="artist-profile-img">'+profileImg+'</div><div class="artist-profile-text"><div class="artist-profile-name">'+artistName+'</div><div class="artist-profile-meta">'+tracks.length+' tracks &middot; '+allReleases.length+' releases</div><div class="artist-profile-desc">'+artistDesc+'</div><button class="artist-profile-playall" style="margin-top:6px" onclick="playAllBrowse()">&#9654; PLAY ALL</button></div></div>';
-    if(allReleases.length){
-      html+='<div class="browse-section-hdr">ALBUMS & SINGLES</div>';
-      html+=allReleases.slice(0,8).map(function(a,i){
-        var thumbHtml=a.thumb?'<img src="'+a.thumb+'">':'&#9835;';
-        var safeT=a.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
-        var safeN=artistName.replace(/'/g,"\\'").replace(/"/g,"&quot;");
-        return'<div class="album-card" style="animation:staggerIn 0.25s ease '+(i*0.04)+'s both" onclick="browseAlbum(\''+a.browseId+'\',\''+safeT+'\',\''+safeN+'\')"><div class="album-art">'+thumbHtml+'</div><div class="album-info"><div class="album-title">'+a.title+'</div></div></div>';
-      }).join('');
-    }
+    html+='<div class="artist-profile-header"><div class="artist-profile-img">'+profileImg+'</div><div class="artist-profile-text"><div class="artist-profile-label">ARTIST</div><div class="artist-profile-desc">'+artistDesc+'</div><button class="artist-profile-playall" style="margin-top:6px" onclick="playAllBrowse()">&#9654; PLAY ALL</button></div></div>';
     if(tracks.length){
-      html+='<div class="browse-section-hdr">TOP TRACKS</div>';
-      html+=tracks.slice(0,6).map(function(t,i){
+      html+=tracks.map(function(t,i){
         var safeT=t.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
         var safeA=t.artist.replace(/'/g,"\\'").replace(/"/g,"&quot;");
         return'<div class="tl-item" style="animation:staggerIn 0.25s ease '+(i*0.04)+'s both" onclick="addYTTrack(\''+t.vid+'\',\''+safeT+'\',\''+safeA+'\')"><div class="tl-art"><img src="https://img.youtube.com/vi/'+t.vid+'/mqdefault.jpg"></div><div class="tl-info"><div class="tl-title">'+t.title+'</div><div class="tl-artist">'+t.artist+'</div></div></div>';
       }).join('');
+    }else if(allReleases.length){
+      html+=allReleases.map(function(a,i){
+        var thumbHtml=a.thumb?'<img src="'+a.thumb+'">':'&#9835;';
+        var safeT=a.title.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+        var safeN=artistName.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+        return'<div class="tl-item" style="animation:staggerIn 0.25s ease '+(i*0.04)+'s both" onclick="browseAlbum(\''+a.browseId+'\',\''+safeT+'\',\''+safeN+'\')"><div class="tl-art">'+thumbHtml+'</div><div class="tl-info"><div class="tl-title">'+a.title+'</div><div class="tl-artist">Album</div></div></div>';
+      }).join('');
+    }else{
+      html+='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">No content found</div>';
     }
-    if(!allReleases.length&&!tracks.length)html+='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">No content found</div>';
     el.innerHTML=html;
   }catch(e){
     el.innerHTML='<div style="font-size:8px;color:rgba(255,255,255,0.25);text-align:center;padding:8px">Failed to load artist: '+e.message+'</div>';
