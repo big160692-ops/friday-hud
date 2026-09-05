@@ -1590,11 +1590,9 @@ function parseYTMusicResponse(d){
       var vid='';
       if(mr.playlistItemData&&mr.playlistItemData.videoId)vid=mr.playlistItemData.videoId;
       var tRuns=flex[0]&&flex[0].musicResponsiveListItemFlexColumnRenderer&&flex[0].musicResponsiveListItemFlexColumnRenderer.text&&flex[0].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
-      var titleBrowseId='';
       for(var ri=0;ri<tRuns.length;ri++){
         var ep=tRuns[ri].navigationEndpoint;
         if(ep&&ep.watchEndpoint&&ep.watchEndpoint.videoId)vid=ep.watchEndpoint.videoId;
-        if(ep&&ep.browseEndpoint&&ep.browseEndpoint.browseId)titleBrowseId=ep.browseEndpoint.browseId;
       }
       if(!vid&&mr.overlay){
         var ov=mr.overlay.musicItemThumbnailOverlayRenderer;
@@ -1608,31 +1606,30 @@ function parseYTMusicResponse(d){
       if(th&&th.length)thumb=th[th.length-1].url||'';
       var col2=gC2(flex[1]);
       var col2l=(col2||'').toLowerCase();
-      if(col2l.indexOf('playlist')!==-1||col2l.indexOf('podcast')!==-1||col2l.indexOf('views')!==-1)continue;
       if(vid){
         videos.push({vid:vid,title:title,artist:col2,thumb:thumb});
-      }else if(titleBrowseId){
-        artists.push({name:title,thumb:thumb,browseId:titleBrowseId,sub:col2||'Artist'});
-      }else{
-        var browseId='';
+      }else if(col2l.indexOf('artist')!==-1){
+        var aBrowseId='';
         for(var ri2=0;ri2<flex.length;ri2++){
           var runs=flex[ri2]&&flex[ri2].musicResponsiveListItemFlexColumnRenderer&&flex[ri2].musicResponsiveListItemFlexColumnRenderer.text&&flex[ri2].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
           for(var ri3=0;ri3<runs.length;ri3++){
             var bep=runs[ri3].navigationEndpoint&&runs[ri3].navigationEndpoint.browseEndpoint;
-            if(bep&&bep.browseId){browseId=bep.browseId;break;}
+            if(bep&&bep.browseId){aBrowseId=bep.browseId;break;}
           }
-          if(browseId)break;
+          if(aBrowseId)break;
         }
-        if(browseId){
-          var allText='';
-          for(var ci=1;ci<flex.length;ci++)allText+=gC2(flex[ci])+' ';
-          allText=allText.toLowerCase();
-          if(allText.indexOf('album')!==-1||allText.indexOf('ep')!==-1||allText.indexOf('single')!==-1){
-            albums.push({title:title,artist:col2,thumb:thumb,browseId:browseId});
-          }else if(allText.indexOf('playlist')===-1&&allText.indexOf('podcast')===-1&&allText.indexOf('views')===-1){
-            artists.push({name:title,thumb:thumb,browseId:browseId,sub:col2||'Artist'});
+        artists.push({name:title,thumb:thumb,browseId:aBrowseId,sub:col2});
+      }else if(col2l.indexOf('album')!==-1||col2l.indexOf('ep')!==-1||col2l.indexOf('single')!==-1){
+        var alBrowseId='';
+        for(var ri4=0;ri4<flex.length;ri4++){
+          var runs2=flex[ri4]&&flex[ri4].musicResponsiveListItemFlexColumnRenderer&&flex[ri4].musicResponsiveListItemFlexColumnRenderer.text&&flex[ri4].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
+          for(var ri5=0;ri5<runs2.length;ri5++){
+            var bep2=runs2[ri5].navigationEndpoint&&runs2[ri5].navigationEndpoint.browseEndpoint;
+            if(bep2&&bep2.browseId){alBrowseId=bep2.browseId;break;}
           }
+          if(alBrowseId)break;
         }
+        albums.push({title:title,artist:col2,thumb:thumb,browseId:alBrowseId});
       }
     }else if(item.musicTwoRowItemRenderer){
       var tr2=item.musicTwoRowItemRenderer;
@@ -1650,15 +1647,12 @@ function parseYTMusicResponse(d){
       if(tr2r&&tr2r.length)thumb2=tr2r[tr2r.length-1].url||'';
       var sub2=gR(tr2.subtitle&&tr2.subtitle.runs);
       var sub2l=sub2.toLowerCase();
-      if(sub2l.indexOf('playlist')!==-1||sub2l.indexOf('podcast')!==-1||sub2l.indexOf('views')!==-1)continue;
       if(watchId2){
         videos.push({vid:watchId2,title:title2,artist:sub2,thumb:thumb2});
-      }else if(browseId2){
-        if(sub2l.indexOf('album')!==-1||sub2l.indexOf('ep')!==-1||sub2l.indexOf('single')!==-1){
-          albums.push({title:title2,artist:sub2,thumb:thumb2,browseId:browseId2});
-        }else{
-          artists.push({name:title2,thumb:thumb2,browseId:browseId2,sub:sub2||'Artist'});
-        }
+      }else if(sub2l.indexOf('artist')!==-1){
+        artists.push({name:title2,thumb:thumb2,browseId:browseId2,sub:sub2});
+      }else if(sub2l.indexOf('album')!==-1||sub2l.indexOf('ep')!==-1||sub2l.indexOf('single')!==-1){
+        albums.push({title:title2,artist:sub2,thumb:thumb2,browseId:browseId2});
       }
     }
   }
