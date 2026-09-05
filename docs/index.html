@@ -1222,6 +1222,8 @@ var lyricsLines=[];
 var lyricsTimings=[];
 var lyricsReady=false;
 
+function cleanLyricQuery(s){return s.replace(/[\(\[].*?[\)\]]/g,'').replace(/[-–—:,.!?'"']/g,' ').replace(/\s+/g,' ').trim();}
+
 function fetchLyrics(tr){
   var box=document.getElementById('lyrics-box');
   lyricsLines=[];
@@ -1230,24 +1232,55 @@ function fetchLyrics(tr){
   if(!tr||!tr.t){box.style.display='none';return;}
   box.style.display='block';
   box.innerHTML='<div style="text-align:center;padding:10px;color:var(--muted);font-size:10px">Loading lyrics...</div>';
-  fetch('https://lrclib.net/api/search?artist_name='+encodeURIComponent(tr.a||'')+'&track_name='+encodeURIComponent(tr.t))
-    .then(function(r){if(!r.ok)throw new Error();return r.json();})
-    .then(function(d){
-      if(d&&d.length>0){
-        if(d[0].syncedLyrics){parseSyncedLyrics(d[0].syncedLyrics);lyricsReady=true;return;}
-        if(d[0].plainLyrics){autoTimeLyrics(d[0].plainLyrics);lyricsReady=true;return;}
-      }
-      fallbackLyricsOvh(tr,box);
-    })
-    .catch(function(){fallbackLyricsOvh(tr,box);});
+  var artist=cleanLyricQuery(tr.a||'');
+  var track=cleanLyricQuery(tr.t);
+  tryLrclibSearch(artist,track,tr,0);
 }
 
-function fallbackLyricsOvh(tr,box){
+function tryLrclibSearch(artist,track,tr,attempt){
+  var box=document.getElementById('lyrics-box');
+  var urls=[];
+  if(attempt===0)urls.push('https://lrclib.net/api/search?artist_name='+encodeURIComponent(artist)+'&track_name='+encodeURIComponent(track));
+  else if(attempt===1)urls.push('https://lrclib.net/api/search?track_name='+encodeURIComponent(track));
+  else if(attempt===2)urls.push('https://lrclib.net/api/get?artist_name='+encodeURIComponent(artist)+'&track_name='+encodeURIComponent(track));
+  else if(attempt===3)urls.push('https://lrclib.net/api/search?artist_name='+encodeURIComponent(artist.split(' ')[0]||artist)+'&track_name='+encodeURIComponent(track.replace(/\s+/g,' ')));
+  else{fallbackGoogleLyrics(tr,box);return;}
+  fetch(urls[0])
+    .then(function(r){if(!r.ok)throw new Error();return r.json();})
+    .then(function(d){
+      var results=d?((Array.isArray(d)?d:[d]):[]);
+      for(var i=0;i<results.length;i++){
+        if(results[i]&&results[i].syncedLyrics){parseSyncedLyrics(results[i].syncedLyrics);lyricsReady=true;return;}
+        if(results[i]&&results[i].plainLyrics){autoTimeLyrics(results[i].plainLyrics);lyricsReady=true;return;}
+      }
+      tryLrclibSearch(artist,track,tr,attempt+1);
+    })
+    .catch(function(){tryLrclibSearch(artist,track,tr,attempt+1);});
+}
+
+function fallbackGoogleLyrics(tr,box){
+  var q=encodeURIComponent((tr.a||'')+' '+tr.t+' lyrics');
   fetch('https://api.lyrics.ovh/v1/'+encodeURIComponent(tr.a||'')+'/'+encodeURIComponent(tr.t))
     .then(function(r){if(!r.ok)throw new Error();return r.json();})
     .then(function(d){
       if(d&&d.lyrics){autoTimeLyrics(d.lyrics);lyricsReady=true;}
-      else{box.innerHTML='<div style="text-align:center;padding:10px;color:var(--muted);font-size:10px">No lyrics found</div>';}
+      else{fallbackHappiLyrics(tr,box);}
+    })
+    .catch(function(){fallbackHappiLyrics(tr,box);});
+}
+
+function fallbackHappiLyrics(tr,box){
+  var q=tr.a?tr.t+' '+tr.a:tr.t;
+  fetch('https://lrclib.net/api/search?q='+encodeURIComponent(q))
+    .then(function(r){if(!r.ok)throw new Error();return r.json();})
+    .then(function(d){
+      if(d&&d.length>0){
+        for(var i=0;i<d.length;i++){
+          if(d[i].syncedLyrics){parseSyncedLyrics(d[i].syncedLyrics);lyricsReady=true;return;}
+          if(d[i].plainLyrics){autoTimeLyrics(d[i].plainLyrics);lyricsReady=true;return;}
+        }
+      }
+      box.innerHTML='<div style="text-align:center;padding:10px;color:var(--muted);font-size:10px">No lyrics found</div>';
     })
     .catch(function(){box.innerHTML='<div style="text-align:center;padding:10px;color:var(--muted);font-size:10px">No lyrics found</div>';});
 }
