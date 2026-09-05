@@ -204,8 +204,9 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .mmb-controls{display:flex;align-items:center;gap:4px}
 .mmb-btn{background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:3px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;border-radius:50%}
 .mmb-btn:hover{color:#fff}
-.mmb-btn.mmb-play{color:#fff;background:var(--green);width:24px;height:24px;border-radius:50%}
+.mmb-btn.mmb-play{color:#fff;background:var(--green);width:24px;height:24px;border-radius:50%;position:relative}
 .mmb-btn.mmb-play:hover{transform:scale(1.08);background:#1ed760}
+.mmb-btn.mmb-play.loading{background:transparent;border:2px solid rgba(255,255,255,0.15);border-top-color:var(--green);animation:spin 0.7s linear infinite}
 .mmb-expand{background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:color 0.2s;font-size:11px}
 .mmb-expand:hover{color:#fff}
 
@@ -221,8 +222,10 @@ html,body{margin:0;padding:0;overflow:hidden;height:100%;width:100%;background:v
 .mf-controls{display:flex;align-items:center;gap:16px;margin-top:16px}
 .mf-btn{background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;transition:color 0.2s;font-size:16px;padding:4px}
 .mf-btn:hover{color:#fff}
-.mf-btn.mf-play{color:#000;background:#fff;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
+.mf-btn.mf-play{color:#000;background:#fff;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;position:relative}
 .mf-btn.mf-play:hover{transform:scale(1.06);background:#f0f0f0}
+.mf-btn.mf-play.loading{background:transparent;border:3px solid rgba(255,255,255,0.15);border-top-color:#fff;animation:spin 0.7s linear infinite;color:transparent}
+@keyframes spin{to{transform:rotate(360deg)}}
 .mf-btn.mf-like{font-size:18px}
 .mf-btn.mf-like.liked{color:#1ed760}
 .mf-progress{width:80%;max-width:320px;margin-top:12px}
@@ -1037,13 +1040,16 @@ var playBtn=document.getElementById('btn-play');
 function setPlayIcon(playing){
   var pb=document.getElementById('btn-play');
   var pf=document.getElementById('btn-play-full');
-  [pb,pf].forEach(function(b){if(!b)return;b.classList.remove('loading');});
-  if(isLoading){
-    [pb,pf].forEach(function(b){if(!b)return;b.innerHTML='';b.classList.add('loading');});
-  }else{
-    var icon=playing?'&#10074;&#10074;':'&#9654;';
-    [pb,pf].forEach(function(b){if(!b)return;b.innerHTML=icon;});
-  }
+  [pb,pf].forEach(function(b){
+    if(!b)return;
+    b.classList.remove('loading');
+    if(isLoading){
+      b.innerHTML='';
+      b.classList.add('loading');
+    }else{
+      b.innerHTML=playing?'&#10074;&#10074;':'&#9654;';
+    }
+  });
 }
 
 setInterval(function(){
@@ -1132,7 +1138,7 @@ function advanceTrack(){
     playTrack(next);
   }else{
     var next2=(curTrack+1)%TRACKS.length;
-    if(next2===0&&TRACKS.length>1){
+    if(next2===0){
       var lastTr=TRACKS[curTrack];
       TRACKS=[];
       recTracks=[];
