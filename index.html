@@ -1138,19 +1138,6 @@ function advanceTrack(){
     playTrack(next);
   }else{
     var next2=(curTrack+1)%TRACKS.length;
-    if(next2===0){
-      var lastTr=TRACKS[curTrack];
-      TRACKS=[];
-      recTracks=[];
-      fetchRelatedCb(lastTr,function(){
-        for(var j=0;j<recTracks.length;j++){
-          var r=recTracks[j];
-          TRACKS.push({t:r.title,a:r.artist,ytid:r.vid});
-        }
-        if(TRACKS.length>0)playTrack(0);
-      });
-      return;
-    }
     playTrack(next2);
   }
 }
@@ -1253,12 +1240,21 @@ function updateMusicMeta(){
 function playRecItem(idx){
   var tr=recTracks[idx];
   if(!tr)return;
-  TRACKS=[];
+  var clickedVid=tr.vid;
+  var alreadyIn=false;
+  for(var i=0;i<TRACKS.length;i++){if(TRACKS[i].ytid===clickedVid){alreadyIn=true;break;}}
+  if(!alreadyIn){
+    TRACKS.splice(curTrack+1,0,{t:tr.title,a:tr.artist,ytid:tr.vid});
+  }
   for(var j=0;j<recTracks.length;j++){
     var r=recTracks[j];
-    TRACKS.push({t:r.title,a:r.artist,ytid:r.vid});
+    var dup=false;
+    for(var k=0;k<TRACKS.length;k++){if(TRACKS[k].ytid===r.vid){dup=true;break;}}
+    if(!dup)TRACKS.push({t:r.title,a:r.artist,ytid:r.vid});
   }
-  playTrack(idx);
+  var playIdx=curTrack+1;
+  for(var m=0;m<TRACKS.length;m++){if(TRACKS[m].ytid===clickedVid){playIdx=m;break;}}
+  playTrack(playIdx);
 }
 
 function removeTrack(i){
@@ -1542,16 +1538,16 @@ async function searchYouTube(){
 }
 
 function addYTTrack(vid,title,artist){
-  var clickedIdx=-1;
-  for(var i=0;i<TRACKS.length;i++){if(TRACKS[i].ytid===vid){clickedIdx=i;break;}}
-  if(clickedIdx>=0){playTrack(clickedIdx);return;}
-  TRACKS=TRACKS.slice(0,curTrack+1);
-  TRACKS.push({t:title,a:artist,ytid:vid});
+  for(var i=0;i<TRACKS.length;i++){if(TRACKS[i].ytid===vid){playTrack(i);return;}}
+  TRACKS.splice(curTrack+1,0,{t:title,a:artist,ytid:vid});
+  var insertAt=curTrack+2;
   for(var j=0;j<recTracks.length;j++){
     var r=recTracks[j];
-    TRACKS.push({t:r.title,a:r.artist,ytid:r.vid});
+    var dup=false;
+    for(var k=0;k<TRACKS.length;k++){if(TRACKS[k].ytid===r.vid){dup=true;break;}}
+    if(!dup){TRACKS.splice(insertAt,0,{t:r.title,a:r.artist,ytid:r.vid});insertAt++;}
   }
-  for(var k=0;k<TRACKS.length;k++){if(TRACKS[k].ytid===vid){playTrack(k);return;}}
+  playTrack(curTrack+1);
 }
 
 // YouTube IFrame API
