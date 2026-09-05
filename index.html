@@ -1248,7 +1248,7 @@ function tryLrclibSearch(artist,track,tr,attempt){
   fetch(urls[0])
     .then(function(r){if(!r.ok)throw new Error();return r.json();})
     .then(function(d){
-      var results=d?((Array.isArray(d)?d:[d]):[]);
+      var results=d?(Array.isArray(d)?d:[d]):[];
       for(var i=0;i<results.length;i++){
         if(results[i]&&results[i].syncedLyrics){parseSyncedLyrics(results[i].syncedLyrics);lyricsReady=true;return;}
         if(results[i]&&results[i].plainLyrics){autoTimeLyrics(results[i].plainLyrics);lyricsReady=true;return;}
