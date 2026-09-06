@@ -1891,6 +1891,53 @@ async function browseArtist(channelId,artistName,artistThumb){
         }
       }
     }
+    if(!tracks.length&&!albums.length&&!singles.length){
+      var allBrItems=[];
+      grabAllItems(d,allBrItems);
+      for(var bi=0;bi<allBrItems.length;bi++){
+        var bItem=allBrItems[bi];
+        if(bItem.musicResponsiveListItemRenderer){
+          var bmr=bItem.musicResponsiveListItemRenderer;
+          var bflex=bmr.flexColumns||[];
+          var btTitle=gC2(bflex[0]);
+          var btVid='';
+          if(bmr.playlistItemData&&bmr.playlistItemData.videoId)btVid=bmr.playlistItemData.videoId;
+          if(!btVid&&bmr.overlay){
+            var bov=bmr.overlay.musicItemThumbnailOverlayRenderer;
+            if(bov&&bov.content&&bov.content.musicPlayButtonRenderer){
+              var bope=bov.content.musicPlayButtonRenderer.playNavigationEndpoint;
+              if(bope&&bope.watchEndpoint&&bope.watchEndpoint.videoId)btVid=bope.watchEndpoint.videoId;
+            }
+          }
+          if(!btVid){
+            var btRuns=bflex[0]&&bflex[0].musicResponsiveListItemFlexColumnRenderer&&bflex[0].musicResponsiveListItemFlexColumnRenderer.text&&bflex[0].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
+            for(var bri=0;bri<btRuns.length;bri++){
+              var bwe=btRuns[bri].navigationEndpoint&&btRuns[bri].navigationEndpoint.watchEndpoint;
+              if(bwe&&bwe.videoId){btVid=bwe.videoId;break;}
+            }
+          }
+          var btArtist=gC2(bflex[1])||artistName;
+          if(btTitle&&btVid){trackCount++;tracks.push({title:btTitle,vid:btVid,artist:btArtist});}
+        }
+        if(bItem.musicTwoRowItemRenderer){
+          var btr=bItem.musicTwoRowItemRenderer;
+          var baTitle=btr.title&&btr.title.runs&&btr.title.runs[0]&&btr.title.runs[0].text||'';
+          var baThumb='';
+          var bath=btr.thumbnailRenderer&&btr.thumbnailRenderer.musicThumbnailRenderer&&btr.thumbnailRenderer.musicThumbnailRenderer.thumbnail&&btr.thumbnailRenderer.musicThumbnailRenderer.thumbnail.thumbnails;
+          if(!bath)bath=btr.thumbnail&&btr.thumbnail.musicThumbnailRenderer&&btr.thumbnail.musicThumbnailRenderer.thumbnail&&btr.thumbnail.musicThumbnailRenderer.thumbnail.thumbnails;
+          if(bath&&bath.length)baThumb=bath[bath.length-1].url||'';
+          var baBid='';
+          var baEp=btr.navigationEndpoint&&btr.navigationEndpoint.browseEndpoint;
+          if(baEp&&baEp.browseId)baBid=baEp.browseId;
+          var baSub=btr.subtitle&&btr.subtitle.runs?gR(btr.subtitle.runs):'';
+          var baSubl=baSub.toLowerCase();
+          if(baTitle&&baBid){
+            if(baSubl.indexOf('single')!==-1||baSubl.indexOf('ep')!==-1){singles.push({title:baTitle,thumb:baThumb,browseId:baBid});}
+            else{albums.push({title:baTitle,thumb:baThumb,browseId:baBid});}
+          }
+        }
+      }
+    }
     searchState.browseTracks=tracks;
     if(!artistDesc)artistDesc='';
     var profileImg=artistThumb?'<img src="'+artistThumb+'">':'&#9733;';
@@ -1997,36 +2044,50 @@ async function browseAlbum(playlistId,albumTitle,albumArtist){
         }
       }
     }
-    if(!tracks.length){
-      var secContents=d&&d.contents&&d.contents.twoColumnBrowseResultsRenderer&&d.contents.twoColumnBrowseResultsRenderer.secondaryContents&&d.contents.twoColumnBrowseResultsRenderer.secondaryContents.sectionListRenderer&&d.contents.twoColumnBrowseResultsRenderer.secondaryContents.sectionListRenderer.contents||[];
-      for(var sci=0;sci<secContents.length;sci++){
-        var sSec=secContents[sci];
-        if(!sSec||!sSec.musicShelfRenderer)continue;
-        var sItems=sSec.musicShelfRenderer.contents||[];
-        for(var ssi=0;ssi<sItems.length;ssi++){
-          var siItem=sItems[ssi];
-          var smr=siItem&&siItem.musicResponsiveListItemRenderer;
-          if(!smr)continue;
-          var sflex=smr.flexColumns||[];
-          var stTitle=gC2(sflex[0]);
-          var stVid='';
-          if(smr.playlistItemData&&smr.playlistItemData.videoId)stVid=smr.playlistItemData.videoId;
-          if(!stVid&&smr.overlay){
-            var sov=smr.overlay.musicItemThumbnailOverlayRenderer;
-            if(sov&&sov.content&&sov.content.musicPlayButtonRenderer){
-              var sope=sov.content.musicPlayButtonRenderer.playNavigationEndpoint;
-              if(sope&&sope.watchEndpoint&&sope.watchEndpoint.videoId)stVid=sope.watchEndpoint.videoId;
+    if(!tracks.length&&!albums.length&&!singles.length){
+      var allBrItems=[];
+      grabAllItems(d,allBrItems);
+      for(var bi=0;bi<allBrItems.length;bi++){
+        var bItem=allBrItems[bi];
+        if(bItem.musicResponsiveListItemRenderer){
+          var bmr=bItem.musicResponsiveListItemRenderer;
+          var bflex=bmr.flexColumns||[];
+          var btTitle=gC2(bflex[0]);
+          var btVid='';
+          if(bmr.playlistItemData&&bmr.playlistItemData.videoId)btVid=bmr.playlistItemData.videoId;
+          if(!btVid&&bmr.overlay){
+            var bov=bmr.overlay.musicItemThumbnailOverlayRenderer;
+            if(bov&&bov.content&&bov.content.musicPlayButtonRenderer){
+              var bope=bov.content.musicPlayButtonRenderer.playNavigationEndpoint;
+              if(bope&&bope.watchEndpoint&&bope.watchEndpoint.videoId)btVid=bope.watchEndpoint.videoId;
             }
           }
-          if(!stVid){
-            var stRuns=sflex[0]&&sflex[0].musicResponsiveListItemFlexColumnRenderer&&sflex[0].musicResponsiveListItemFlexColumnRenderer.text&&sflex[0].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
-            for(var sri=0;sri<stRuns.length;sri++){
-              var swe=stRuns[sri].navigationEndpoint&&stRuns[sri].navigationEndpoint.watchEndpoint;
-              if(swe&&swe.videoId){stVid=swe.videoId;break;}
+          if(!btVid){
+            var btRuns=bflex[0]&&bflex[0].musicResponsiveListItemFlexColumnRenderer&&bflex[0].musicResponsiveListItemFlexColumnRenderer.text&&bflex[0].musicResponsiveListItemFlexColumnRenderer.text.runs||[];
+            for(var bri=0;bri<btRuns.length;bri++){
+              var bwe=btRuns[bri].navigationEndpoint&&btRuns[bri].navigationEndpoint.watchEndpoint;
+              if(bwe&&bwe.videoId){btVid=bwe.videoId;break;}
             }
           }
-          var stArtist=gC2(sflex[1])||resolvedArtist;
-          if(stTitle&&stVid){trackCount++;tracks.push({title:stTitle,vid:stVid,artist:stArtist});}
+          var btArtist=gC2(bflex[1])||resolvedArtist;
+          if(btTitle&&btVid){trackCount++;tracks.push({title:btTitle,vid:btVid,artist:btArtist});}
+        }
+        if(bItem.musicTwoRowItemRenderer){
+          var btr=bItem.musicTwoRowItemRenderer;
+          var baTitle=btr.title&&btr.title.runs&&btr.title.runs[0]&&btr.title.runs[0].text||'';
+          var baThumb='';
+          var bath=btr.thumbnailRenderer&&btr.thumbnailRenderer.musicThumbnailRenderer&&btr.thumbnailRenderer.musicThumbnailRenderer.thumbnail&&btr.thumbnailRenderer.musicThumbnailRenderer.thumbnail.thumbnails;
+          if(!bath)bath=btr.thumbnail&&btr.thumbnail.musicThumbnailRenderer&&btr.thumbnail.musicThumbnailRenderer.thumbnail&&btr.thumbnail.musicThumbnailRenderer.thumbnail.thumbnails;
+          if(bath&&bath.length)baThumb=bath[bath.length-1].url||'';
+          var baBid='';
+          var baEp=btr.navigationEndpoint&&btr.navigationEndpoint.browseEndpoint;
+          if(baEp&&baEp.browseId)baBid=baEp.browseId;
+          var baSub=btr.subtitle&&btr.subtitle.runs?gR(btr.subtitle.runs):'';
+          var baSubl=baSub.toLowerCase();
+          if(baTitle&&baBid){
+            if(baSubl.indexOf('single')!==-1||baSubl.indexOf('ep')!==-1){singles.push({title:baTitle,thumb:baThumb,browseId:baBid});}
+            else{albums.push({title:baTitle,thumb:baThumb,browseId:baBid});}
+          }
         }
       }
     }
