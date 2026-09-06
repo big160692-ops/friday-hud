@@ -1414,6 +1414,39 @@ var lyricsReady=false;
 
 function cleanLyricQuery(s){return s.replace(/[\(\[].*?[\)\]]/g,'').replace(/[^a-zA-Z0-9\s]/g,' ').replace(/\s+/g,' ').trim();}
 
+function lyricsMatch(queryArtist,queryTrack,resultArtist,resultTrack){
+  if(!resultTrack)return false;
+  var qa=cleanLyricQuery(queryArtist).toLowerCase();
+  var qt=cleanLyricQuery(queryTrack).toLowerCase();
+  var ra=cleanLyricQuery(resultArtist||'').toLowerCase();
+  var rt=cleanLyricQuery(resultTrack).toLowerCase();
+  if(!rt)return false;
+  function wordOverlap(a,b){
+    if(!a||!b)return 0;
+    var aw=a.split(/\s+/);var bw=b.split(/\s+/);
+    var matched=0;
+    for(var i=0;i<aw.length;i++){
+      if(aw[i].length<2)continue;
+      for(var j=0;j<bw.length;j++){
+        if(aw[i]===bw[j]){matched++;break;}
+      }
+    }
+    return aw.length>0?matched/aw.length:0;
+  }
+  var trackScore=wordOverlap(qt,rt);
+  var artistScore=qa?wordOverlap(qa,ra):1;
+  if(trackScore<0.4)return false;
+  if(qa&&artistScore<0.3&&trackScore<0.7)return false;
+  return true;
+}
+
+function hasNonLatinScript(text){
+  if(!text)return false;
+  var sample=text.substring(0,500);
+  var nonLatin=sample.match(/[\u0400-\u04FF\u0600-\u06FF\u0900-\u097F\u0E00-\u0E7F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/g);
+  return nonLatin&&nonLatin.length>10;
+}
+
 function fetchLyrics(tr){
   var box=document.getElementById('lyrics-box');
   lyricsLines=[];
@@ -1440,8 +1473,16 @@ function tryLrclibSearch(artist,track,tr,attempt){
     .then(function(d){
       var results=d?(Array.isArray(d)?d:[d]):[];
       for(var i=0;i<results.length;i++){
-        if(results[i]&&results[i].syncedLyrics){parseSyncedLyrics(results[i].syncedLyrics);lyricsReady=true;return;}
-        if(results[i]&&results[i].plainLyrics){autoTimeLyrics(results[i].plainLyrics);lyricsReady=true;return;}
+        var res=results[i];
+        if(!res)continue;
+        var resArtist=res.artistName||'';
+        var resTrack=res.trackName||'';
+        if(!lyricsMatch(tr.a,tr.t,resArtist,resTrack))continue;
+        var lyrics=res.syncedLyrics||res.plainLyrics||'';
+        if(!lyrics)continue;
+        if(hasNonLatinScript(lyrics)&&!hasNonLatinScript(tr.t))continue;
+        if(res.syncedLyrics){parseSyncedLyrics(res.syncedLyrics);lyricsReady=true;return;}
+        if(res.plainLyrics){autoTimeLyrics(res.plainLyrics);lyricsReady=true;return;}
       }
       tryLrclibSearch(artist,track,tr,attempt+1);
     })
@@ -1449,12 +1490,13 @@ function tryLrclibSearch(artist,track,tr,attempt){
 }
 
 function fallbackGoogleLyrics(tr,box){
-  var q=encodeURIComponent((tr.a||'')+' '+tr.t+' lyrics');
   fetch('https://api.lyrics.ovh/v1/'+encodeURIComponent(tr.a||'')+'/'+encodeURIComponent(tr.t))
     .then(function(r){if(!r.ok)throw new Error();return r.json();})
     .then(function(d){
-      if(d&&d.lyrics){autoTimeLyrics(d.lyrics);lyricsReady=true;}
-      else{fallbackHappiLyrics(tr,box);}
+      if(d&&d.lyrics){
+        if(hasNonLatinScript(d.lyrics)&&!hasNonLatinScript(tr.t)){fallbackHappiLyrics(tr,box);return;}
+        autoTimeLyrics(d.lyrics);lyricsReady=true;
+      }else{fallbackHappiLyrics(tr,box);}
     })
     .catch(function(){fallbackHappiLyrics(tr,box);});
 }
@@ -1466,8 +1508,16 @@ function fallbackHappiLyrics(tr,box){
     .then(function(d){
       if(d&&d.length>0){
         for(var i=0;i<d.length;i++){
-          if(d[i].syncedLyrics){parseSyncedLyrics(d[i].syncedLyrics);lyricsReady=true;return;}
-          if(d[i].plainLyrics){autoTimeLyrics(d[i].plainLyrics);lyricsReady=true;return;}
+          var res=d[i];
+          if(!res)continue;
+          var resArtist=res.artistName||'';
+          var resTrack=res.trackName||'';
+          if(!lyricsMatch(tr.a,tr.t,resArtist,resTrack))continue;
+          var lyrics=res.syncedLyrics||res.plainLyrics||'';
+          if(!lyrics)continue;
+          if(hasNonLatinScript(lyrics)&&!hasNonLatinScript(tr.t))continue;
+          if(res.syncedLyrics){parseSyncedLyrics(res.syncedLyrics);lyricsReady=true;return;}
+          if(res.plainLyrics){autoTimeLyrics(res.plainLyrics);lyricsReady=true;return;}
         }
       }
       box.innerHTML='<div style="text-align:center;padding:10px;color:var(--muted);font-size:10px">No lyrics found</div>';
